@@ -12,8 +12,7 @@
 }
 
 .day-column {
-    min-width: 320px;
-    max-width: 320px;
+    flex: 0 0 calc((100% - 4 * var(--space-4)) / 3);
     display: flex;
     flex-direction: column;
     gap: var(--space-3);

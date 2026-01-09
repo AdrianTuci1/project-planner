@@ -1,0 +1,247 @@
+.task-card {
+    background-color: var(--bg-card);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+.task-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.task-card.ghost {
+    background-color: transparent;
+    border: 1px dashed var(--border-strong);
+    opacity: 0.6;
+}
+
+.task-card.ghost:hover {
+    opacity: 1;
+    background-color: var(--bg-card-hover);
+    border-style: solid;
+}
+
+.tc-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+}
+
+.tc-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 2px;
+}
+
+.tc-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--text-muted);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.tc-checkbox.checked {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.tc-title {
+    color: var(--text-main);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    flex: 1;
+    font-weight: 500;
+}
+
+.tc-title-input {
+    background: transparent;
+    border: 1px dashed transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    flex: 1;
+    font-weight: 500;
+    outline: none;
+    padding: 2px 4px;
+    margin: -3px -5px;
+}
+
+.task-card.creating .tc-title-input:focus {
+    border-color: var(--accent-purple);
+}
+
+.tc-title.completed {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.tc-time-badge {
+    background-color: var(--bg-input);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.tc-time-badge:hover {
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+}
+
+.tc-footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 20px;
+}
+
+.tc-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.tc-label-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--accent-pink);
+}
+
+.tc-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: auto;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.task-card:hover .tc-actions {
+    opacity: 1;
+}
+
+.tc-action-icon {
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.tc-action-icon:hover {
+    color: var(--text-main);
+}
+
+/* Subtask Mode */
+.tc-divider {
+    height: 1px;
+    background-color: var(--border-subtle);
+    margin: var(--space-1) 0;
+}
+
+.tc-subtasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-left: var(--space-2);
+}
+
+.tc-subtask-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 2px 0;
+}
+
+.tc-subtask-input {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: var(--text-sm);
+    flex: 1;
+    outline: none;
+}
+
+.tc-add-subtask {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    padding: var(--space-1) 0;
+    cursor: pointer;
+}
+
+.tc-add-subtask:hover {
+    color: var(--text-main);
+}
+
+/* Time Expanded Mode */
+.tc-time-expanded {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: var(--space-1);
+}
+
+.tc-play-btn {
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.tc-play-btn:hover {
+    background-color: var(--bg-surface);
+}
+
+.tc-time-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.tc-time-label {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.tc-time-value {
+    font-size: var(--text-sm);
+    color: var(--text-main);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.tc-time-value:hover {
+    color: var(--accent-blue);
+}
