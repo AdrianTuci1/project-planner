@@ -1,0 +1,104 @@
+:root {
+  /* =========================================
+     Color Palette - Premium Dark "Ellie-like"
+     ========================================= */
+
+  /* Backgrounds */
+  --bg-app: #0E0E10;
+  /* Deepest dark */
+  --bg-sidebar: #161618;
+  /* Slightly lighter for sidebars */
+  --bg-card: #1C1C1E;
+  /* Card background */
+  --bg-card-hover: #252528;
+  /* Hovers */
+  --bg-input: #2C2C2E;
+  /* Input fields */
+  --bg-popover: #1F1F22;
+  /* Dropdowns/Modals */
+
+  /* Text Colors */
+  --text-main: #ECECEC;
+  --text-secondary: #9FA1A6;
+  --text-muted: #5D5F66;
+
+  /* Accents */
+  --accent-pink: #FF2D55;
+  --accent-pink-dim: rgba(255, 45, 85, 0.15);
+  --accent-blue: #0A84FF;
+  --accent-purple: #BF5AF2;
+
+  /* Borders */
+  --border-subtle: #2C2C2E;
+  --border-strong: #3A3A3C;
+
+  /* =========================================
+     Typography
+     ========================================= */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+
+  /* =========================================
+     Spacing & Layout
+     ========================================= */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --header-height: 60px;
+  --sidebar-width: 260px;
+  --dock-width: 300px;
+
+  /* =========================================
+     Effects & Radius
+     ========================================= */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  overflow: hidden;
+  /* App-like feel */
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

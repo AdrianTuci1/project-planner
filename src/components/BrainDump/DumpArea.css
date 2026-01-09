@@ -1,0 +1,109 @@
+/* DumpArea.css */
+.dump-container {
+    padding: var(--space-8);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.dump-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.dump-title {
+    font-size: var(--text-2xl);
+    font-weight: 600;
+}
+
+.task-input-wrapper {
+    background-color: var(--bg-input);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+    margin-bottom: var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid transparent;
+    transition: border-color var(--transition-fast);
+}
+
+.task-input-wrapper:focus-within {
+    border-color: var(--accent-primary);
+}
+
+.task-input {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: var(--text-base);
+    flex: 1;
+    outline: none;
+}
+
+.enter-hint {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-card);
+    margin-bottom: var(--space-2);
+    border: 1px solid transparent;
+    transition: var(--transition-fast);
+    cursor: pointer;
+    /* Clickable */
+}
+
+.task-item:hover {
+    border-color: var(--border-strong);
+}
+
+.task-check-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    padding: 0;
+    z-index: 2;
+    /* Ensure click doesn't conflict with item click if careful */
+}
+
+.task-check-btn.checked {
+    color: var(--accent-pink);
+}
+
+.task-text {
+    flex: 1;
+    color: var(--text-main);
+}
+
+.task-text.completed {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.task-label {
+    font-size: var(--text-xs);
+    padding: 2px 8px;
+    border-radius: 12px;
+    background-color: var(--bg-input);
+    color: var(--text-secondary);
+}

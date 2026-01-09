@@ -1,0 +1,66 @@
+/* Timebox.css */
+.timebox-container {
+    width: 300px;
+    border-left: 1px solid var(--border-subtle);
+    background-color: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.timebox-header {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.timebox-grid {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+    background-color: var(--bg-app);
+}
+
+.time-slot {
+    height: 60px;
+    /* 1 hour */
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-2);
+}
+
+.time-label {
+    width: 50px;
+    font-size: 10px;
+    color: var(--text-muted);
+    transform: translateY(-50%);
+}
+
+.current-time-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: var(--accent-pink);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.current-time-line::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 6px solid var(--accent-pink);
+}

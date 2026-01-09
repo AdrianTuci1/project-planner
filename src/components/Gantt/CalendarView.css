@@ -1,0 +1,212 @@
+.calendar-view-grid {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Row - Fixed */
+.calendar-header-row {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.time-column-header {
+    border-right: 1px solid var(--border-color);
+}
+
+.day-column-header {
+    padding: 16px 12px;
+    text-align: center;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.day-column-header.today {
+    background: var(--bg-secondary);
+}
+
+.day-name {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
+.day-number {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.day-number.today-number {
+    background: #8B5CF6;
+    color: white;
+}
+
+/* Grid Body - Scrollable */
+.calendar-grid-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.time-row {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    min-height: 100px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.time-label {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+    border-right: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    position: sticky;
+    left: 0;
+}
+
+.time-cell {
+    border-right: 1px solid var(--border-color);
+    padding: 6px;
+    position: relative;
+    background: var(--bg-primary);
+    transition: background 0.2s;
+}
+
+.time-cell:hover {
+    background: var(--bg-hover);
+}
+
+.time-cell.today-cell {
+    background: rgba(139, 92, 246, 0.03);
+}
+
+.time-cell.today-cell:hover {
+    background: rgba(139, 92, 246, 0.08);
+}
+
+/* Calendar Events */
+.calendar-event {
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 3px solid rgba(0, 0, 0, 0.2);
+}
+
+.calendar-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.event-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1F2937;
+    margin-bottom: 2px;
+    line-height: 1.3;
+}
+
+.event-time {
+    font-size: 11px;
+    color: #374151;
+    opacity: 0.8;
+}
+
+/* Current time indicator (red line) */
+.time-cell::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #EF4444;
+    display: none;
+}
+
+.time-cell.current-time::after {
+    display: block;
+}
+
+/* Scrollbar styling */
+.calendar-grid-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.calendar-grid-body::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+.calendar-grid-body::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.calendar-grid-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+
+    .calendar-header-row,
+    .time-row {
+        grid-template-columns: 60px repeat(7, 1fr);
+    }
+
+    .time-label {
+        font-size: 10px;
+        padding: 6px 8px;
+    }
+
+    .day-number {
+        font-size: 20px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .time-row {
+        min-height: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .calendar-header-row,
+    .time-row {
+        grid-template-columns: 50px repeat(7, minmax(80px, 1fr));
+    }
+
+    .calendar-view-grid {
+        overflow-x: auto;
+    }
+
+    .event-title {
+        font-size: 11px;
+    }
+
+    .event-time {
+        font-size: 10px;
+    }
+}

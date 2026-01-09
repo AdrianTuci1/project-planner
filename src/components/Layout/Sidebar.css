@@ -1,0 +1,242 @@
+/* Sidebar.css */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    height: 100vh;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    margin-bottom: var(--space-6);
+}
+
+.user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.app-name {
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--text-main);
+    flex: 1;
+}
+
+.settings-icon {
+    color: var(--text-muted);
+    transition: color var(--transition-fast);
+}
+
+.settings-icon:hover {
+    color: var(--text-main);
+}
+
+/* Nav Group Header (Brain Dump Dropdown) */
+.nav-group-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+}
+
+.nav-group-header:hover {
+    background-color: var(--bg-card-hover);
+    color: var(--text-main);
+}
+
+.nav-group-content {
+    margin-top: var(--space-2);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Nav Item (Redesigned) */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    height: 54px;
+    /* Taller for subtitle */
+    transition: all var(--transition-fast);
+}
+
+.nav-item:hover {
+    background-color: var(--bg-card-hover);
+    color: var(--text-main);
+}
+
+.nav-item.active {
+    background-color: var(--bg-input);
+    /* Active state based on image */
+    color: var(--text-main);
+}
+
+.nav-label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+}
+
+.nav-sub-label {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.new-list-btn {
+    color: var(--text-muted);
+    height: 40px;
+    /* Standard height */
+}
+
+.new-list-btn:hover {
+    color: var(--text-main);
+}
+
+/* Lists Menu (Accordion style) */
+.lists-menu {
+    margin-left: var(--space-3);
+    border-left: 1px solid var(--border-subtle);
+    padding-left: var(--space-2);
+    margin-bottom: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sub-nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.sub-nav-item:hover {
+    background-color: var(--bg-card-hover);
+    color: var(--text-main);
+}
+
+.sub-nav-item.active {
+    background-color: var(--bg-card-hover);
+    /* Or a lighter active highlight */
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.sub-nav-item .count {
+    font-size: 10px;
+    color: var(--text-muted);
+    background: var(--bg-input);
+    padding: 2px 6px;
+    border-radius: 8px;
+}
+
+.sub-nav-item.new-list {
+    color: var(--text-muted);
+    gap: var(--space-2);
+    justify-content: flex-start;
+}
+
+/* Create Task Card */
+.create-task-wrapper {
+    margin-top: var(--space-2);
+    padding: 0 var(--space-2);
+}
+
+.card-container-create {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.card-container-create .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-2);
+}
+
+.card-container-create textarea.card-description {
+    background: transparent;
+    border: none;
+    resize: none;
+    font-family: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-main);
+    width: 100%;
+    outline: none;
+    min-height: 20px;
+    padding: 0;
+}
+
+.card-container-create textarea.card-description::placeholder {
+    color: var(--text-muted);
+}
+
+.card-container-create .card-time-estimate {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-input);
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.card-container-create .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-container-create .card-left-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.card-container-create .card-no-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    border: 1px dashed var(--border-subtle);
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.card-container-create .subtask-button-container {
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.card-container-create .subtask-button-container:hover {
+    color: var(--text-main);
+}

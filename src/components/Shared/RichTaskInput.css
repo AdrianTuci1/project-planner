@@ -1,0 +1,105 @@
+/* RichTaskInput.css */
+.rich-input-container {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeIn 0.2s ease-out;
+    box-shadow: var(--shadow-md);
+}
+
+.rich-input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rich-text-input {
+    flex: 1;
+    background: transparent;
+    border: 2px dashed rgba(168, 85, 247, 0.5);
+    /* Purple dashed border */
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    color: var(--text-main);
+    font-size: var(--text-sm);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.rich-text-input:focus {
+    border-color: var(--accent-purple);
+    background-color: rgba(168, 85, 247, 0.05);
+}
+
+.rich-duration-badge {
+    background-color: var(--bg-input);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+}
+
+.rich-duration-badge:hover {
+    background-color: var(--bg-card-hover);
+    color: var(--text-main);
+}
+
+.rich-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.rich-btn-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.rich-btn-text:hover {
+    color: var(--text-main);
+}
+
+.rich-icon-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rich-icon-btn {
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.1s;
+}
+
+.rich-icon-btn:hover {
+    color: var(--accent-pink);
+}
+
+.collapsed-input {
+    height: 44px;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    cursor: text;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    transition: all 0.2s;
+}
+
+.collapsed-input:hover {
+    border-color: var(--border-strong);
+    background-color: var(--bg-card-hover);
+}
