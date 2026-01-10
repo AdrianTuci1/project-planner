@@ -1,0 +1,253 @@
+.labels-settings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+}
+
+.labels-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.search-labels-input {
+    flex: 1;
+    background: var(--bg-secondary, #2C2C2E);
+    border: 1px solid var(--border-subtle, #3A3A3C);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-primary, #FFFFFF);
+    font-size: 14px;
+    outline: none;
+    transition: box-shadow 0.2s;
+}
+
+.search-labels-input:focus {
+    border-color: var(--accent-primary, #0A84FF);
+    box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.2);
+}
+
+.btn-create-label {
+    background: transparent;
+    border: 1px solid var(--border-subtle, #3A3A3C);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text-primary, #FFFFFF);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-create-label:hover {
+    background: var(--bg-hover, rgba(255, 255, 255, 0.1));
+}
+
+.labels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    padding-right: 4px;
+    /* Space for scrollbar */
+}
+
+.label-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary, #1C1C1E);
+    border: 1px solid var(--border-subtle, #2C2C2E);
+    border-radius: 8px;
+    padding: 10px 14px;
+    transition: background 0.2s;
+}
+
+.label-item:hover {
+    background: var(--bg-secondary-hover, #2C2C2E);
+}
+
+.label-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.label-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.label-name {
+    font-size: 14px;
+    color: var(--text-primary, #FFFFFF);
+}
+
+.label-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* opacity: 0; removed opacity to make it always visible */
+    transition: opacity 0.2s;
+    color: var(--text-muted, #8E8E93);
+    /* Set default color to muted */
+}
+
+/* .label-item:hover .label-actions {
+    opacity: 1;
+} Removed hover dependency */
+
+.icon-btn-sm {
+    background: transparent;
+    border: none;
+    color: var(--text-muted, #8E8E93);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, background 0.2s;
+}
+
+.icon-btn-sm:hover {
+    color: var(--text-primary, #FFFFFF);
+    background: var(--bg-hover, rgba(255, 255, 255, 0.1));
+}
+
+/* Edit/Create Mode Styles */
+.edit-label-container {
+    background: var(--bg-secondary, #1C1C1E);
+    border: 1px solid var(--border-subtle, #3A3A3C);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.edit-label-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.color-picker-trigger {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle, #3A3A3C);
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.color-dot-large {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.label-name-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-primary, #FFFFFF);
+    font-size: 14px;
+    outline: none;
+}
+
+.edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-left: auto;
+    /* Push to right if in row, but here we might want separate row or same row depending on design */
+}
+
+/* Matching the screenshot Design:
+   [Color] [Input] [Cancel] [Create/Save]
+*/
+.edit-label-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-secondary, #1C1C1E);
+    border: 1px solid var(--border-subtle, #3A3A3C);
+    border-radius: 8px;
+    padding: 6px;
+}
+
+.edit-label-inline .color-picker-trigger {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-subtle, #3A3A3C);
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.edit-label-inline .label-name-input {
+    flex: 1;
+    height: 32px;
+    padding: 0 8px;
+}
+
+.btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border-subtle, #3A3A3C);
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: var(--text-primary, #FFFFFF);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.btn-primary-sm {
+    background: var(--accent-primary, #8B5CF6);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 16px;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    background: linear-gradient(90deg, #A78BFA 0%, #8B5CF6 100%);
+}
+
+.color-palette {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 8px;
+    background: var(--bg-elevated, #2C2C2E);
+    border: 1px solid var(--border-subtle, #3A3A3C);
+    border-radius: 8px;
+    position: absolute;
+    top: 45px;
+    left: 0;
+    z-index: 10;
+    width: 180px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.color-option {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.1s;
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+}
+
+.color-option.selected {
+    border-color: #FFFFFF;
+}

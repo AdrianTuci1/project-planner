@@ -7,29 +7,56 @@
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.8);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    /* Changed from center to allow scrolling */
     justify-content: center;
     z-index: 2000;
     backdrop-filter: blur(4px);
+    overflow-y: auto;
+    /* Enable page scrolling */
+    padding: 100px 0;
+    /* Add visual spacing */
 }
 
 .settings-container {
-    width: 900px;
-    max-width: 95vw;
-    height: 700px;
-    max-height: 90vh;
-    background-color: var(--bg-card);
+    width: auto;
+    min-width: 900px;
+    max-width: 900px;
+    height: auto;
+    min-height: 700px;
+    /* max-height: 95vh; REMOVED max-height to allow full expansion */
+    background-color: var(--bg-primary);
     border-radius: var(--radius-lg);
     display: flex;
     overflow: hidden;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border-strong);
     animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    margin: auto;
+    /* Centers the modal vertically if smaller than viewport */
+}
+
+.icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    background-color: var(--bg-sidebar);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border: 1px solid var(--border-strong);
+    color: var(--text-main);
+}
+
+.icon-btn:hover {
+    background-color: var(--bg-card-hover);
 }
 
 .settings-sidebar {
     width: 260px;
-    background-color: #1A1C20;
+    background-color: var(--bg-sidebar);
     /* Slightly darker */
     border-right: 1px solid var(--border-strong);
     padding: var(--space-6) var(--space-2);
@@ -64,7 +91,6 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: var(--space-2) var(--space-3);
-    margin-top: var(--space-4);
 }
 
 .settings-nav-item {
@@ -90,6 +116,12 @@
     color: var(--text-main);
 }
 
+.settings-separator {
+    height: 1px;
+    background-color: var(--border-subtle);
+    margin: var(--space-2) var(--space-1);
+}
+
 .settings-content {
     flex: 1;
     background-color: var(--bg-card);
@@ -110,7 +142,7 @@
 
 .settings-scroll-area {
     flex: 1;
-    overflow-y: auto;
+    /* overflow-y: auto; REMOVED to allow container to grow */
     padding: var(--space-8);
 }
 
@@ -181,7 +213,7 @@
 }
 
 .invite-section {
-    background-color: var(--bg-input);
+    background-color: var(--bg-sidebar);
     border-radius: var(--radius-lg);
     padding: var(--space-4);
     margin-top: var(--space-4);

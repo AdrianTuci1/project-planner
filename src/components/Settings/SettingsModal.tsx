@@ -16,6 +16,10 @@ import {
     Users
 } from 'lucide-react';
 import './SettingsModal.css';
+import { GeneralSettings } from './GeneralSettings';
+import { LabelsSettings } from './LabelsSettings';
+import { PowerFeaturesSettings } from './PowerFeaturesSettings';
+import { CalendarSettings } from './CalendarSettings';
 
 interface SettingsModalProps {
     onClose: () => void;
@@ -49,28 +53,45 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                     <div className={`settings-nav-item ${activeTab === 'account' ? 'active' : ''}`} onClick={() => setActiveTab('account')}>
                         <User size={16} /> Account Settings
                     </div>
-                    <div className={`settings-nav-item ${activeTab === 'subscription' ? 'active' : ''}`} onClick={() => setActiveTab('subscription')}>
-                        <CreditCard size={16} /> Subscription
-                    </div>
+                    <div className="settings-nav-item"><CreditCard size={16} /> Subscription</div>
+
+                    <div className="settings-separator" />
 
                     <div className="settings-section-title">Team</div>
                     <div className={`settings-nav-item ${activeTab === 'team' ? 'active' : ''}`} onClick={() => setActiveTab('team')}>
                         <Users size={16} /> Manage Team
                     </div>
 
+                    <div className="settings-separator" />
+
                     <div className="settings-section-title">App Settings</div>
-                    <div className="settings-nav-item"><Settings size={16} /> General settings</div>
-                    <div className="settings-nav-item"><Calendar size={16} /> Calendar accounts</div>
-                    <div className="settings-nav-item"><Tag size={16} /> Labels</div>
+                    <div className={`settings-nav-item ${activeTab === 'general' ? 'active' : ''}`} onClick={() => setActiveTab('general')}>
+                        <Settings size={16} /> General settings
+                    </div>
+                    <div className={`settings-nav-item ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>
+                        <Calendar size={16} /> Calendar accounts
+                    </div>
+                    <div className={`settings-nav-item ${activeTab === 'labels' ? 'active' : ''}`} onClick={() => setActiveTab('labels')}>
+                        <Tag size={16} /> Labels
+                    </div>
                     <div className="settings-nav-item"><Grid size={16} /> Integrations</div>
 
-                    <div className="settings-section-title">Power Features</div>
-                    <div className="settings-nav-item"><Zap size={16} /> Toggle power features</div>
+                    <div className="settings-separator" />
 
-                    <div style={{ marginTop: 'auto' }}>
-                        <div className="settings-nav-item" style={{ color: 'var(--accent-pink)' }}>
-                            <LogOut size={16} /> Log out
-                        </div>
+                    <div className="settings-section-title">Power Features</div>
+                    <div className={`settings-nav-item ${activeTab === 'power' ? 'active' : ''}`} onClick={() => setActiveTab('power')}>
+                        <Zap size={16} /> Toggle power features
+                    </div>
+
+                    <div className="settings-separator" />
+
+                    <div className="settings-nav-item"><Download size={16} /> Download apps</div>
+                    <div className="settings-nav-item"><Cloud size={16} /> Account data</div>
+
+                    <div className="settings-separator" />
+
+                    <div className="settings-nav-item" style={{ color: 'var(--accent-pink)' }}>
+                        <LogOut size={16} /> Log out
                     </div>
                 </div>
 
@@ -80,6 +101,10 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                         <span>
                             {activeTab === 'account' && 'Account Settings'}
                             {activeTab === 'team' && 'Team Management'}
+                            {activeTab === 'general' && 'General Settings'}
+                            {activeTab === 'labels' && 'Label Settings'}
+                            {activeTab === 'power' && 'Power Features'}
+                            {activeTab === 'calendar' && 'Calendar Integration'}
                         </span>
                         <button className="icon-btn" onClick={onClose}>
                             <X size={20} />
@@ -151,6 +176,11 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                                 </div>
                             </div>
                         )}
+
+                        {activeTab === 'general' && <GeneralSettings />}
+                        {activeTab === 'labels' && <LabelsSettings />}
+                        {activeTab === 'power' && <PowerFeaturesSettings />}
+                        {activeTab === 'calendar' && <CalendarSettings />}
                     </div>
                 </div>
             </div>

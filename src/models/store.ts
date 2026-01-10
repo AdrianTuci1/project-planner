@@ -143,6 +143,29 @@ class ProjectStore {
         return label ? label.color : '#60A5FA'; // Default blue if not found
     }
 
+    addLabel(name: string, color: string) {
+        const newLabel = {
+            id: uuidv4(),
+            name,
+            color
+        };
+        this.availableLabels.push(newLabel);
+    }
+
+    updateLabel(id: string, name: string, color: string) {
+        const label = this.availableLabels.find(l => l.id === id);
+        if (label) {
+            label.name = name;
+            label.color = color;
+        }
+    }
+
+    deleteLabel(id: string) {
+        this.availableLabels = this.availableLabels.filter(l => l.id !== id);
+        // Also remove from filter if present
+        this.filterLabelIds = this.filterLabelIds.filter(fid => fid !== id);
+    }
+
     addTaskToDump(title: string) {
         const task = new Task(title);
         this.dumpAreaTasks.push(task);
