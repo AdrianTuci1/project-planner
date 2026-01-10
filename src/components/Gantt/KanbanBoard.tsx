@@ -10,9 +10,10 @@ import './KanbanBoard.css';
 interface KanbanBoardProps {
     tasks: Task[];
     onTaskClick: (task: Task) => void;
+    groupId?: string | null;
 }
 
-export const KanbanBoard = observer(({ tasks, onTaskClick }: KanbanBoardProps) => {
+export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoardProps) => {
     const [addingTaskDate, setAddingTaskDate] = useState<Date | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -74,24 +75,60 @@ export const KanbanBoard = observer(({ tasks, onTaskClick }: KanbanBoardProps) =
         });
     };
 
+    const getTargetGroup = () => {
+        if (groupId === null) return null; // Brain Dump
+        if (groupId) return store.groups.find(g => g.id === groupId); // Specific group
+        return store.activeGroup; // Fallback to active group (though ideally should not be used if props are correct)
+    };
+
     const handleCreateTask = (title: string, date: Date) => {
-        if (title && store.activeGroup) {
+        if (!title) return;
+
+        const targetGroup = getTargetGroup();
+
+        if (groupId === null) {
+            // Brain dump logic if needed, though usually this view is for groups?
+            // If Kanban is used for Brain Dump, we might need store.addTaskToDump(title) and set scheduledDate?
+            // Assuming for now Brain Dump items in Kanban behave like tasks
             const newTask = new Task(title);
             newTask.scheduledDate = date;
-            store.activeGroup.addTask(newTask);
+            store.dumpAreaTasks.push(newTask);
+            return;
+        }
+
+        if (targetGroup) {
+            const newTask = new Task(title);
+            newTask.scheduledDate = date;
+            targetGroup.addTask(newTask);
             // We stay in create mode to allow adding multiple tasks
         }
     };
 
     const handleDuplicateTask = (task: Task) => {
-        if (store.activeGroup) {
-            store.activeGroup.duplicateTask(task.id);
+        const targetGroup = getTargetGroup();
+
+        if (groupId === null) {
+            const clone = task.clone();
+            store.dumpAreaTasks.push(clone);
+            return;
+        }
+
+        if (targetGroup) {
+            targetGroup.duplicateTask(task.id);
         }
     };
 
     const handleDeleteTask = (task: Task) => {
-        if (store.activeGroup && confirm('Are you sure you want to delete this task?')) {
-            store.activeGroup.removeTask(task.id);
+        if (confirm('Are you sure you want to delete this task?')) {
+            if (groupId === null) {
+                store.dumpAreaTasks = store.dumpAreaTasks.filter(t => t.id !== task.id);
+                return;
+            }
+
+            const targetGroup = getTargetGroup();
+            if (targetGroup) {
+                targetGroup.removeTask(task.id);
+            }
         }
     };
 

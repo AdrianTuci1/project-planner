@@ -59,11 +59,18 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 
     return (
         <>
-            <div className="context-menu-backdrop" onClick={onClose} />
+            <div
+                className="context-menu-backdrop"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onClose();
+                }}
+            />
             <div
                 ref={menuRef}
                 className={`context-menu ${className}`}
                 style={{ left: position.x, top: position.y }}
+                onClick={(e) => e.stopPropagation()}
             >
                 {children}
             </div>

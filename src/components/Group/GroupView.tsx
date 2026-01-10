@@ -35,6 +35,7 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                             <KanbanBoard
                                 tasks={group.tasks}
                                 onTaskClick={handleTaskClick}
+                                groupId={groupId}
                             />
                         ) : (
                             <div className="empty-gantt">
@@ -55,7 +56,11 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                 store.viewMode === 'tasks' ? (
                     <Timebox />
                 ) : (
-                    <TasksView tasks={group.tasks} onTaskClick={handleTaskClick} />
+                    <TasksView
+                        tasks={group.tasks}
+                        onTaskClick={handleTaskClick}
+                        groupId={groupId}
+                    />
                 )
             )}
 

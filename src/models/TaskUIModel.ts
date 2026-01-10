@@ -15,6 +15,18 @@ export class TaskUIModel {
         position: { x: 0, y: 0 }
     };
 
+    labelContext = {
+        isOpen: false,
+        position: { x: 0, y: 0 }
+    };
+
+    recurrenceContext = {
+        isOpen: false,
+        mode: 'set' as 'set' | 'actions', // 'set' for MakeRecurring, 'actions' for RecurringActions
+        position: { x: 0, y: 0 }
+    };
+
+
     actionContext = {
         isOpen: false,
         position: { x: 0, y: 0 }
@@ -47,18 +59,44 @@ export class TaskUIModel {
         this.draftTitle = value;
     }
 
-    openTimeContext(e: React.MouseEvent, type: 'actual' | 'estimated') {
+    openTimeContext(e: React.MouseEvent, type: 'actual' | 'estimated', pos?: { x: number; y: number }) {
         e.stopPropagation();
         this.timeContext = {
             isOpen: true,
             type,
-            position: { x: e.clientX, y: e.clientY }
+            position: pos || { x: e.clientX, y: e.clientY }
         };
     }
 
     closeTimeContext() {
         this.timeContext.isOpen = false;
     }
+
+    openLabelContext(e: React.MouseEvent, pos?: { x: number; y: number }) {
+        e.stopPropagation();
+        this.labelContext = {
+            isOpen: true,
+            position: pos || { x: e.clientX, y: e.clientY }
+        };
+    }
+
+    closeLabelContext() {
+        this.labelContext.isOpen = false;
+    }
+
+    openRecurrenceContext(e: React.MouseEvent, mode: 'set' | 'actions', pos?: { x: number; y: number }) {
+        e.stopPropagation();
+        this.recurrenceContext = {
+            isOpen: true,
+            mode,
+            position: pos || { x: e.clientX, y: e.clientY }
+        };
+    }
+
+    closeRecurrenceContext() {
+        this.recurrenceContext.isOpen = false;
+    }
+
 
     openActionContext(e: React.MouseEvent) {
         e.preventDefault();

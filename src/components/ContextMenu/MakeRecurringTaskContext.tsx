@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
+import { RecurrenceType } from '../../models/core';
 import { ContextMenu, MenuItem, MenuHeader, ToggleSwitch } from './ContextMenu';
 
-type RecurrenceType =
-    | 'none'
-    | 'daily'
-    | 'weekday'
-    | 'weekly'
-    | 'biweekly'
-    | 'monthly'
-    | 'yearly'
-    | 'custom';
 
 interface MakeRecurringTaskContextProps {
     isOpen: boolean;

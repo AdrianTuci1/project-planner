@@ -36,7 +36,18 @@ export interface ITask {
     createdAt: Date;
     scheduledDate?: Date; // For Gantt/Calendar
     labels: string[];
+    recurrence?: RecurrenceType;
 }
+
+export type RecurrenceType =
+    | 'none'
+    | 'daily'
+    | 'weekday'
+    | 'weekly'
+    | 'biweekly'
+    | 'monthly'
+    | 'yearly'
+    | 'custom';
 
 export interface IGroup {
     id: string;
@@ -76,6 +87,7 @@ export class Task implements ITask {
     createdAt: Date;
     scheduledDate?: Date;
     labels: string[] = [];
+    recurrence: RecurrenceType = 'none';
 
     constructor(title: string) {
         this.id = uuidv4();
@@ -123,6 +135,7 @@ export class Task implements ITask {
         });
         newTask.scheduledDate = this.scheduledDate ? new Date(this.scheduledDate) : undefined;
         newTask.labels = [...this.labels];
+        newTask.recurrence = this.recurrence;
         return newTask;
     }
 }

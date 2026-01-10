@@ -16,6 +16,10 @@ import {
 } from 'lucide-react';
 import { format, setHours, setMinutes, getHours, getMinutes } from 'date-fns';
 import { DateTimePickerContext } from '../ContextMenu/DateTimePickerContext';
+import { TimeInputContext } from '../ContextMenu/TimeInputContext';
+import { CreateLabelContext } from '../ContextMenu/CreateLabelContext';
+import { MakeRecurringTaskContext } from '../ContextMenu/MakeRecurringTaskContext';
+import { RecurringTaskActionsContext } from '../ContextMenu/RecurringTaskActionsContext';
 import './TaskModal.css';
 
 interface TaskModalProps {
@@ -55,7 +59,13 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         <div
                             className="meta-row"
                             onClick={(e) => {
-                                ui.setContextPosition({ x: e.clientX, y: e.clientY });
+                                const valueEl = e.currentTarget.querySelector('.meta-row-value');
+                                if (valueEl) {
+                                    const rect = valueEl.getBoundingClientRect();
+                                    ui.setContextPosition({ x: rect.left, y: rect.bottom + 4 });
+                                } else {
+                                    ui.setContextPosition({ x: e.clientX, y: e.clientY });
+                                }
                                 ui.setContextMenuOpen(true);
                             }}
                         >
@@ -72,7 +82,15 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         </div>
 
                         {/* Estimated Time */}
-                        <div className="meta-row">
+                        {/* Estimated Time */}
+                        <div
+                            className="meta-row"
+                            onClick={(e) => {
+                                const valueEl = e.currentTarget.querySelector('.meta-row-value');
+                                const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
+                                ui.openTimeContext(e, 'estimated', pos);
+                            }}
+                        >
                             <div className="meta-row-label">
                                 <Clock size={18} />
                                 <span>Estimated time</span>
@@ -85,19 +103,41 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         </div>
 
                         {/* Actual Time */}
-                        <div className="meta-row">
+                        {/* Actual Time */}
+                        <div
+                            className="meta-row"
+                            onClick={(e) => {
+                                const valueEl = e.currentTarget.querySelector('.meta-row-value');
+                                const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
+                                ui.openTimeContext(e, 'actual', pos);
+                            }}
+                        >
                             <div className="meta-row-label">
                                 <Clock size={18} />
                                 <span>Actual time</span>
                             </div>
                             <div className="meta-row-value">
-                                <span className="value-placeholder">Click to edit</span>
+                                {task.actualDuration ? (
+                                    <span className="value-main">
+                                        {Math.floor(task.actualDuration / 60)}h {task.actualDuration % 60}m
+                                    </span>
+                                ) : (
+                                    <span className="value-placeholder">Click to edit</span>
+                                )}
                                 <span className="value-sub">(Start timer)</span>
                             </div>
                         </div>
 
                         {/* Label */}
-                        <div className="meta-row">
+                        {/* Label */}
+                        <div
+                            className="meta-row"
+                            onClick={(e) => {
+                                const valueEl = e.currentTarget.querySelector('.meta-row-value');
+                                const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
+                                ui.openLabelContext(e, pos);
+                            }}
+                        >
                             <div className="meta-row-label">
                                 <Tag size={18} />
                                 <span>Label</span>
@@ -110,13 +150,26 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         </div>
 
                         {/* Repeats */}
-                        <div className="meta-row">
+                        <div
+                            className="meta-row"
+                            onClick={(e) => {
+                                const valueEl = e.currentTarget.querySelector('.meta-row-value');
+                                const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
+                                ui.openRecurrenceContext(
+                                    e,
+                                    task.recurrence && task.recurrence !== 'none' ? 'actions' : 'set',
+                                    pos
+                                );
+                            }}
+                        >
                             <div className="meta-row-label">
                                 <RotateCw size={18} />
                                 <span>Repeats</span>
                             </div>
                             <div className="meta-row-value">
-                                <span className="value-placeholder">Does not repeat</span>
+                                <span className="value-placeholder">
+                                    {task.recurrence && task.recurrence !== 'none' ? task.recurrence : 'Does not repeat'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -130,7 +183,17 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                             className="tc-notes-textarea"
                             placeholder="Add any notes to the task..."
                             value={task.description}
-                            onChange={(e) => task.description = e.target.value}
+                            onChange={(e) => {
+                                task.description = e.target.value;
+                                e.target.style.height = 'auto';
+                                e.target.style.height = e.target.scrollHeight + 'px';
+                            }}
+                            ref={(el) => {
+                                if (el) {
+                                    el.style.height = 'auto';
+                                    el.style.height = el.scrollHeight + 'px';
+                                }
+                            }}
                         />
                     </div>
 
@@ -195,21 +258,72 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                     </div>
                 )}
 
-                <DateTimePickerContext
-                    isOpen={ui.isContextMenuOpen}
-                    onClose={() => ui.setContextMenuOpen(false)}
-                    position={ui.contextPosition}
-                    selectedDate={task.scheduledDate}
-                    onSelect={(date) => {
-                        task.scheduledDate = date;
-                    }}
-                    onRemoveTime={() => {
-                        if (task.scheduledDate) {
-                            task.scheduledDate = setHours(setMinutes(new Date(task.scheduledDate), 0), 0);
-                        }
+
+            </div>
+
+            <DateTimePickerContext
+                isOpen={ui.isContextMenuOpen}
+                onClose={() => ui.setContextMenuOpen(false)}
+                position={ui.contextPosition}
+                selectedDate={task.scheduledDate}
+                onSelect={(date) => {
+                    task.scheduledDate = date;
+                }}
+                onRemoveTime={() => {
+                    if (task.scheduledDate) {
+                        task.scheduledDate = setHours(setMinutes(new Date(task.scheduledDate), 0), 0);
+                    }
+                }}
+            />
+
+            <TimeInputContext
+                isOpen={ui.timeContext.isOpen}
+                onClose={() => ui.closeTimeContext()}
+                position={ui.timeContext.position}
+                title={ui.timeContext.type === 'estimated' ? 'Set estimated time' : 'Set actual time'}
+                initialDuration={ui.timeContext.type === 'estimated' ? task.duration : task.actualDuration}
+                onSave={(duration) => {
+                    if (ui.timeContext.type === 'estimated') {
+                        task.duration = duration;
+                    } else {
+                        task.actualDuration = duration;
+                    }
+                }}
+            />
+
+            <CreateLabelContext
+                isOpen={ui.labelContext.isOpen}
+                onClose={() => ui.closeLabelContext()}
+                position={ui.labelContext.position}
+                onCreateLabel={(name) => {
+                    task.labels.push(name);
+                }}
+            />
+
+            {ui.recurrenceContext.mode === 'set' ? (
+                <MakeRecurringTaskContext
+                    isOpen={ui.recurrenceContext.isOpen}
+                    onClose={() => ui.closeRecurrenceContext()}
+                    position={ui.recurrenceContext.position}
+                    selectedRecurrence={task.recurrence}
+                    onSelectRecurrence={(type) => {
+                        task.recurrence = type;
+                        ui.closeRecurrenceContext();
                     }}
                 />
-            </div>
+            ) : (
+                <RecurringTaskActionsContext
+                    isOpen={ui.recurrenceContext.isOpen}
+                    onClose={() => ui.closeRecurrenceContext()}
+                    position={ui.recurrenceContext.position}
+                    recurrenceDescription={task.recurrence}
+                    onStopRepeating={() => {
+                        task.recurrence = 'none';
+                        ui.closeRecurrenceContext();
+                    }}
+                // Note: Update All and Delete All not fully implemented yet in basic Task model
+                />
+            )}
         </div>
     );
 });

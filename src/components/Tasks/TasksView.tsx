@@ -10,9 +10,10 @@ import './TasksView.css';
 interface TasksViewProps {
     tasks: Task[];
     onTaskClick: (task: Task) => void;
+    groupId?: string | null;
 }
 
-export const TasksView = observer(({ tasks, onTaskClick }: TasksViewProps) => {
+export const TasksView = observer(({ tasks, onTaskClick, groupId }: TasksViewProps) => {
     const [isAddingTask, setIsAddingTask] = useState(false);
     const currentDate = store.viewDate;
     const today = startOfDay(new Date());
@@ -48,24 +49,56 @@ export const TasksView = observer(({ tasks, onTaskClick }: TasksViewProps) => {
         store.setDate(addDays(currentDate, 1));
     };
 
+    const getTargetGroup = () => {
+        if (groupId === null) return null; // Brain Dump
+        if (groupId) return store.groups.find(g => g.id === groupId); // Specific group
+        return store.activeGroup; // Fallback
+    };
+
     const handleCreateTask = (title: string) => {
-        if (title && store.activeGroup) {
+        if (!title) return;
+
+        const targetGroup = getTargetGroup();
+
+        if (groupId === null) {
             const newTask = new Task(title);
             newTask.scheduledDate = currentDate;
-            store.activeGroup.addTask(newTask);
-            // setIsAddingTask(false); // Keep open for multiple entry
+            store.dumpAreaTasks.push(newTask);
+            return;
+        }
+
+        if (targetGroup) {
+            const newTask = new Task(title);
+            newTask.scheduledDate = currentDate;
+            targetGroup.addTask(newTask);
         }
     };
 
     const handleDuplicateTask = (task: Task) => {
-        if (store.activeGroup) {
-            store.activeGroup.duplicateTask(task.id);
+        const targetGroup = getTargetGroup();
+
+        if (groupId === null) {
+            const clone = task.clone();
+            store.dumpAreaTasks.push(clone);
+            return;
+        }
+
+        if (targetGroup) {
+            targetGroup.duplicateTask(task.id);
         }
     };
 
     const handleDeleteTask = (task: Task) => {
-        if (store.activeGroup && confirm('Are you sure you want to delete this task?')) {
-            store.activeGroup.removeTask(task.id);
+        if (confirm('Are you sure you want to delete this task?')) {
+            if (groupId === null) {
+                store.dumpAreaTasks = store.dumpAreaTasks.filter(t => t.id !== task.id);
+                return;
+            }
+
+            const targetGroup = getTargetGroup();
+            if (targetGroup) {
+                targetGroup.removeTask(task.id);
+            }
         }
     };
 
