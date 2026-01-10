@@ -14,6 +14,14 @@ class ProjectStore {
     dumpAreaTasks: Task[] = [];
     currentUser: IParticipant = MOCK_USER;
 
+    availableLabels: { id: string; name: string; color: string }[] = [
+        { id: 'l1', name: 'Design', color: '#8B5CF6' },
+        { id: 'l2', name: 'Important', color: '#EF4444' },
+        { id: 'l3', name: 'Home', color: '#FF2D55' },
+        { id: 'l4', name: 'Work', color: '#3B82F6' },
+        { id: 'l5', name: 'Lam', color: '#FFD60A' },
+    ];
+
     // UI State
     activeGroupId: string | null = null;
     isSidebarOpen: boolean = true;
@@ -89,6 +97,11 @@ class ProjectStore {
 
     setViewMode(mode: 'calendar' | 'tasks') {
         this.viewMode = mode;
+    }
+
+    getLabelColor(labelName: string): string {
+        const label = this.availableLabels.find(l => l.name === labelName);
+        return label ? label.color : '#60A5FA'; // Default blue if not found
     }
 
     addTaskToDump(title: string) {

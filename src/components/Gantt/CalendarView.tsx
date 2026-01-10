@@ -85,11 +85,12 @@ export const CalendarView = observer(({ tasks, onTaskClick }: CalendarViewProps)
                                             const height = (roundedDuration / 60) * 100; // Percentage height relative to hour cell
 
                                             const fontSize = duration <= 15 ? '10px' : '12px';
+                                            const backgroundColor = task.labels.length > 0 ? store.getLabelColor(task.labels[0]) : '#60A5FA';
 
                                             return (
                                                 <div
                                                     key={task.id}
-                                                    className="calendar-event"
+                                                    className={`calendar-event ${task.status === 'done' ? 'completed' : ''}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         onTaskClick(task);
@@ -97,18 +98,33 @@ export const CalendarView = observer(({ tasks, onTaskClick }: CalendarViewProps)
                                                     style={{
                                                         top: `${top}%`,
                                                         height: `${height}%`,
-                                                        backgroundColor: task.labels.length > 0 ? '#FCD34D' : '#60A5FA',
+                                                        backgroundColor: backgroundColor,
                                                         fontSize: fontSize,
                                                         position: 'absolute',
-                                                        zIndex: 1
+                                                        zIndex: 1,
+                                                        maxWidth: '100%', // Ensure it doesn't exceed slot
+                                                        boxSizing: 'border-box'
                                                     }}
                                                 >
-                                                    <div className="event-title" style={{ fontSize }}>{task.title}</div>
-                                                    {task.scheduledDate && duration > 20 && (
-                                                        <div className="event-time" style={{ fontSize: `calc(${fontSize} - 1px)` }}>
-                                                            {formatTaskTime(task.scheduledDate)}
+                                                    <div className="event-content-wrapper">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={task.status === 'done'}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            onChange={(e) => {
+                                                                task.toggleStatus();
+                                                            }}
+                                                            className="task-checkbox"
+                                                        />
+                                                        <div className="event-details">
+                                                            <div className="event-title" style={{ fontSize }}>{task.title}</div>
+                                                            {task.scheduledDate && duration > 20 && (
+                                                                <div className="event-time" style={{ fontSize: `calc(${fontSize} - 1px)` }}>
+                                                                    {formatTaskTime(task.scheduledDate)}
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    )}
+                                                    </div>
                                                 </div>
                                             );
                                         })}

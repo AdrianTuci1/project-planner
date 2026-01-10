@@ -91,8 +91,8 @@ export const TopBar = observer(() => {
                         </div>
                     </div>
 
-                    <div className="avatar-button min-w-[32px] min-h-[32px] w-8 h-8">
-                        {store.currentUser?.initials || 'T'}
+                    <div className="avatar-button">
+                        {store.currentUser?.initials[0] || 'T'}
                     </div>
                 </div>
 

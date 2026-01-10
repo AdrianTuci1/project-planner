@@ -9,6 +9,12 @@ export interface ISubtask {
     isCompleted: boolean;
 }
 
+export interface ILabel {
+    id: string;
+    name: string;
+    color: string;
+}
+
 export interface IParticipant {
     id: string;
     name: string;
