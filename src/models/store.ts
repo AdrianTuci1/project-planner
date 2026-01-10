@@ -30,6 +30,11 @@ class ProjectStore {
     viewDate: Date = new Date();
     timeboxDate: Date = new Date();
 
+    // Filter State
+    filterLabelIds: string[] = [];
+    showCompletedTasks: boolean = true;
+    showTimeboxedTasks: boolean = true;
+
     constructor() {
         makeAutoObservable(this);
         this.seedData();
@@ -97,6 +102,22 @@ class ProjectStore {
 
     setViewMode(mode: 'calendar' | 'tasks') {
         this.viewMode = mode;
+    }
+
+    toggleFilterLabel(labelId: string) {
+        if (this.filterLabelIds.includes(labelId)) {
+            this.filterLabelIds = this.filterLabelIds.filter(id => id !== labelId);
+        } else {
+            this.filterLabelIds.push(labelId);
+        }
+    }
+
+    toggleShowCompleted(show: boolean) {
+        this.showCompletedTasks = show;
+    }
+
+    toggleShowTimeboxed(show: boolean) {
+        this.showTimeboxedTasks = show;
     }
 
     getLabelColor(labelName: string): string {

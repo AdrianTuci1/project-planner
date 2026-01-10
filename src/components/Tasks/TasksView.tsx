@@ -53,7 +53,7 @@ export const TasksView = observer(({ tasks, onTaskClick }: TasksViewProps) => {
             const newTask = new Task(title);
             newTask.scheduledDate = currentDate;
             store.activeGroup.addTask(newTask);
-            setIsAddingTask(false);
+            // setIsAddingTask(false); // Keep open for multiple entry
         }
     };
 

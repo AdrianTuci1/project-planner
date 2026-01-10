@@ -38,23 +38,25 @@ export const TimeEntryContext: React.FC<TimeEntryContextProps> = ({
             <MenuHeader title={title} onClose={onClose} />
             <div style={{ padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginBottom: '4px' }}>Hours</div>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Hours</span>
                         <input
                             type="number"
                             min="0"
                             className="context-menu-input"
+                            style={{ width: '100%', padding: '6px' }}
                             value={hours}
                             onChange={(e) => setHours(parseInt(e.target.value) || 0)}
                         />
                     </div>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginBottom: '4px' }}>Minutes</div>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Minutes</span>
                         <input
                             type="number"
                             min="0"
                             max="59"
                             className="context-menu-input"
+                            style={{ width: '100%', padding: '6px' }}
                             value={minutes}
                             onChange={(e) => setMinutes(parseInt(e.target.value) || 0)}
                         />

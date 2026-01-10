@@ -79,7 +79,7 @@ export const KanbanBoard = observer(({ tasks, onTaskClick }: KanbanBoardProps) =
             const newTask = new Task(title);
             newTask.scheduledDate = date;
             store.activeGroup.addTask(newTask);
-            setAddingTaskDate(null);
+            // We stay in create mode to allow adding multiple tasks
         }
     };
 
@@ -122,6 +122,7 @@ export const KanbanBoard = observer(({ tasks, onTaskClick }: KanbanBoardProps) =
 
                             {isAddingToThisDay && (
                                 <TaskCard
+                                    key="create-task"
                                     isCreating
                                     onCreate={(title) => handleCreateTask(title, date)}
                                     onCancel={() => setAddingTaskDate(null)}
@@ -132,6 +133,7 @@ export const KanbanBoard = observer(({ tasks, onTaskClick }: KanbanBoardProps) =
                                 <TaskCard
                                     key={task.id}
                                     task={task}
+                                    className="kanban-task-card"
                                     onTaskClick={onTaskClick}
                                     onDuplicate={handleDuplicateTask}
                                     onDelete={handleDeleteTask}

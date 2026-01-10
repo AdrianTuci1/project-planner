@@ -1,7 +1,7 @@
 .tasks-view {
     width: 300px;
     height: 100%;
-    background: #1a1a1a;
+    background: var(--bg-sidebar);
     border-left: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
@@ -10,12 +10,13 @@
 
 /* Header */
 .tasks-header {
-    height: 60px;
+    height: 28px;
     padding: 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-subtile);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .tasks-title {

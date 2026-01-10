@@ -13,8 +13,28 @@ import {
 import { addDays } from 'date-fns';
 import '../Layout/KanbanLayout.css';
 
+import { UserContext } from '../ContextMenu/UserContext';
+import { FilterContext } from '../ContextMenu/FilterContext';
+import { SettingsModal } from '../Settings/SettingsModal';
+
 export const TopBar = observer(() => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [filterMenuOpen, setFilterMenuOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+
+    const handleUserClick = (e: React.MouseEvent) => {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        setMenuPosition({ x: rect.right - 200, y: rect.bottom + 5 });
+        setUserMenuOpen(true);
+    };
+
+    const handleFilterClick = (e: React.MouseEvent) => {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        setMenuPosition({ x: rect.left, y: rect.bottom + 5 });
+        setFilterMenuOpen(true);
+    };
 
     const toggleSidebar = () => {
         store.isSidebarOpen = !store.isSidebarOpen;
@@ -69,7 +89,10 @@ export const TopBar = observer(() => {
                         Free Trial (14 days left)
                     </div>
 
-                    <div className="topbar-button filter">
+                    <div
+                        className={`topbar-button filter ${filterMenuOpen ? 'active' : ''}`}
+                        onClick={handleFilterClick}
+                    >
                         <Filter size={14} />
                         Filter
                     </div>
@@ -91,7 +114,10 @@ export const TopBar = observer(() => {
                         </div>
                     </div>
 
-                    <div className="avatar-button">
+                    <div
+                        className="avatar-button"
+                        onClick={handleUserClick}
+                    >
                         {store.currentUser?.initials[0] || 'T'}
                     </div>
                 </div>
@@ -104,6 +130,36 @@ export const TopBar = observer(() => {
                     />
                 </div>
             </div>
+
+            <UserContext
+                isOpen={userMenuOpen}
+                onClose={() => setUserMenuOpen(false)}
+                position={menuPosition}
+                onSettings={() => {
+                    setUserMenuOpen(false);
+                    setIsSettingsOpen(true);
+                }}
+                onLogout={() => console.log('Logout')}
+            />
+
+            {isSettingsOpen && (
+                <SettingsModal onClose={() => setIsSettingsOpen(false)} />
+            )}
+
+            <FilterContext
+                isOpen={filterMenuOpen}
+                onClose={() => setFilterMenuOpen(false)}
+                position={menuPosition}
+                labels={store.availableLabels}
+                selectedLabels={store.filterLabelIds}
+                showComplete={store.showCompletedTasks}
+                showTimeboxed={store.showTimeboxedTasks}
+                onToggleLabel={(id) => store.toggleFilterLabel(id)}
+                onToggleComplete={(val) => store.toggleShowCompleted(val)}
+                onToggleTimeboxed={(val) => store.toggleShowTimeboxed(val)}
+                onSelectAll={() => store.filterLabelIds = store.availableLabels.map(l => l.id)}
+                onClearAll={() => store.filterLabelIds = []}
+            />
         </div>
     );
 });

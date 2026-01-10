@@ -99,6 +99,12 @@ export class Task implements ITask {
         }
     }
 
+    reorderSubtask(fromIndex: number, toIndex: number) {
+        if (fromIndex < 0 || fromIndex >= this.subtasks.length || toIndex < 0 || toIndex >= this.subtasks.length) return;
+        const [moved] = this.subtasks.splice(fromIndex, 1);
+        this.subtasks.splice(toIndex, 0, moved);
+    }
+
     toggleStatus() {
         this.status = this.status === 'done' ? 'todo' : 'done';
     }

@@ -20,7 +20,6 @@ import { Trash2 } from 'lucide-react';
 import './Sidebar.css';
 
 export const Sidebar = observer(() => {
-    const [showSettings, setShowSettings] = useState(false);
     const [showCreateList, setShowCreateList] = useState(false);
     const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
@@ -47,12 +46,6 @@ export const Sidebar = observer(() => {
                     <span className="app-name">
                         simplu
                     </span>
-                    <Settings
-                        size={16}
-                        className="settings-icon"
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => setShowSettings(true)}
-                    />
                 </div>
 
                 <div className="active-list-container">
@@ -197,7 +190,6 @@ export const Sidebar = observer(() => {
 
             </aside>
 
-            {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
             {showCreateList && (
                 <CreateListModal
                     groupId={editingGroupId}

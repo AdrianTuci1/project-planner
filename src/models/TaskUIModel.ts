@@ -88,13 +88,18 @@ export class TaskUIModel {
         }
     }
 
+    lastSubmitTime: number = 0;
+
     handleCreateTask(
         e: React.KeyboardEvent,
         onCreate?: (title: string) => void,
         onCancel?: () => void
     ) {
         if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
             if (this.draftTitle.trim() && onCreate) {
+                this.lastSubmitTime = Date.now();
                 onCreate(this.draftTitle);
                 this.draftTitle = '';
             } else if (onCancel) {
@@ -105,14 +110,31 @@ export class TaskUIModel {
         }
     }
 
-    handleBlur(e: React.FocusEvent, isCreating?: boolean, onCancel?: () => void) {
+    handleBlur(e: React.FocusEvent, isCreating?: boolean, onCancel?: () => void, onCreate?: (title: string) => void) {
+        // If we recently submitted (e.g. via Enter), ignore blur to prevent closing
+        if (Date.now() - this.lastSubmitTime < 200) {
+            // Keep focus if possible? Logic is just to avoid Cancel
+            // Re-focus might be needed if focus was truly lost, but usually this is just preventing the side-effect
+            // Actually, if we want to create multiple tasks, we want to stay.
+            (e.target as HTMLElement).focus();
+            return;
+        }
+
         // If we are clicking inside a context menu or another part of the card, don't cancel
+        // Also check if we are creating and have a title, we might want to create on blur
         if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget as Node)) {
             return;
         }
 
-        if (isCreating && !this.draftTitle.trim() && onCancel) {
-            onCancel();
+        if (isCreating) {
+            if (this.draftTitle.trim() && onCreate) {
+                onCreate(this.draftTitle);
+                // After creating on blur, we usually want to close/cancel the creation mode 
+                // because focus is lost.
+                if (onCancel) onCancel();
+            } else if (onCancel) {
+                onCancel();
+            }
         }
         this.isSubtaskMode = false;
         this.isTimeExpanded = false;

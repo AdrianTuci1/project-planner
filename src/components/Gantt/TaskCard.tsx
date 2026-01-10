@@ -19,7 +19,7 @@ import { TaskUIModel } from '../../models/TaskUIModel';
 import { format, getHours, getMinutes } from 'date-fns';
 import './TaskCard.css';
 
-interface TaskCardProps {
+export interface TaskCardProps {
     task?: Task;
     isGhost?: boolean;
     isCreating?: boolean;
@@ -29,9 +29,23 @@ interface TaskCardProps {
     onCancel?: () => void;
     onDuplicate?: (task: Task) => void;
     onDelete?: (task: Task) => void;
+    style?: React.CSSProperties;
+    className?: string;
 }
 
-export const TaskCard = observer(({ task, isGhost, isCreating, onAddClick, onTaskClick, onCreate, onCancel, onDuplicate, onDelete }: TaskCardProps) => {
+export const TaskCard = observer(({
+    task,
+    isGhost,
+    isCreating,
+    onAddClick,
+    onTaskClick,
+    onCreate,
+    onCancel,
+    onDuplicate,
+    onDelete,
+    style,
+    className
+}: TaskCardProps) => {
     const ui = useMemo(() => new TaskUIModel(), []);
 
     if (isGhost) {
@@ -51,14 +65,21 @@ export const TaskCard = observer(({ task, isGhost, isCreating, onAddClick, onTas
         return `${h}h ${m}m`;
     };
 
+    const formatTimeMinimal = (minutes: number = 0) => {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        return `${h}:${m}`;
+    };
+
     return (
         <>
             <div
                 tabIndex={0}
-                className={`task-card ${ui.isHovered || isCreating ? 'hovered' : ''} ${isCreating ? 'creating' : ''}`}
+                className={`task-card ${ui.isHovered || isCreating ? 'hovered' : ''} ${isCreating ? 'creating' : ''} ${className || ''}`}
+                style={style}
                 onMouseEnter={() => ui.setHovered(true)}
                 onMouseLeave={() => ui.setHovered(false)}
-                onBlur={(e) => ui.handleBlur(e, isCreating, onCancel)}
+                onBlur={(e) => ui.handleBlur(e, isCreating, onCancel, onCreate)}
                 onClick={() => !isCreating && onTaskClick?.(task!)}
                 onContextMenu={(e) => ui.openActionContext(e)}
             >
@@ -78,7 +99,13 @@ export const TaskCard = observer(({ task, isGhost, isCreating, onAddClick, onTas
                             placeholder="Task name"
                             value={ui.draftTitle}
                             onChange={e => ui.setDraftTitle(e.target.value)}
-                            onKeyDown={(e) => ui.handleCreateTask(e, onCreate, onCancel)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault(); // Prevent newline
+                                    e.stopPropagation();
+                                    ui.handleCreateTask(e, onCreate, onCancel);
+                                }
+                            }}
                             onClick={e => e.stopPropagation()}
                         />
                     ) : (
@@ -87,52 +114,85 @@ export const TaskCard = observer(({ task, isGhost, isCreating, onAddClick, onTas
                         </span>
                     )}
 
-                    <div
-                        className="tc-time-badge"
-                        onClick={(e) => { e.stopPropagation(); ui.setTimeExpanded(!ui.isTimeExpanded); }}
-                    >
-                        {formatTime(task?.duration || 0)}
-                    </div>
-                </div>
-
-                <div className="tc-footer">
-                    {(ui.isHovered || isCreating) ? (
-                        <>
-                            <div className="tc-label">Select Label</div>
-                            <div className="tc-actions">
-                                <Flag size={14} className="tc-action-icon" />
-                                <Link2
-                                    size={14}
-                                    className="tc-action-icon"
-                                    onClick={(e) => { e.stopPropagation(); ui.setSubtaskMode(!ui.isSubtaskMode); }}
-                                />
-                                <RotateCw size={14} className="tc-action-icon" />
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            {task?.labels && task.labels.length > 0 && (
-                                <div className="tc-label">
-                                    <div className="tc-label-dot" />
-                                    {task.labels[0]}
-                                </div>
-                            )}
-                            {task?.scheduledDate && (getHours(task.scheduledDate) !== 0 || getMinutes(task.scheduledDate) !== 0) && (
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                                    {format(task.scheduledDate, 'h:mmaaa')}
-                                </div>
-                            )}
-                        </>
+                    {(task?.duration || 0) > 0 && (
+                        <div
+                            className="tc-time-badge"
+                            onClick={(e) => { e.stopPropagation(); ui.setTimeExpanded(!ui.isTimeExpanded); }}
+                        >
+                            {formatTimeMinimal(task?.duration || 0)}
+                        </div>
                     )}
                 </div>
+
+                {(ui.isHovered || isCreating || (task?.labels && task.labels.length > 0) || (task?.scheduledDate && (getHours(task.scheduledDate) !== 0 || getMinutes(task.scheduledDate) !== 0))) && (
+                    <div className="tc-footer">
+                        {(ui.isHovered || isCreating) ? (
+                            <>
+                                <div className="tc-label">
+                                    {task?.labels && task.labels.length > 0 ? (
+                                        <>
+                                            <div className="tc-label-dot" />
+                                            {task.labels[0]}
+                                        </>
+                                    ) : (
+                                        "Select Label"
+                                    )}
+                                </div>
+                                <div className="tc-actions">
+                                    <Flag size={14} className="tc-action-icon" />
+                                    <Link2
+                                        size={14}
+                                        className="tc-action-icon"
+                                        onClick={(e) => { e.stopPropagation(); ui.setSubtaskMode(!ui.isSubtaskMode); }}
+                                    />
+                                    <RotateCw size={14} className="tc-action-icon" />
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                {task?.labels && task.labels.length > 0 && (
+                                    <div className="tc-label">
+                                        <div className="tc-label-dot" />
+                                        {task.labels[0]}
+                                    </div>
+                                )}
+                                {task?.scheduledDate && (getHours(task.scheduledDate) !== 0 || getMinutes(task.scheduledDate) !== 0) && (
+                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                                        {format(task.scheduledDate, 'h:mmaaa')}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
 
                 {ui.isSubtaskMode && task && (
                     <>
                         <div className="tc-divider" />
                         <div className="tc-subtasks-list" onClick={e => e.stopPropagation()}>
-                            {task.subtasks.map(sub => (
-                                <div key={sub.id} className="tc-subtask-item">
-                                    <GripVertical size={12} color="var(--text-muted)" />
+                            {task.subtasks.map((sub, index) => (
+                                <div
+                                    key={sub.id}
+                                    className="tc-subtask-item"
+                                    draggable
+                                    onDragStart={(e) => {
+                                        e.stopPropagation();
+                                        e.dataTransfer.setData('text/plain', index.toString());
+                                    }}
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                                        if (fromIndex !== index) {
+                                            task.reorderSubtask(fromIndex, index);
+                                        }
+                                    }}
+                                >
+                                    <GripVertical size={12} color="var(--text-muted)" style={{ cursor: 'grab' }} />
                                     <div
                                         className={`tc-checkbox ${sub.isCompleted ? 'checked' : ''}`}
                                         onClick={() => sub.isCompleted = !sub.isCompleted}
