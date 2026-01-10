@@ -16,6 +16,7 @@ import {
 import { TimeEntryContext } from '../ContextMenu/TimeEntryContext';
 import { ContextMenu, MenuItem } from '../ContextMenu/ContextMenu';
 import { TaskUIModel } from '../../models/TaskUIModel';
+import { format, getHours, getMinutes } from 'date-fns';
 import './TaskCard.css';
 
 interface TaskCardProps {
@@ -116,9 +117,11 @@ export const TaskCard = observer(({ task, isGhost, isCreating, onAddClick, onTas
                                     {task.labels[0]}
                                 </div>
                             )}
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                                9:30pm
-                            </div>
+                            {task?.scheduledDate && (getHours(task.scheduledDate) !== 0 || getMinutes(task.scheduledDate) !== 0) && (
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                                    {format(task.scheduledDate, 'h:mmaaa')}
+                                </div>
+                            )}
                         </>
                     )}
                 </div>

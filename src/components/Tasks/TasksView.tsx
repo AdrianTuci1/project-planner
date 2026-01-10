@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { Task } from '../../models/core';
 import { format, addDays, isSameDay, startOfDay } from 'date-fns';
-import { ChevronLeft, ChevronRight, CheckSquare, Circle } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { TaskCard } from '../Gantt/TaskCard';
 import './TasksView.css';
 
 interface TasksViewProps {
@@ -12,6 +13,7 @@ interface TasksViewProps {
 }
 
 export const TasksView = observer(({ tasks, onTaskClick }: TasksViewProps) => {
+    const [isAddingTask, setIsAddingTask] = useState(false);
     const currentDate = store.viewDate;
     const today = startOfDay(new Date());
     const isToday = isSameDay(currentDate, today);
@@ -34,10 +36,6 @@ export const TasksView = observer(({ tasks, onTaskClick }: TasksViewProps) => {
         return `${hours}:${mins.toString().padStart(2, '0')}`;
     };
 
-    const formatTime = (date: Date) => {
-        return format(date, 'h:mma').toLowerCase();
-    };
-
     const goToPreviousDay = () => {
         store.setDate(addDays(currentDate, -1));
     };
@@ -48,6 +46,27 @@ export const TasksView = observer(({ tasks, onTaskClick }: TasksViewProps) => {
 
     const goToNextDay = () => {
         store.setDate(addDays(currentDate, 1));
+    };
+
+    const handleCreateTask = (title: string) => {
+        if (title && store.activeGroup) {
+            const newTask = new Task(title);
+            newTask.scheduledDate = currentDate;
+            store.activeGroup.addTask(newTask);
+            setIsAddingTask(false);
+        }
+    };
+
+    const handleDuplicateTask = (task: Task) => {
+        if (store.activeGroup) {
+            store.activeGroup.duplicateTask(task.id);
+        }
+    };
+
+    const handleDeleteTask = (task: Task) => {
+        if (store.activeGroup && confirm('Are you sure you want to delete this task?')) {
+            store.activeGroup.removeTask(task.id);
+        }
     };
 
     return (
@@ -72,17 +91,13 @@ export const TasksView = observer(({ tasks, onTaskClick }: TasksViewProps) => {
             </div>
 
             {/* Current Date */}
-            <div className="tasks-date">
-                <span className="date-text">
-                    {format(currentDate, 'EEE MMM d')}
-                </span>
-                {isToday && <span className="today-badge">Today</span>}
-            </div>
-
-            {/* Add Task Input */}
-            <div className="add-task-input">
-                <Circle size={20} className="task-circle" />
-                <input type="text" placeholder="Add a task" />
+            <div className="tasks-date-row">
+                <div className="tasks-date">
+                    <span className="date-text">
+                        {format(currentDate, 'EEE MMM d')}
+                    </span>
+                    {isToday && <span className="today-badge">Today</span>}
+                </div>
                 <span className="time-summary">
                     {formatDuration(totalCompleted)} / {formatDuration(totalScheduled)}
                 </span>
@@ -90,59 +105,30 @@ export const TasksView = observer(({ tasks, onTaskClick }: TasksViewProps) => {
 
             {/* Tasks List */}
             <div className="tasks-list">
+                <TaskCard
+                    isGhost
+                    onAddClick={() => setIsAddingTask(true)}
+                />
+
+                {isAddingTask && (
+                    <TaskCard
+                        isCreating
+                        onCreate={handleCreateTask}
+                        onCancel={() => setIsAddingTask(false)}
+                    />
+                )}
+
                 {tasksForDate.map(task => (
-                    <div
+                    <TaskCard
                         key={task.id}
-                        className={`task-item ${task.status === 'done' ? 'completed' : ''}`}
-                        onClick={() => onTaskClick(task)}
-                    >
-                        <div className="task-main">
-                            <div
-                                className="task-checkbox"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    task.toggleStatus();
-                                }}
-                            >
-                                {task.status === 'done' ? (
-                                    <CheckSquare size={20} className="checked" />
-                                ) : (
-                                    <Circle size={20} />
-                                )}
-                            </div>
-                            <div className="task-content">
-                                <div className="task-title-row">
-                                    <span className="task-title">{task.title}</span>
-                                    {task.duration && (
-                                        <span className="task-duration-badge">
-                                            {formatDuration(task.duration)}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="task-meta">
-                                    {task.labels.length > 0 && (
-                                        <div className="task-label">
-                                            <div className="label-dot" style={{
-                                                backgroundColor: task.labels[0] === 'Design' || task.labels[0] === 'Important' ? '#FCD34D' : '#EF4444'
-                                            }} />
-                                            <span>{task.labels[0]}</span>
-                                        </div>
-                                    )}
-                                    {task.scheduledDate && (
-                                        <span className="task-time">{formatTime(task.scheduledDate)}</span>
-                                    )}
-                                    {task.subtasks.length > 0 && (
-                                        <span className="task-subtasks">
-                                            🔁 {task.subtasks.filter(s => s.isCompleted).length}/{task.subtasks.length}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        task={task}
+                        onTaskClick={onTaskClick}
+                        onDuplicate={handleDuplicateTask}
+                        onDelete={handleDeleteTask}
+                    />
                 ))}
 
-                {tasksForDate.length === 0 && (
+                {tasksForDate.length === 0 && !isAddingTask && (
                     <div className="empty-tasks">
                         <p>No tasks scheduled for this day</p>
                     </div>

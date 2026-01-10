@@ -20,6 +20,7 @@ class ProjectStore {
     isRightSidebarOpen: boolean = true;
     viewMode: 'calendar' | 'tasks' = 'tasks';
     viewDate: Date = new Date();
+    timeboxDate: Date = new Date();
 
     constructor() {
         makeAutoObservable(this);
@@ -49,6 +50,10 @@ class ProjectStore {
 
     setDate(date: Date) {
         this.viewDate = date;
+    }
+
+    setTimeboxDate(date: Date) {
+        this.timeboxDate = date;
     }
 
     toggleRightSidebar() {

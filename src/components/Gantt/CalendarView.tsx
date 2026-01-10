@@ -2,7 +2,7 @@ import React from 'react';
 import { observer } from 'mobx-react-lite';
 import { Task } from '../../models/core';
 import { store } from '../../models/store';
-import { format, addDays, isSameDay, startOfWeek, startOfDay, getHours } from 'date-fns';
+import { format, addDays, isSameDay, startOfWeek, startOfDay, getHours, getMinutes } from 'date-fns';
 import './CalendarView.css';
 
 interface CalendarViewProps {
@@ -17,13 +17,17 @@ export const CalendarView = observer(({ tasks, onTaskClick }: CalendarViewProps)
 
     const today = startOfDay(new Date());
 
-    // Time slots for full 24 hours (0-23)
-    const timeSlots = Array.from({ length: 24 }, (_, i) => ({
-        label: i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`,
-        hour: i
-    }));
+    // Create 24 hours (0-23)
+    const hours = Array.from({ length: 24 }, (_, i) => i);
 
-    const getTasksForDayAndHour = (date: Date, hour: number) => {
+    const getHourLabel = (hour: number) => {
+        if (hour === 0) return '12 AM';
+        if (hour < 12) return `${hour} AM`;
+        if (hour === 12) return '12 PM';
+        return `${hour - 12} PM`;
+    };
+
+    const getTasksForDayHour = (date: Date, hour: number) => {
         return tasks.filter(t => {
             if (!t.scheduledDate) return false;
             if (!isSameDay(t.scheduledDate, date)) return false;
@@ -38,61 +42,83 @@ export const CalendarView = observer(({ tasks, onTaskClick }: CalendarViewProps)
     };
 
     return (
-        <div className="calendar-view-grid">
-            {/* Header Row */}
-            <div className="calendar-header-row">
-                <div className="time-column-header"></div>
-                {days.map(date => {
-                    const isToday = isSameDay(date, today);
-                    return (
-                        <div key={date.toString()} className={`day-column-header ${isToday ? 'today' : ''}`}>
-                            <div className="day-name">{format(date, 'EEE')}</div>
-                            <div className={`day-number ${isToday ? 'today-number' : ''}`}>
-                                {format(date, 'd')}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Time Slots Grid */}
-            <div className="calendar-grid-body">
-                {timeSlots.map((slot) => (
-                    <div key={slot.hour} className="time-row">
-                        <div className="time-label">{slot.label}</div>
+        <div className="calendar-view-container">
+            <table className="calendar-table">
+                <thead className="calendar-header">
+                    <tr>
+                        <th className="time-column-header"></th>
                         {days.map(date => {
-                            const cellTasks = getTasksForDayAndHour(date, slot.hour);
                             const isToday = isSameDay(date, today);
-
                             return (
-                                <div
-                                    key={`${date.toString()}-${slot.hour}`}
-                                    className={`time-cell ${isToday ? 'today-cell' : ''}`}
-                                >
-                                    {cellTasks.map(task => (
-                                        <div
-                                            key={task.id}
-                                            className="calendar-event"
-                                            onClick={() => onTaskClick(task)}
-                                            style={{
-                                                backgroundColor: task.labels.length > 0 ? '#FCD34D' : '#60A5FA',
-                                            }}
-                                        >
-                                            <div className="event-title">{task.title}</div>
-                                            {task.scheduledDate && (
-                                                <div className="event-time">
-                                                    {formatTaskTime(task.scheduledDate)}
-                                                    {task.duration && ` - ${format(addDays(task.scheduledDate, 0), 'h:mm')}`}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
+                                <th key={date.toString()} className={`day-column-header ${isToday ? 'today' : ''}`}>
+                                    <div className="day-header-content">
+                                        <span className="day-name">{format(date, 'EEE')}</span>
+                                        <span className={`day-number ${isToday ? 'today-number' : ''}`}>
+                                            {format(date, 'd')}
+                                        </span>
+                                    </div>
+                                </th>
                             );
                         })}
-                    </div>
-                ))}
-            </div>
+                    </tr>
+                </thead>
+                <tbody className="calendar-body">
+                    {hours.map(hour => (
+                        <tr key={hour} className="hour-row">
+                            <td className="time-label">
+                                <div className="time-cell-visual">
+                                    <span className="time-text">{getHourLabel(hour)}</span>
+                                </div>
+                            </td>
+                            {days.map(date => {
+                                const isToday = isSameDay(date, today);
+                                return (
+                                    <td key={`${date.toString()}-${hour}`} className={`hour-cell ${isToday ? 'today-cell' : ''}`}>
+                                        {getTasksForDayHour(date, hour).map(task => {
+                                            const taskMinute = getMinutes(task.scheduledDate!);
+                                            const top = (taskMinute / 60) * 100; // Percentage from top
+
+                                            // Calculate height based on duration
+                                            let duration = task.duration || 15;
+                                            // Round to nearest 15 for visual consistency, minimum 15
+                                            const roundedDuration = Math.max(15, Math.round(duration / 15) * 15);
+                                            const height = (roundedDuration / 60) * 100; // Percentage height relative to hour cell
+
+                                            const fontSize = duration <= 15 ? '10px' : '12px';
+
+                                            return (
+                                                <div
+                                                    key={task.id}
+                                                    className="calendar-event"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onTaskClick(task);
+                                                    }}
+                                                    style={{
+                                                        top: `${top}%`,
+                                                        height: `${height}%`,
+                                                        backgroundColor: task.labels.length > 0 ? '#FCD34D' : '#60A5FA',
+                                                        fontSize: fontSize,
+                                                        position: 'absolute',
+                                                        zIndex: 1
+                                                    }}
+                                                >
+                                                    <div className="event-title" style={{ fontSize }}>{task.title}</div>
+                                                    {task.scheduledDate && duration > 20 && (
+                                                        <div className="event-time" style={{ fontSize: `calc(${fontSize} - 1px)` }}>
+                                                            {formatTaskTime(task.scheduledDate)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </td>
+                                );
+                            })}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 });

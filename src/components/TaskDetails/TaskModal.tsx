@@ -14,7 +14,8 @@ import {
     Copy,
     Link
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, setHours, setMinutes, getHours, getMinutes } from 'date-fns';
+import { DateTimePickerContext } from '../ContextMenu/DateTimePickerContext';
 import './TaskModal.css';
 
 interface TaskModalProps {
@@ -51,14 +52,20 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                     {/* Meta Info Rows */}
                     <div className="tc-meta-rows">
                         {/* Task Date */}
-                        <div className="meta-row">
+                        <div
+                            className="meta-row"
+                            onClick={(e) => {
+                                ui.setContextPosition({ x: e.clientX, y: e.clientY });
+                                ui.setContextMenuOpen(true);
+                            }}
+                        >
                             <div className="meta-row-label">
                                 <Calendar size={18} />
                                 <span>Task date</span>
                             </div>
                             <div className="meta-row-value">
                                 <span className="value-main">
-                                    {task.scheduledDate ? format(task.scheduledDate, 'EEEE, d MMM') : 'No date set'}
+                                    {task.scheduledDate ? format(task.scheduledDate, 'EEEE, d MMM' + (getHours(task.scheduledDate) !== 0 || getMinutes(task.scheduledDate) !== 0 ? ' HH:mm' : '')) : 'No date set'}
                                 </span>
                                 <span className="value-sub">(Move to List)</span>
                             </div>
@@ -187,6 +194,21 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         </div>
                     </div>
                 )}
+
+                <DateTimePickerContext
+                    isOpen={ui.isContextMenuOpen}
+                    onClose={() => ui.setContextMenuOpen(false)}
+                    position={ui.contextPosition}
+                    selectedDate={task.scheduledDate}
+                    onSelect={(date) => {
+                        task.scheduledDate = date;
+                    }}
+                    onRemoveTime={() => {
+                        if (task.scheduledDate) {
+                            task.scheduledDate = setHours(setMinutes(new Date(task.scheduledDate), 0), 0);
+                        }
+                    }}
+                />
             </div>
         </div>
     );

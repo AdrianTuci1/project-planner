@@ -20,6 +20,61 @@
     color: var(--text-muted);
 }
 
+.timebox-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-main);
+}
+
+.timebox-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+}
+
+.today-btn {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 24px;
+}
+
+.today-btn:hover {
+    border-color: var(--accent-purple);
+    color: var(--accent-purple);
+}
+
+.today-btn.active {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--accent-purple);
+    border-color: var(--accent-purple);
+}
+
 .timebox-date-row {
     padding: 16px;
     display: flex;
@@ -58,8 +113,19 @@
     /* 1 hour */
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
+    flex-direction: column;
+}
+
+.time-slot-sub {
+    flex: 1;
+    position: relative;
+    display: flex;
     align-items: center;
     padding: 0 var(--space-2);
+}
+
+.time-slot-sub:last-child {
+    border-bottom: none;
 }
 
 .time-label {

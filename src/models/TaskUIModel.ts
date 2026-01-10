@@ -20,6 +20,9 @@ export class TaskUIModel {
         position: { x: 0, y: 0 }
     };
 
+    isContextMenuOpen: boolean = false;
+    contextPosition = { x: 0, y: 0 };
+
     constructor() {
         makeAutoObservable(this);
     }
@@ -68,6 +71,14 @@ export class TaskUIModel {
 
     closeActionContext() {
         this.actionContext.isOpen = false;
+    }
+
+    setContextMenuOpen(value: boolean) {
+        this.isContextMenuOpen = value;
+    }
+
+    setContextPosition(pos: { x: number; y: number }) {
+        this.contextPosition = pos;
     }
 
     handleAddSubtask(e: React.KeyboardEvent, task?: Task) {
