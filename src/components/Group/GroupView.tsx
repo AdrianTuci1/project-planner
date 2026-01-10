@@ -7,6 +7,7 @@ import { Timebox } from '../Gantt/Timebox';
 import { TasksView } from '../Tasks/TasksView';
 import { TopBar } from '../Navigation/TopBar';
 import { TaskModal } from '../TaskDetails/TaskModal';
+import { UpgradeModal } from '../Upgrade/UpgradeModal';
 import { Task } from '../../models/core';
 import './GroupView.css';
 
@@ -68,6 +69,9 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
             {selectedTask && (
                 <TaskModal task={selectedTask} onClose={() => setSelectedTask(null)} />
             )}
+
+            {/* Upgrade Modal */}
+            <UpgradeModal />
         </div>
     );
 });

@@ -35,6 +35,12 @@ class ProjectStore {
     showCompletedTasks: boolean = true;
     showTimeboxedTasks: boolean = true;
 
+    // Analytics State
+    isAnalyticsOpen: boolean = false;
+
+    // Upgrade Modal State
+    isUpgradeModalOpen: boolean = false;
+
     constructor() {
         makeAutoObservable(this);
         this.seedData();
@@ -118,6 +124,18 @@ class ProjectStore {
 
     toggleShowTimeboxed(show: boolean) {
         this.showTimeboxedTasks = show;
+    }
+
+    toggleAnalytics() {
+        this.isAnalyticsOpen = !this.isAnalyticsOpen;
+    }
+
+    openUpgradeModal() {
+        this.isUpgradeModalOpen = true;
+    }
+
+    closeUpgradeModal() {
+        this.isUpgradeModalOpen = false;
     }
 
     getLabelColor(labelName: string): string {

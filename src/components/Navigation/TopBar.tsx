@@ -17,6 +17,23 @@ import { UserContext } from '../ContextMenu/UserContext';
 import { FilterContext } from '../ContextMenu/FilterContext';
 import { SettingsModal } from '../Settings/SettingsModal';
 
+const topbarStyles = `
+  .trial-button {
+    background: linear-gradient(90deg, #8B5CF6, #EC4899);
+    border: none !important;
+    color: white !important;
+    font-weight: 500;
+  }
+  .trial-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+`;
+// Inject styles
+const styleSheet = document.createElement("style");
+styleSheet.innerText = topbarStyles;
+document.head.appendChild(styleSheet);
+
 export const TopBar = observer(() => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -85,7 +102,7 @@ export const TopBar = observer(() => {
             {/* RIGHT SECTION */}
             <div className="topbar-right">
                 <div className="topbar-actions">
-                    <div className="topbar-button trial-button">
+                    <div className="topbar-button trial-button" onClick={() => store.openUpgradeModal()}>
                         Free Trial (14 days left)
                     </div>
 
@@ -138,6 +155,10 @@ export const TopBar = observer(() => {
                 onSettings={() => {
                     setUserMenuOpen(false);
                     setIsSettingsOpen(true);
+                }}
+                onAnalytics={() => {
+                    setUserMenuOpen(false);
+                    store.toggleAnalytics();
                 }}
                 onLogout={() => console.log('Logout')}
             />
