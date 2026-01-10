@@ -1,3 +1,4 @@
+import { makeAutoObservable } from 'mobx';
 import { v4 as uuidv4 } from 'uuid';
 
 // --- Interfaces ---
@@ -49,6 +50,7 @@ export class Subtask implements ISubtask {
         this.id = uuidv4();
         this.title = title;
         this.isCompleted = false;
+        makeAutoObservable(this);
     }
 
     toggle() {
@@ -73,6 +75,7 @@ export class Task implements ITask {
         this.id = uuidv4();
         this.title = title;
         this.createdAt = new Date();
+        makeAutoObservable(this);
     }
 
     addSubtask(title: string) {
@@ -121,6 +124,7 @@ export class Group implements IGroup {
     constructor(name: string) {
         this.id = uuidv4();
         this.name = name;
+        makeAutoObservable(this);
     }
 
     addTask(task: Task) {

@@ -1,30 +1,51 @@
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
+import { Task } from '../../models/core';
 import {
     Plus,
     Settings,
     ChevronDown,
     ChevronRight,
-    List
+    List,
+    MoreVertical,
+    Edit2
 } from 'lucide-react';
 import { useState } from 'react';
 import { SettingsModal } from '../Settings/SettingsModal';
 import { CreateListModal } from '../Sidebar/CreateListModal';
+import { ContextMenu, MenuItem, MenuSeparator } from '../ContextMenu/ContextMenu';
+import { sidebarUI } from '../../models/SidebarUIModel';
+import { TaskCard } from '../Gantt/TaskCard';
+import { Trash2 } from 'lucide-react';
 import './Sidebar.css';
 
 export const Sidebar = observer(() => {
     const [showSettings, setShowSettings] = useState(false);
     const [showCreateList, setShowCreateList] = useState(false);
-    const [isListsExpanded, setIsListsExpanded] = useState(false);
+    const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+
+    const activeGroup = store.activeGroup;
+
+    const handleCreateTask = (title: string) => {
+        if (title) {
+            if (store.activeGroupId === null) {
+                store.addTaskToDump(title);
+            } else if (activeGroup) {
+                const newTask = new Task(title);
+                activeGroup.addTask(newTask);
+            }
+            sidebarUI.setAddingTask(false);
+        }
+    };
 
     return (
         <>
             <aside className="sidebar">
                 {/* App Header / User */}
                 <div className="sidebar-header">
-                    <div className="user-avatar" />
+                    <img className="user-avatar" src="/logo.png" alt="" />
                     <span className="app-name">
-                        Brain Force
+                        simplu
                     </span>
                     <Settings
                         size={16}
@@ -34,90 +55,158 @@ export const Sidebar = observer(() => {
                     />
                 </div>
 
-                {/* Lists Toggle Header */}
-                <div
-                    className="nav-group-header"
-                    onClick={() => setIsListsExpanded(!isListsExpanded)}
+                <div className="active-list-container">
+                    <div
+                        className="active-list-selector"
+                        onClick={(e) => sidebarUI.handleListClick(e)}
+                    >
+                        <div className="active-list-icon">
+                            {store.activeGroupId === null ? '🧠' : '🐙'}
+                        </div>
+                        <div className="active-list-info">
+                            <span className="active-list-name">
+                                {store.activeGroupId === null ? 'Brain Dump' : activeGroup?.name}
+                            </span>
+                        </div>
+                        <ChevronDown size={16} className="active-list-chevron" />
+                    </div>
+
+                    {store.activeGroupId !== null && (
+                        <div
+                            className="active-list-actions-trigger"
+                            onClick={(e) => sidebarUI.handleActionsClick(e)}
+                        >
+                            <MoreVertical size={18} />
+                        </div>
+                    )}
+                </div>
+
+                {/* Context Menu for Lists */}
+                <ContextMenu
+                    isOpen={sidebarUI.isMenuOpen}
+                    onClose={() => sidebarUI.setMenuOpen(false)}
+                    position={sidebarUI.menuPosition}
+                    className="sidebar-list-context-menu"
                 >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-                        <List size={16} />
-                        <span>Lists</span>
+                    <MenuItem
+                        label="Brain Dump"
+                        icon={<span>🧠</span>}
+                        selected={store.activeGroupId === null}
+                        checkmark={store.activeGroupId === null}
+                        onClick={() => {
+                            store.activeGroupId = null;
+                            sidebarUI.setMenuOpen(false);
+                        }}
+                    />
+                    <MenuSeparator />
+                    {store.groups.map(group => (
+                        <MenuItem
+                            key={group.id}
+                            label={group.name}
+                            icon={<span>🐙</span>}
+                            selected={store.activeGroupId === group.id}
+                            checkmark={store.activeGroupId === group.id}
+                            onClick={() => {
+                                store.activeGroupId = group.id;
+                                sidebarUI.setMenuOpen(false);
+                            }}
+                        />
+                    ))}
+                    <MenuSeparator />
+                    <MenuItem
+                        label="New List"
+                        icon={<Plus size={14} />}
+                        onClick={() => {
+                            sidebarUI.setMenuOpen(false);
+                            setEditingGroupId(null);
+                            setShowCreateList(true);
+                        }}
+                    />
+                </ContextMenu>
+
+                {/* List Actions Context Menu */}
+                <ContextMenu
+                    isOpen={sidebarUI.isActionsMenuOpen}
+                    onClose={() => sidebarUI.setActionsMenuOpen(false)}
+                    position={sidebarUI.actionsMenuPosition}
+                >
+                    <MenuItem
+                        label="Edit List"
+                        icon={<Edit2 size={14} />}
+                        onClick={() => {
+                            sidebarUI.setActionsMenuOpen(false);
+                            setEditingGroupId(store.activeGroupId);
+                            setShowCreateList(true);
+                        }}
+                    />
+                    <MenuItem
+                        label="Delete List"
+                        icon={<Trash2 size={14} />}
+                        onClick={() => {
+                            if (confirm('Are you sure you want to delete this list?')) {
+                                store.deleteGroup(store.activeGroupId!);
+                                sidebarUI.setActionsMenuOpen(false);
+                            }
+                        }}
+                    />
+                </ContextMenu>
+
+                <div className="sidebar-tasks-container">
+                    <div className="sidebar-add-task">
+                        <TaskCard
+                            isGhost
+                            onAddClick={() => sidebarUI.setAddingTask(true)}
+                        />
+                        {sidebarUI.isAddingTask && (
+                            <div className="sidebar-task-creation">
+                                <TaskCard
+                                    isCreating
+                                    onCreate={handleCreateTask}
+                                    onCancel={() => sidebarUI.setAddingTask(false)}
+                                />
+                            </div>
+                        )}
                     </div>
-                    {isListsExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+
+                    <div className="sidebar-tasks-list">
+                        {(store.activeGroupId === null ? store.dumpAreaTasks : activeGroup?.tasks || [])
+                            .filter(t => !t.scheduledDate)
+                            .map(task => (
+                                <TaskCard
+                                    key={task.id}
+                                    task={task}
+                                    onDuplicate={(t) => {
+                                        if (store.activeGroupId === null) {
+                                            const clone = t.clone();
+                                            store.dumpAreaTasks.push(clone);
+                                        } else {
+                                            activeGroup?.duplicateTask(t.id);
+                                        }
+                                    }}
+                                    onDelete={(t) => {
+                                        if (store.activeGroupId === null) {
+                                            store.dumpAreaTasks = store.dumpAreaTasks.filter(task => task.id !== t.id);
+                                        } else {
+                                            activeGroup?.removeTask(t.id);
+                                        }
+                                    }}
+                                />
+                            ))}
+                    </div>
                 </div>
 
-                {isListsExpanded && (
-                    <div className="lists-menu">
-                        {/* Brain Dump List */}
-                        <div
-                            onClick={() => store.activeGroupId = null}
-                            className={`sub-nav-item ${store.activeGroupId === null ? 'active' : ''}`}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span>🧠</span>
-                                <span>Brain Dump</span>
-                            </div>
-                            <span className="count">{store.dumpAreaTasks.length}</span>
-                        </div>
-
-                        {/* User Groups */}
-                        {store.groups.map(group => (
-                            <div
-                                key={group.id}
-                                onClick={() => store.activeGroupId = group.id}
-                                className={`sub-nav-item ${store.activeGroupId === group.id ? 'active' : ''}`}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span>🐙</span>
-                                    <span>{group.name}</span>
-                                </div>
-                                <span className="count">{group.tasks.length}</span>
-                            </div>
-                        ))}
-
-                        {/* New List Button */}
-                        <div
-                            className="sub-nav-item new-list"
-                            onClick={() => setShowCreateList(true)}
-                        >
-                            <Plus size={14} />
-                            <span>New List</span>
-                        </div>
-                    </div>
-                )}
-
-                {/* Create Task Mini Card */}
-                <div className="create-task-wrapper">
-                    <div className="card-container-create">
-                        <div className="card-header">
-                            <textarea
-                                className="card-description"
-                                placeholder="What needs to be done?"
-                                rows={1}
-                                onInput={(e) => {
-                                    e.currentTarget.style.height = 'auto';
-                                    e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
-                                }}
-                            />
-                            <div className="card-time-estimate">0:00</div>
-                        </div>
-                        <div className="card-footer creation">
-                            <div className="card-left-buttons">
-                                <div className="card-no-label">Select Label</div>
-                                <div className="subtask-button-container">
-                                    <List size={12} />
-                                </div>
-                                <div className="subtask-button-container">
-                                    <Settings size={12} /> {/* Placeholder for Repeat/Settings */}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </aside>
 
             {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-            {showCreateList && <CreateListModal onClose={() => setShowCreateList(false)} />}
+            {showCreateList && (
+                <CreateListModal
+                    groupId={editingGroupId}
+                    onClose={() => {
+                        setShowCreateList(false);
+                        setEditingGroupId(null);
+                    }}
+                />
+            )}
         </>
     );
 });

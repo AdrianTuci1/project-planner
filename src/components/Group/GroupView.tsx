@@ -6,7 +6,7 @@ import { CalendarView } from '../Gantt/CalendarView';
 import { Timebox } from '../Gantt/Timebox';
 import { TasksView } from '../Tasks/TasksView';
 import { TopBar } from '../Navigation/TopBar';
-import { TaskCard } from '../TaskDetails/TaskCard';
+import { TaskModal } from '../TaskDetails/TaskModal';
 import { Task } from '../../models/core';
 import './GroupView.css';
 
@@ -59,7 +59,7 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
 
             {/* Task Details Modal */}
             {selectedTask && (
-                <TaskCard task={selectedTask} onClose={() => setSelectedTask(null)} />
+                <TaskModal task={selectedTask} onClose={() => setSelectedTask(null)} />
             )}
         </div>
     );

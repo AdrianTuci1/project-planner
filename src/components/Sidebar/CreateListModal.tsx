@@ -5,15 +5,21 @@ import './CreateListModal.css';
 
 interface CreateListModalProps {
     onClose: () => void;
+    groupId?: string | null;
 }
 
-export const CreateListModal = observer(({ onClose }: CreateListModalProps) => {
-    const [name, setName] = useState('');
-    const [icon, setIcon] = useState('🍌'); // Mock default
+export const CreateListModal = observer(({ onClose, groupId }: CreateListModalProps) => {
+    const existingGroup = groupId ? store.groups.find(g => g.id === groupId) : null;
+    const [name, setName] = useState(existingGroup?.name || '');
+    const [icon, setIcon] = useState('🐙'); // Mock default
 
-    const handleCreate = () => {
+    const handleSave = () => {
         if (name.trim()) {
-            store.createGroup(name);
+            if (groupId && existingGroup) {
+                store.updateGroup(groupId, name);
+            } else {
+                store.createGroup(name);
+            }
             onClose();
         }
     };
@@ -21,7 +27,7 @@ export const CreateListModal = observer(({ onClose }: CreateListModalProps) => {
     return (
         <div className="settings-modal-overlay" onClick={onClose}>
             <div className="create-list-content" onClick={e => e.stopPropagation()}>
-                <div className="cl-header">Create list</div>
+                <div className="cl-header">{groupId ? 'Edit list' : 'Create list'}</div>
 
                 <div className="cl-input-row">
                     <button className="cl-icon-picker">{icon}</button>
@@ -31,7 +37,7 @@ export const CreateListModal = observer(({ onClose }: CreateListModalProps) => {
                         autoFocus
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                     />
                 </div>
 
@@ -42,7 +48,7 @@ export const CreateListModal = observer(({ onClose }: CreateListModalProps) => {
 
                 <div className="cl-footer">
                     <button className="btn-cancel" onClick={onClose}>Cancel</button>
-                    <button className="btn-create" onClick={handleCreate}>Create</button>
+                    <button className="btn-create" onClick={handleSave}>{groupId ? 'Save' : 'Create'}</button>
                 </div>
             </div>
         </div>

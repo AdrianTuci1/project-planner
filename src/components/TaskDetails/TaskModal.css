@@ -1,0 +1,382 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-overlay-transparent {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1100;
+}
+
+.task-card-modal {
+    background-color: var(--bg-card);
+    width: 680px;
+    max-width: 95vw;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.tc-header-new {
+    padding: 32px 32px 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.task-check-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 2px solid var(--text-muted);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.task-check-circle:hover {
+    border-color: var(--accent-blue);
+    background: rgba(10, 132, 255, 0.1);
+}
+
+.task-check-circle.checked {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 15px rgba(10, 132, 255, 0.4);
+}
+
+.task-check-circle.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.tc-title-input-large {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-main);
+    outline: none;
+    padding: 0;
+    letter-spacing: -0.02em;
+}
+
+.tc-title-input-large::placeholder {
+    color: var(--text-muted);
+}
+
+.tc-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.icon-btn-ghost {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.icon-btn-ghost:hover {
+    color: var(--text-main);
+    background-color: var(--bg-card-hover);
+}
+
+.tc-content-new {
+    padding: 16px 32px 32px 32px;
+    overflow-y: auto;
+    max-height: calc(85vh - 100px);
+}
+
+.tc-meta-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.meta-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.meta-row-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.meta-row-label svg {
+    color: var(--text-muted);
+}
+
+.meta-row-value {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+}
+
+.value-main {
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.value-sub {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.value-placeholder {
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.value-placeholder:hover {
+    color: var(--text-secondary);
+}
+
+.label-icon-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.tc-spacer-line {
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-subtle) 0%, transparent 100%);
+    margin: 32px 0;
+}
+
+.tc-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tc-section-label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.tc-notes-textarea {
+    width: 100%;
+    min-height: 80px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    font-size: 15px;
+    outline: none;
+    resize: vertical;
+    padding: 12px;
+    transition: border-color 0.2s;
+}
+
+.tc-notes-textarea:focus {
+    border-color: var(--accent-blue);
+}
+
+.tc-subtasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tc-subtask-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s;
+}
+
+.tc-subtask-item:hover {
+    background-color: var(--bg-card-hover);
+}
+
+.tc-subtask-check {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--text-muted);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tc-subtask-check:hover {
+    border-color: var(--accent-blue);
+}
+
+.tc-subtask-check.checked {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.tc-subtask-check.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.tc-subtask-input {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: 15px;
+    outline: none;
+    flex: 1;
+}
+
+.tc-add-subtask-btn {
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 16px;
+    margin-top: 8px;
+    transition: all 0.2s;
+}
+
+.tc-add-subtask-btn:hover {
+    color: var(--text-main);
+    border-color: var(--text-muted);
+    background-color: var(--bg-card-hover);
+}
+
+.tc-context-menu {
+    position: absolute;
+    background-color: var(--bg-popover);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 6px;
+    min-width: 200px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    z-index: 1200;
+}
+
+.context-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+}
+
+.context-item:hover {
+    background-color: var(--bg-card-hover);
+    color: var(--text-main);
+}
+
+.context-item svg {
+    color: var(--text-muted);
+}
+
+.context-item:hover svg {
+    color: var(--text-main);
+}
+
+.context-divider {
+    height: 1px;
+    background-color: var(--border-subtle);
+    margin: 6px 0;
+}
+
+.context-item.delete {
+    color: var(--accent-pink);
+}
+
+.context-item.delete:hover {
+    background-color: var(--accent-pink-dim);
+}
+
+.context-item.delete svg {
+    color: var(--accent-pink);
+}

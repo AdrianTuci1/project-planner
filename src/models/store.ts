@@ -39,6 +39,23 @@ class ProjectStore {
         return group;
     }
 
+    deleteGroup(groupId: string) {
+        const index = this.groups.findIndex(g => g.id === groupId);
+        if (index > -1) {
+            this.groups.splice(index, 1);
+            if (this.activeGroupId === groupId) {
+                this.activeGroupId = null;
+            }
+        }
+    }
+
+    updateGroup(groupId: string, name: string) {
+        const group = this.groups.find(g => g.id === groupId);
+        if (group) {
+            group.name = name;
+        }
+    }
+
     setViewMode(mode: 'calendar' | 'tasks') {
         this.viewMode = mode;
     }
@@ -63,7 +80,7 @@ class ProjectStore {
 
     private seedData() {
         const marketingGroup = this.createGroup("Marketing Campaign");
-        this.activeGroupId = marketingGroup.id;
+        // this.activeGroupId = marketingGroup.id;
 
         // Create tasks with specific times for calendar view
         const today = new Date();

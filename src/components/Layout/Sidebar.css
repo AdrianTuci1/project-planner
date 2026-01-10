@@ -18,10 +18,11 @@
 }
 
 .user-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    width: 32px;
+    height: 32px;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
 }
 
 .app-name {
@@ -40,123 +41,127 @@
     color: var(--text-main);
 }
 
-/* Nav Group Header (Brain Dump Dropdown) */
-.nav-group-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-}
-
-.nav-group-header:hover {
-    background-color: var(--bg-card-hover);
-    color: var(--text-main);
-}
-
-.nav-group-content {
-    margin-top: var(--space-2);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-/* Nav Item (Redesigned) */
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    height: 54px;
-    /* Taller for subtitle */
-    transition: all var(--transition-fast);
-}
-
-.nav-item:hover {
-    background-color: var(--bg-card-hover);
-    color: var(--text-main);
-}
-
-.nav-item.active {
-    background-color: var(--bg-input);
-    /* Active state based on image */
-    color: var(--text-main);
-}
-
-.nav-label {
-    font-size: var(--text-sm);
-    font-weight: 500;
-}
-
-.nav-sub-label {
-    font-size: 11px;
-    color: var(--text-muted);
-}
-
-.new-list-btn {
-    color: var(--text-muted);
-    height: 40px;
-    /* Standard height */
-}
-
-.new-list-btn:hover {
-    color: var(--text-main);
-}
-
-/* Lists Menu (Accordion style) */
-.lists-menu {
-    margin-left: var(--space-3);
-    border-left: 1px solid var(--border-subtle);
-    padding-left: var(--space-2);
-    margin-bottom: var(--space-4);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.sub-nav-item {
+/* Active List Display */
+.active-list-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-2);
-    font-size: var(--text-sm);
-    color: var(--text-secondary);
-    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
     cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-bottom: var(--space-4);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+}
+
+.active-list-container:hover {
+    background-color: var(--bg-card-hover);
+    border-color: var(--border-main);
+}
+
+.sidebar-tasks-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-height: 0;
+    /* Important for flex child scrolling */
+    margin-bottom: var(--space-4);
+}
+
+.sidebar-tasks-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+
+}
+
+.sidebar-tasks-list:empty {
+    display: none;
+}
+
+.active-list-selector {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+    /* Important for text truncation if name is long */
+}
+
+.active-list-info {
+    display: flex;
+    align-items: center;
+    /* Ensure vertical center */
+    flex: 1;
+    min-width: 0;
+}
+
+.active-list-icon {
+    font-size: 18px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-input);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.active-list-name {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.active-list-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.active-list-actions-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
     transition: all var(--transition-fast);
 }
 
-.sub-nav-item:hover {
-    background-color: var(--bg-card-hover);
+.active-list-actions-trigger:hover {
+    background-color: var(--bg-input);
     color: var(--text-main);
 }
 
-.sub-nav-item.active {
-    background-color: var(--bg-card-hover);
-    /* Or a lighter active highlight */
-    color: var(--text-main);
-    font-weight: 500;
+.active-list-chevron {
+    color: var(--text-muted);
 }
 
-.sub-nav-item .count {
-    font-size: 10px;
-    color: var(--text-muted);
-    background: var(--bg-input);
-    padding: 2px 6px;
-    border-radius: 8px;
+/* Sidebar List Context Menu Overrides */
+.sidebar-list-context-menu {
+    min-width: 200px;
 }
 
-.sub-nav-item.new-list {
-    color: var(--text-muted);
+/* Sidebar Add Task Section */
+.sidebar-add-task {
+    display: flex;
+    flex-direction: column;
     gap: var(--space-2);
-    justify-content: flex-start;
+}
+
+.sidebar-task-creation {
+    margin-top: var(--space-2);
 }
 
 /* Create Task Card */
