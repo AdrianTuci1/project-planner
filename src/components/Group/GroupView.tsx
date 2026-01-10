@@ -51,10 +51,12 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
             </div>
 
             {/* Right Sidebar (Timebox or TasksView based on view mode) */}
-            {store.viewMode === 'tasks' ? (
-                <Timebox />
-            ) : (
-                <TasksView tasks={group.tasks} onTaskClick={handleTaskClick} />
+            {store.isRightSidebarOpen && (
+                store.viewMode === 'tasks' ? (
+                    <Timebox />
+                ) : (
+                    <TasksView tasks={group.tasks} onTaskClick={handleTaskClick} />
+                )
             )}
 
             {/* Task Details Modal */}

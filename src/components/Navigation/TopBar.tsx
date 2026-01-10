@@ -7,7 +7,8 @@ import {
     Filter,
     Calendar as CalendarIcon,
     Layout,
-    PanelLeft
+    PanelLeft,
+    PanelRight
 } from 'lucide-react';
 import { addDays } from 'date-fns';
 import '../Layout/KanbanLayout.css';
@@ -95,8 +96,13 @@ export const TopBar = observer(() => {
                     </div>
                 </div>
 
-                {/* Right Sidebar Toggle (if needed matching HTML structure ending) */}
-                {/* <PanelRight /> in HTML it was another collapse icon */}
+                <div onClick={() => store.toggleRightSidebar()} style={{ cursor: 'pointer', display: 'flex' }}>
+                    <PanelRight
+                        size={18}
+                        className="collapse-icon"
+                        style={{ color: 'var(--text-secondary)' }}
+                    />
+                </div>
             </div>
         </div>
     );

@@ -1,4 +1,4 @@
-import { makeAutoObservable } from "mobx"; // Using mobx for transparent reactivity with OOP
+import { makeAutoObservable, reaction } from "mobx"; // Using mobx for transparent reactivity with OOP
 import { Group, Task, IParticipant } from "./core";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -17,16 +17,42 @@ class ProjectStore {
     // UI State
     activeGroupId: string | null = null;
     isSidebarOpen: boolean = true;
-    viewMode: 'calendar' | 'tasks' = 'calendar';
+    isRightSidebarOpen: boolean = true;
+    viewMode: 'calendar' | 'tasks' = 'tasks';
     viewDate: Date = new Date();
 
     constructor() {
         makeAutoObservable(this);
         this.seedData();
+
+        // Load persistence
+        const savedViewMode = localStorage.getItem('viewMode') as 'calendar' | 'tasks';
+        if (savedViewMode) this.viewMode = savedViewMode;
+
+        const savedGroupId = localStorage.getItem('activeGroupId');
+        if (savedGroupId) this.activeGroupId = savedGroupId;
+
+        // Setup persistence reactions
+        reaction(
+            () => this.viewMode,
+            (mode) => localStorage.setItem('viewMode', mode)
+        );
+
+        reaction(
+            () => this.activeGroupId,
+            (id) => {
+                if (id) localStorage.setItem('activeGroupId', id);
+                else localStorage.removeItem('activeGroupId');
+            }
+        );
     }
 
     setDate(date: Date) {
         this.viewDate = date;
+    }
+
+    toggleRightSidebar() {
+        this.isRightSidebarOpen = !this.isRightSidebarOpen;
     }
 
     get activeGroup() {

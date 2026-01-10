@@ -1,7 +1,8 @@
 import React from 'react';
 import { observer } from 'mobx-react-lite';
-import { format } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, isSameDay, startOfDay } from 'date-fns';
+import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { store } from '../../models/store';
 import './Timebox.css';
 
 export const Timebox = observer(() => {
@@ -15,14 +16,23 @@ export const Timebox = observer(() => {
         <div className="timebox-container">
             <div className="timebox-header">
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <div style={{ width: 8, height: 8, background: 'var(--text-muted)', borderRadius: '50%' }} />
+                    <Clock size={14} />
                     Timebox
                 </span>
                 <div style={{ display: 'flex', gap: 4 }}>
-                    <ChevronLeft size={14} />
-                    <span>Today</span>
-                    <ChevronRight size={14} />
+                    <ChevronLeft size={14} onClick={() => store.setDate(new Date(store.viewDate.getTime() - 86400000))} style={{ cursor: 'pointer' }} />
+                    <span onClick={() => store.setDate(new Date())} style={{ cursor: 'pointer' }}>Today</span>
+                    <ChevronRight size={14} onClick={() => store.setDate(new Date(store.viewDate.getTime() + 86400000))} style={{ cursor: 'pointer' }} />
                 </div>
+            </div>
+
+            <div className="timebox-date-row">
+                <span className="date-text">
+                    {format(store.viewDate, 'EEE d')}
+                </span>
+                {isSameDay(store.viewDate, startOfDay(new Date())) && (
+                    <span className="today-badge">Today</span>
+                )}
             </div>
 
             <div className="timebox-grid">
