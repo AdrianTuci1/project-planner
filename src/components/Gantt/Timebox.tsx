@@ -10,7 +10,7 @@ export const Timebox = observer(() => {
     // Mock current time line (e.g. at 9:30 AM = 9 * 60 + 30 mins)
     const now = new Date();
     const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
-    const topPosition = minutesSinceMidnight; // Assuming 1px per minute for simplicity or mapping
+    const topPosition = minutesSinceMidnight * (100 / 60); // 100px per hour scale
 
     const isToday = isSameDay(store.timeboxDate, new Date());
 
@@ -54,21 +54,38 @@ export const Timebox = observer(() => {
             </div>
 
             <div className="timebox-grid">
-                {/* Current Time Line */}
-                <div className="current-time-line" style={{ top: `${topPosition}px` }} />
-
-                {hours.map(hour => (
-                    <div key={hour} className="time-slot">
-                        {[0, 15, 30, 45].map(minute => (
-                            <div key={minute} className="time-slot-sub">
-                                {minute === 0 && (
-                                    <span className="time-label">{format(new Date().setHours(hour, 0), 'h aa')}</span>
-                                )}
-                            </div>
+                <table className="timebox-table">
+                    <tbody className="timebox-body">
+                        {hours.map(hour => (
+                            <tr key={hour} className="hour-row">
+                                <td className="time-label-cell">
+                                    <span className="time-text">
+                                        {hour === 0 ? '12 AM' :
+                                            hour < 12 ? `${hour} AM` :
+                                                hour === 12 ? '12 PM' :
+                                                    `${hour - 12} PM`}
+                                    </span>
+                                </td>
+                                <td className="timebox-content-cell">
+                                    {/* Sub-slots for 15-min intervals if needed for drop targets, 
+                                        but visually the row is the hour. 
+                                        We can keep the sub-divs logic if we want to retain strict 15-min slots 
+                                        inside the cell, or just use the cell as a container. 
+                                        Keeping strict structure for consistency with previous logic.
+                                    */}
+                                    {[0, 15, 30, 45].map(minute => (
+                                        <div key={minute} className="time-slot-sub">
+                                            {/* Content or drop zones go here */}
+                                        </div>
+                                    ))}
+                                </td>
+                            </tr>
                         ))}
-                    </div>
-                ))}
+                    </tbody>
+                </table>
+                {/* Current Time Line - Overlayed */}
+                <div className="current-time-line" style={{ top: `${topPosition}px` }} />
             </div>
-        </div>
+        </div >
     );
 });

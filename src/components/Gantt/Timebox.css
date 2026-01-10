@@ -79,11 +79,10 @@
     padding: 16px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     border-bottom: 1px solid var(--border-subtle);
     background-color: var(--bg-sidebar);
-    display: flex;
-    justify-content: center;
 }
 
 .date-text {
@@ -108,40 +107,77 @@
     background-color: var(--bg-app);
 }
 
-.time-slot {
-    height: 60px;
-    /* 1 hour */
+/* Table Styles - Matching CalendarView */
+.timebox-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.hour-row {
+    height: 100px;
+    /* 1 hour fixed height */
+}
+
+/* Time Label Cell */
+.time-label-cell {
+    width: 40px;
+    /* Adjust width as needed */
+    vertical-align: top;
+    border-right: 1px solid var(--border-subtle);
+    background-color: var(--bg-sidebar);
     border-bottom: 1px solid var(--border-subtle);
-    display: flex;
-    flex-direction: column;
+    padding: 0;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+
+
+.time-text {
+    position: absolute;
+    top: 4px;
+    /* Move inside the cell, top corner */
+    right: 4px;
+    font-size: 10px;
+    color: var(--text-muted);
+    background-color: transparent;
+    padding: 0;
+    text-align: right;
+    width: auto;
+    /* Allow auto width */
+}
+
+/* Content Cell */
+.timebox-content-cell {
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+    padding: 0;
+    position: relative;
+    background-color: var(--bg-sidebar);
 }
 
 .time-slot-sub {
-    flex: 1;
-    position: relative;
-    display: flex;
-    align-items: center;
-    padding: 0 var(--space-2);
+    height: 25%;
+    /* 15 mins = 1/4 of hour */
+    /* border-bottom: 1px dashed var(--border-subtle); Optional: internal grids */
+    box-sizing: border-box;
 }
 
 .time-slot-sub:last-child {
     border-bottom: none;
 }
 
-.time-label {
-    width: 50px;
-    font-size: 10px;
-    color: var(--text-muted);
-    transform: translateY(-50%);
-}
-
+/* Current Time Line */
 .current-time-line {
     position: absolute;
-    left: 0;
+    left: 47px;
+    /* Offset by time label width */
     right: 0;
     height: 1px;
     background-color: var(--accent-pink);
-    z-index: 10;
+    z-index: 20;
     pointer-events: none;
 }
 
