@@ -4,7 +4,7 @@ import { store } from '../../models/store';
 import { Task } from '../../models/core';
 import { format, addDays, isSameDay, startOfDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { TaskCard } from '../Gantt/TaskCard';
+import { TaskCard } from '../Gantt/TaskCard/index';
 import './TasksView.css';
 
 interface TasksViewProps {

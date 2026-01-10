@@ -118,8 +118,14 @@
     align-items: center;
     gap: 6px;
     font-size: 11px;
+    padding: 2px;
     color: var(--text-secondary);
+    cursor: pointer;
     font-weight: 500;
+}
+
+.tc-label:hover {
+    color: var(--text-main);
 }
 
 .tc-label-dot {

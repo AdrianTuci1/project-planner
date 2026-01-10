@@ -15,7 +15,7 @@ import { SettingsModal } from '../Settings/SettingsModal';
 import { CreateListModal } from '../Sidebar/CreateListModal';
 import { ContextMenu, MenuItem, MenuSeparator } from '../ContextMenu/ContextMenu';
 import { sidebarUI } from '../../models/SidebarUIModel';
-import { TaskCard } from '../Gantt/TaskCard';
+import { TaskCard } from '../Gantt/TaskCard/index';
 import { Trash2 } from 'lucide-react';
 import './Sidebar.css';
 

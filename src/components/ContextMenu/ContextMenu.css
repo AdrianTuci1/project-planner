@@ -12,6 +12,9 @@
     max-width: 320px;
     padding: var(--space-2);
     z-index: 1000;
+    max-height: 300px;
+    max-width: 260px;
+    overflow-y: auto;
     animation: contextMenuFadeIn 150ms ease-out;
     backdrop-filter: blur(20px);
 }

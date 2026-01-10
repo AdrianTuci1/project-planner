@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { Task } from '../../models/core';
 import { store } from '../../models/store';
 import { format, addDays, subDays, isSameDay, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import { TaskCard } from './TaskCard';
+import { TaskCard } from './TaskCard/index';
 import { kanbanModel } from '../../models/KanbanModel';
 import './KanbanBoard.css';
 
