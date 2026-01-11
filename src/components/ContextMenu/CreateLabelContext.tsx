@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ContextMenu, MenuHeader } from './ContextMenu';
+import { ColorPickerContext, PRESET_COLORS } from './ColorPickerContext';
 
 interface CreateLabelContextProps {
     isOpen: boolean;
@@ -7,19 +8,6 @@ interface CreateLabelContextProps {
     position?: { x: number; y: number };
     onCreateLabel?: (name: string, color: string) => void;
 }
-
-const PRESET_COLORS = [
-    '#FF2D55', // Pink
-    '#FF9500', // Orange
-    '#FFD60A', // Yellow
-    '#32D74B', // Green
-    '#64D2FF', // Light Blue
-    '#0A84FF', // Blue
-    '#BF5AF2', // Purple
-    '#FF375F', // Red
-    '#AC8E68', // Brown
-    '#8E8E93', // Gray
-];
 
 export const CreateLabelContext: React.FC<CreateLabelContextProps> = ({
     isOpen,
@@ -29,14 +17,17 @@ export const CreateLabelContext: React.FC<CreateLabelContextProps> = ({
 }) => {
     const [labelName, setLabelName] = useState('');
     const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
-    const [view, setView] = useState<'main' | 'colors'>('main');
+
+    // Color picker state
+    const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+    const [colorPickerPosition, setColorPickerPosition] = useState({ x: 0, y: 0 });
+    const colorButtonRef = useRef<HTMLButtonElement>(null);
 
     const handleCreate = () => {
         if (labelName.trim()) {
             onCreateLabel?.(labelName.trim(), selectedColor);
             setLabelName('');
             setSelectedColor(PRESET_COLORS[0]);
-            setView('main');
             onClose();
         }
     };
@@ -44,82 +35,68 @@ export const CreateLabelContext: React.FC<CreateLabelContextProps> = ({
     const handleCancel = () => {
         setLabelName('');
         setSelectedColor(PRESET_COLORS[0]);
-        setView('main');
         onClose();
     };
 
-    return (
-        <ContextMenu isOpen={isOpen} onClose={onClose} position={position}>
-            {view === 'main' ? (
-                <>
-                    <MenuHeader title="Create label" onClose={handleCancel} />
-                    <div style={{ padding: 'var(--space-2)' }}>
-                        <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
-                            <button
-                                className="color-trigger-btn"
-                                style={{
-                                    width: '32px',
-                                    height: '32px',
-                                    borderRadius: '6px',
-                                    backgroundColor: selectedColor,
-                                    border: '1px solid var(--border-subtle)',
-                                    cursor: 'pointer',
-                                    flexShrink: 0
-                                }}
-                                onClick={() => setView('colors')}
-                                title="Select color"
-                            />
-                            <input
-                                type="text"
-                                className="context-menu-input"
-                                placeholder="Label name"
-                                style={{ margin: 0, flex: 1 }}
-                                value={labelName}
-                                onChange={(e) => setLabelName(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleCreate();
-                                    if (e.key === 'Escape') handleCancel();
-                                }}
-                                autoFocus
-                            />
-                        </div>
-                        {/* Use a hidden submit button or just rely on Enter? 
-                            User said "inputurile in meniu trebuie reglate" and "patratel colorat".
-                            Let's add a small create button for clarity if needed, or keep it minimal.
-                            Minimal is better. User can press Enter. 
-                        */}
-                    </div>
-                </>
-            ) : (
-                <>
-                    <div className="menu-header">
-                        <button
-                            className="icon-btn-sm"
-                            onClick={() => setView('main')}
-                            style={{ marginRight: 'var(--space-2)' }}
-                        >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
-                        </button>
-                        <span className="menu-title">Select Color</span>
-                    </div>
+    const handleOpenColorPicker = () => {
+        if (colorButtonRef.current) {
+            const rect = colorButtonRef.current.getBoundingClientRect();
+            // Position above the button, centered horizontally if possible, or just aligned left
+            // We want it "outside" this context menu.
+            // Let's try positioning it slightly above the button.
+            setColorPickerPosition({
+                x: rect.left,
+                y: rect.top - 180 // Approximate height of color picker, or use calculation dynamically
+            });
+            setIsColorPickerOpen(true);
+        }
+    };
 
-                    <div style={{ padding: 'var(--space-2)' }}>
-                        <div className="color-picker-grid">
-                            {PRESET_COLORS.map((color) => (
-                                <div
-                                    key={color}
-                                    className={`color-picker-item ${selectedColor === color ? 'selected' : ''}`}
-                                    style={{ backgroundColor: color }}
-                                    onClick={() => {
-                                        setSelectedColor(color);
-                                        setView('main');
-                                    }}
-                                />
-                            ))}
-                        </div>
+    return (
+        <>
+            <ContextMenu isOpen={isOpen} onClose={onClose} position={position}>
+                <MenuHeader title="Create label" onClose={handleCancel} />
+                <div style={{ padding: 'var(--space-2)' }}>
+                    <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                        <button
+                            ref={colorButtonRef}
+                            className="color-trigger-btn"
+                            style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '6px',
+                                backgroundColor: selectedColor,
+                                border: '1px solid var(--border-subtle)',
+                                cursor: 'pointer',
+                                flexShrink: 0
+                            }}
+                            onClick={handleOpenColorPicker}
+                            title="Select color"
+                        />
+                        <input
+                            type="text"
+                            className="context-menu-input"
+                            placeholder="Label name"
+                            style={{ margin: 0, flex: 1 }}
+                            value={labelName}
+                            onChange={(e) => setLabelName(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleCreate();
+                                if (e.key === 'Escape') handleCancel();
+                            }}
+                            autoFocus
+                        />
                     </div>
-                </>
-            )}
-        </ContextMenu>
+                </div>
+            </ContextMenu>
+
+            <ColorPickerContext
+                isOpen={isColorPickerOpen}
+                onClose={() => setIsColorPickerOpen(false)}
+                position={colorPickerPosition}
+                selectedColor={selectedColor}
+                onSelectColor={setSelectedColor}
+            />
+        </>
     );
 };

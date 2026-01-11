@@ -1,3 +1,4 @@
+import { ListSelectionContext } from "../ContextMenu/ListSelectionContext";
 import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Task } from '../../models/core';
@@ -22,6 +23,7 @@ import { store } from '../../models/store';
 import { MakeRecurringTaskContext } from '../ContextMenu/MakeRecurringTaskContext';
 import { RecurringTaskActionsContext } from '../ContextMenu/RecurringTaskActionsContext';
 import { SubtaskList } from '../Shared/SubtaskList';
+import { GroupList } from '../Shared/GroupList';
 import './TaskModal.css';
 
 interface TaskModalProps {
@@ -60,6 +62,13 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         {/* Task Date */}
                         <div
                             className="meta-row"
+                            // Remove onClick from parent to avoid conflict with "Move to List" specifically?
+                            // Or keep it as general context menu for the row.
+                            // The user said: "Apasand pe (Move to list)". So specific click.
+                            // But let's keep the general click for now or adjust.
+                            // If we click "Move to List", we open the list selector.
+                            // If we click elsewhere in the row, maybe date picker?
+                            // The original code opened date picker on row click.
                             onClick={(e) => {
                                 const valueEl = e.currentTarget.querySelector('.meta-row-value');
                                 if (valueEl) {
@@ -75,7 +84,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                                 <Calendar size={18} />
                                 <span>Task date</span>
                             </div>
-                            <div className="meta-row-value">
+                            <div className="meta-row-value chip-style"> {/* Added chip-style class */}
                                 <span className="value-main">
                                     {task.scheduledDate ? (() => {
                                         const dateStr = format(task.scheduledDate, 'EEEE, d MMM');
@@ -88,7 +97,22 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                                         return dateStr;
                                     })() : 'No date set'}
                                 </span>
-                                <span className="value-sub">(Move to List)</span>
+                                <span
+                                    className="value-sub clickable-sub" // Added clickable-sub class
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent opening date picker
+                                        // Open GroupList popover
+                                        // We need state for this in TaskUIModel or local state.
+                                        // Since TaskUIModel isn't updated yet, let's use a local state wrapper or
+                                        // ideally update TaskUIModel if we could.
+                                        // But TaskModal is observer.
+                                        // Let's use TaskUIModel for state.
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        ui.openListContext(e, { x: rect.left, y: rect.bottom + 4 });
+                                    }}
+                                >
+                                    (Move to List)
+                                </span>
                             </div>
                         </div>
 
@@ -226,188 +250,58 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         <SubtaskList task={task} autoFocusNew={ui.isSubtaskMode} />
                     </div>
                 </div>
-
-                {/* Context Menu */}
-                {ui.actionContext.isOpen && (
-                    <div
-                        className="modal-overlay-transparent"
-                        onClick={() => ui.closeActionContext()}
-                    >
-                        <div
-                            className="tc-context-menu"
-                            style={{
-                                top: ui.actionContext.position.y,
-                                left: ui.actionContext.position.x
-                            }}
-                        >
-                            <div className="context-item">
-                                <Repeat size={16} />
-                                <span>Repeat task</span>
-                            </div>
-                            <div className="context-item" onClick={() => { }}>
-                                <Copy size={16} />
-                                <span>Duplicate</span>
-                            </div>
-                            <div className="context-item">
-                                <Link size={16} />
-                                <span>Copy link</span>
-                            </div>
-                            <div className="context-divider" />
-                            <div className="context-item delete" onClick={() => { }}>
-                                <Trash2 size={16} />
-                                <span>Delete Task</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-
             </div>
 
-            <DateTimePickerContext
-                isOpen={ui.isContextMenuOpen}
-                onClose={() => ui.setContextMenuOpen(false)}
-                position={ui.contextPosition}
-                selectedDate={(() => {
-                    if (!task.scheduledDate) return undefined;
-                    const d = new Date(task.scheduledDate);
-                    if (task.scheduledTime) {
-                        const [h, m] = task.scheduledTime.split(':').map(Number);
-                        d.setHours(h, m);
-                    }
-                    return d;
-                })()}
-                onSelect={(date) => {
-                    const h = date.getHours();
-                    const m = date.getMinutes();
-                    // If the picker returns a time component, or if we already had a time and preserving it (handled by picker logic),
-                    // we update the time string.
-                    // Special case: If 00:00, we treat it as specific time "00:00" ONLY if scheduledTime was already set or we are explicitly in time mode?
-                    // Actually, let's trust the picker. If it sends hours/mins, we use them.
+            {/* Context Menu */}
+            {ui.actionContext.isOpen && (
+                <div
+                    className="modal-overlay-transparent"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        ui.closeActionContext();
+                    }}
+                >
+                    <div
+                        className="tc-context-menu"
+                        style={{
+                            top: ui.actionContext.position.y,
+                            left: ui.actionContext.position.x
+                        }}
+                    >
+                        <div className="context-item" onClick={() => {
+                            store.duplicateTask(task);
+                            ui.closeActionContext();
+                        }}>
+                            <Copy size={16} />
+                            <span style={{ fontFamily: 'var(--font-primary)' }}>Duplicate</span>
+                        </div>
+                        <div className="context-divider" />
+                        <div className="context-item delete" onClick={() => {
+                            store.deleteTask(task.id);
+                            ui.closeActionContext();
+                            onClose();
+                        }}>
+                            <Trash2 size={16} />
+                            <span style={{ fontFamily: 'var(--font-primary)' }}>Delete</span>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-                    // We need to decouple the Date (midnight) from the Time string.
-                    const newDate = new Date(date);
-                    newDate.setHours(0, 0, 0, 0);
+            <DateTimePickerContext ui={ui} task={task} />
 
-                    if (h !== 0 || m !== 0) {
-                        // Explicit time set
-                        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-                        task.setScheduling(newDate, timeStr);
-                    } else {
-                        // Midnight value.
-                        // If we are coming from a time-change (e.g. set to 12:00 AM), we want to keep it as time "00:00".
-                        // If we are just picking a date (which defaults to midnight), we might want to KEEP existing time.
+            <TimeInputContext ui={ui} task={task} />
 
-                        // BUT, DateTimePickerContext's handleDateClick preserves existing time.
-                        // So if we receive 00:00, it means either:
-                        // A) Exisiting time was 00:00 (or undefined)
-                        // B) User explicitly set 12:00 AM
-
-                        // Let's assume if we are receiving this onSelect, checking if we originally had a time matches best.
-                        if (task.scheduledTime) {
-                            // If we had a time, and we got 00:00, it effectively means "00:00".
-                            task.setScheduling(newDate, "00:00");
-                        } else {
-                            // No previous time, and got 00:00 => Date only.
-                            task.setScheduling(newDate, undefined);
-                        }
-                    }
-                }}
-                onRemoveTime={() => {
-                    if (task.scheduledDate) {
-                        task.setScheduling(task.scheduledDate, undefined);
-                    }
-                }}
-            />
-
-            <TimeInputContext
-                isOpen={ui.timeContext.isOpen}
-                onClose={() => ui.closeTimeContext()}
-                position={ui.timeContext.position}
-                title={ui.timeContext.type === 'estimated' ? 'Set estimated time' : 'Set actual time'}
-                initialDuration={ui.timeContext.type === 'estimated' ? task.duration : task.actualDuration}
-                onSave={(duration) => {
-                    if (ui.timeContext.type === 'estimated') {
-                        task.duration = duration;
-                    } else {
-                        task.actualDuration = duration;
-                    }
-                }}
-            />
-
-            <LabelContext
-                isOpen={ui.labelContext.isOpen}
-                onClose={() => ui.closeLabelContext()}
-                position={ui.labelContext.position}
-                labels={store.availableLabels}
-                recentLabels={store.availableLabels.slice(0, 3)}
-                onSelectLabel={(label) => {
-                    task.labels = [label.id];
-                    ui.closeLabelContext();
-                }}
-                onCreateLabel={(name, color) => {
-                    const newLabel = store.addLabel(name, color);
-                    task.labels = [newLabel.id];
-                    ui.closeLabelContext();
-                }}
-            />
+            <LabelContext ui={ui} task={task} />
 
             {ui.recurrenceContext.mode === 'set' ? (
-                <MakeRecurringTaskContext
-                    isOpen={ui.recurrenceContext.isOpen}
-                    onClose={() => ui.closeRecurrenceContext()}
-                    position={ui.recurrenceContext.position}
-                    selectedRecurrence={task.recurrence}
-                    hasSpecificTime={!!task.scheduledTime}
-                    specificTime={(() => {
-                        if (task.scheduledTime) {
-                            const [h, m] = task.scheduledTime.split(':').map(Number);
-                            const d = new Date();
-                            d.setHours(h, m);
-                            return format(d, 'h:mm a');
-                        }
-                        return '9:00 AM';
-                    })()}
-                    onSelectRecurrence={(type) => {
-                        task.recurrence = type;
-                        ui.closeRecurrenceContext();
-                    }}
-                    onToggleSpecificTime={(enabled) => {
-                        if (!enabled) {
-                            if (task.scheduledDate) {
-                                task.setScheduling(task.scheduledDate, undefined);
-                            }
-                        } else {
-                            const d = task.scheduledDate ? new Date(task.scheduledDate) : startOfDay(new Date());
-                            d.setHours(0, 0, 0, 0);
-                            task.setScheduling(d, "09:00");
-                        }
-                    }}
-                    onChangeTime={(timeStr) => {
-                        const [time, period] = timeStr.split(' ');
-                        const [hoursStr, minutesStr] = time.split(':');
-                        let hours = parseInt(hoursStr);
-                        const minutes = parseInt(minutesStr);
-                        if (period === 'PM' && hours < 12) hours += 12;
-                        if (period === 'AM' && hours === 12) hours = 0;
-
-                        const newTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-                        task.setScheduling(task.scheduledDate, newTime);
-                    }}
-                />
+                <MakeRecurringTaskContext ui={ui} task={task} />
             ) : (
-                <RecurringTaskActionsContext
-                    isOpen={ui.recurrenceContext.isOpen}
-                    onClose={() => ui.closeRecurrenceContext()}
-                    position={ui.recurrenceContext.position}
-                    recurrenceDescription={task.recurrence}
-                    onStopRepeating={() => {
-                        task.recurrence = 'none';
-                        ui.closeRecurrenceContext();
-                    }}
-                // Note: Update All and Delete All not fully implemented yet in basic Task model
-                />
+                <RecurringTaskActionsContext ui={ui} task={task} />
             )}
+
+            {/* List Selection Context */}
+            <ListSelectionContext ui={ui} task={task} />
         </div>
     );
 });

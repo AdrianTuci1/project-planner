@@ -1,21 +1,13 @@
 import React, { useState } from 'react';
+import { observer } from 'mobx-react-lite';
 import { ContextMenu, MenuItem, MenuSearch, MenuSectionLabel } from './ContextMenu';
-
-interface Label {
-    id: string;
-    name: string;
-    color: string;
-}
+import { Task } from '../../models/core';
+import { TaskUIModel } from '../../models/TaskUIModel';
+import { store } from '../../models/store';
 
 interface LabelContextProps {
-    isOpen: boolean;
-    onClose: () => void;
-    position?: { x: number; y: number };
-    labels?: Label[];
-    recentLabels?: Label[];
-    onCreateLabel?: (name: string, color: string) => void;
-    onEditLabels?: () => void;
-    onSelectLabel?: (label: Label) => void;
+    ui: TaskUIModel;
+    task: Task;
 }
 
 const PRESET_COLORS = [
@@ -31,21 +23,19 @@ const PRESET_COLORS = [
     '#8E8E93', // Gray
 ];
 
-export const LabelContext: React.FC<LabelContextProps> = ({
-    isOpen,
-    onClose,
-    position,
-    labels = [],
-    recentLabels = [],
-    onCreateLabel,
-    onEditLabels,
-    onSelectLabel,
-}) => {
+export const LabelContext = observer(({
+    ui,
+    task
+}: LabelContextProps) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isCreating, setIsCreating] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
     const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
     const [creationView, setCreationView] = useState<'main' | 'colors'>('main');
+
+    const labels = store.availableLabels;
+    // Assuming recent is just first 3 for now, or implement recent logic in store
+    const recentLabels = labels.slice(0, 3);
 
     const filteredLabels = labels.filter((label) =>
         label.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -53,15 +43,14 @@ export const LabelContext: React.FC<LabelContextProps> = ({
 
     const handleCreate = () => {
         if (newLabelName.trim()) {
-            if (onCreateLabel) {
-                onCreateLabel(newLabelName.trim(), selectedColor);
-                setNewLabelName('');
-                setSelectedColor(PRESET_COLORS[0]);
-                setIsCreating(false);
-                setCreationView('main');
-            } else {
-                console.error("onCreateLabel prop is missing!");
-            }
+            const newLabel = store.addLabel(newLabelName.trim(), selectedColor);
+            task.labels = [newLabel.id];
+
+            setNewLabelName('');
+            setSelectedColor(PRESET_COLORS[0]);
+            setIsCreating(false);
+            setCreationView('main');
+            ui.closeLabelContext();
         }
     };
 
@@ -71,8 +60,17 @@ export const LabelContext: React.FC<LabelContextProps> = ({
         setCreationView('main');
     }
 
+    const handleSelect = (labelId: string) => {
+        task.labels = [labelId];
+        ui.closeLabelContext();
+    }
+
     return (
-        <ContextMenu isOpen={isOpen} onClose={onClose} position={position}>
+        <ContextMenu
+            isOpen={ui.labelContext.isOpen}
+            onClose={() => ui.closeLabelContext()}
+            position={ui.labelContext.position}
+        >
             {isCreating ? (
                 creationView === 'main' ? (
                     <>
@@ -158,7 +156,7 @@ export const LabelContext: React.FC<LabelContextProps> = ({
                                     key={label.id}
                                     colorDot={label.color}
                                     label={label.name}
-                                    onClick={() => onSelectLabel?.(label)}
+                                    onClick={() => handleSelect(label.id)}
                                 />
                             ))}
                         </>
@@ -170,7 +168,7 @@ export const LabelContext: React.FC<LabelContextProps> = ({
                             key={label.id}
                             colorDot={label.color}
                             label={label.name}
-                            onClick={() => onSelectLabel?.(label)}
+                            onClick={() => handleSelect(label.id)}
                         />
                     ))}
 
@@ -194,10 +192,13 @@ export const LabelContext: React.FC<LabelContextProps> = ({
                     <MenuItem
                         label="Edit labels"
                         arrow
-                        onClick={onEditLabels}
+                        onClick={() => {
+                            // onEditLabels logic if needed, or implement here
+                            console.log("Edit labels clicked - implement global label manager if needed");
+                        }}
                     />
                 </>
             )}
         </ContextMenu>
     );
-};
+});

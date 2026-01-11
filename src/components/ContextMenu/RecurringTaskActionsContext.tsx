@@ -1,29 +1,24 @@
 import React from 'react';
+import { observer } from 'mobx-react-lite';
 import { ContextMenu, MenuItem } from './ContextMenu';
+import { Task } from '../../models/core';
+import { TaskUIModel } from '../../models/TaskUIModel';
 
 interface RecurringTaskActionsContextProps {
-    isOpen: boolean;
-    onClose: () => void;
-    position?: { x: number; y: number };
-    recurrenceDescription?: string;
-    onUpdateRecurrence?: () => void;
-    onStopRepeating?: () => void;
-    onUpdateAllTasks?: () => void;
-    onDeleteAllInstances?: () => void;
+    ui: TaskUIModel;
+    task: Task;
 }
 
-export const RecurringTaskActionsContext: React.FC<RecurringTaskActionsContextProps> = ({
-    isOpen,
-    onClose,
-    position,
-    recurrenceDescription = 'Every weekday (Mon - Fri) at 12:30 AM',
-    onUpdateRecurrence,
-    onStopRepeating,
-    onUpdateAllTasks,
-    onDeleteAllInstances,
-}) => {
+export const RecurringTaskActionsContext = observer(({
+    ui,
+    task
+}: RecurringTaskActionsContextProps) => {
     return (
-        <ContextMenu isOpen={isOpen} onClose={onClose} position={position}>
+        <ContextMenu
+            isOpen={ui.recurrenceContext.isOpen}
+            onClose={() => ui.closeRecurrenceContext()}
+            position={ui.recurrenceContext.position}
+        >
             <MenuItem
                 icon={
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -31,9 +26,17 @@ export const RecurringTaskActionsContext: React.FC<RecurringTaskActionsContextPr
                         <circle cx="12" cy="8" r="2" />
                     </svg>
                 }
-                label={recurrenceDescription}
+                label={task.recurrence || 'Recurring'}
                 arrow
-                onClick={onUpdateRecurrence}
+                onClick={() => {
+                    // Switch to 'set' mode to edit recurrence
+                    // We need a way to switch modes in UI model.
+                    // As per TaskUIModel: mode: 'set' | 'actions'
+                    ui.recurrenceContext.mode = 'set';
+                    // Context closes/re-renders? 
+                    // If we change mode, TaskModal will re-render and show MakeRecurringTaskContext because of conditional rendering there.
+                    // So we just update the model.
+                }}
             />
 
             <MenuItem
@@ -44,7 +47,10 @@ export const RecurringTaskActionsContext: React.FC<RecurringTaskActionsContextPr
                     </svg>
                 }
                 label="Stop repeating"
-                onClick={onStopRepeating}
+                onClick={() => {
+                    task.recurrence = 'none';
+                    ui.closeRecurrenceContext();
+                }}
             />
 
             <MenuItem
@@ -54,7 +60,11 @@ export const RecurringTaskActionsContext: React.FC<RecurringTaskActionsContextPr
                     </svg>
                 }
                 label="Update all incomplete tasks to match this task"
-                onClick={onUpdateAllTasks}
+                onClick={() => {
+                    // Placeholder for future logic
+                    console.log("Update all incomplete tasks - not implemented");
+                    ui.closeRecurrenceContext();
+                }}
             />
 
             <MenuItem
@@ -64,8 +74,12 @@ export const RecurringTaskActionsContext: React.FC<RecurringTaskActionsContextPr
                     </svg>
                 }
                 label="Delete all instances"
-                onClick={onDeleteAllInstances}
+                onClick={() => {
+                    // Placeholder for future logic
+                    console.log("Delete all instances - not implemented");
+                    ui.closeRecurrenceContext();
+                }}
             />
         </ContextMenu >
     );
-};
+});

@@ -3,19 +3,16 @@ import { store } from '../../models/store';
 import { Task } from '../../models/core';
 import {
     Plus,
-    ChevronDown,
-    MoreVertical,
-    Edit2
 } from 'lucide-react';
 import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 import { CreateListModal } from '../Sidebar/CreateListModal';
+import { GroupList } from '../Shared/GroupList';
 import { ContextMenu, MenuItem, MenuSeparator } from '../ContextMenu/ContextMenu';
 import { sidebarUI } from '../../models/SidebarUIModel';
 import { TaskCard, SortableTaskCard } from '../Gantt/TaskCard/index';
-import { Trash2 } from 'lucide-react';
 import './Sidebar.css';
 
 const SidebarTaskList = observer(({ tasks, activeGroup, onDuplicate, onDelete }: any) => {
@@ -53,9 +50,6 @@ const SidebarTaskList = observer(({ tasks, activeGroup, onDuplicate, onDelete }:
 });
 
 export const Sidebar = observer(() => {
-    const [showCreateList, setShowCreateList] = useState(false);
-    const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
-
     const activeGroup = store.activeGroup;
 
     const handleCreateTask = (title: string) => {
@@ -81,100 +75,9 @@ export const Sidebar = observer(() => {
                     </span>
                 </div>
 
-                <div className="active-list-container">
-                    <div
-                        className="active-list-selector"
-                        onClick={(e) => sidebarUI.handleListClick(e)}
-                    >
-                        <div className="active-list-icon">
-                            {store.activeGroupId === null ? '🧠' : '🐙'}
-                        </div>
-                        <div className="active-list-info">
-                            <span className="active-list-name">
-                                {store.activeGroupId === null ? 'Brain Dump' : activeGroup?.name}
-                            </span>
-                        </div>
-                        <ChevronDown size={16} className="active-list-chevron" />
-                    </div>
-
-                    {store.activeGroupId !== null && (
-                        <div
-                            className="active-list-actions-trigger"
-                            onClick={(e) => sidebarUI.handleActionsClick(e)}
-                        >
-                            <MoreVertical size={18} />
-                        </div>
-                    )}
-                </div>
-
-                {/* Context Menu for Lists */}
-                <ContextMenu
-                    isOpen={sidebarUI.isMenuOpen}
-                    onClose={() => sidebarUI.setMenuOpen(false)}
-                    position={sidebarUI.menuPosition}
-                    className="sidebar-list-context-menu"
-                >
-                    <MenuItem
-                        label="Brain Dump"
-                        icon={<span>🧠</span>}
-                        selected={store.activeGroupId === null}
-                        checkmark={store.activeGroupId === null}
-                        onClick={() => {
-                            store.activeGroupId = null;
-                            sidebarUI.setMenuOpen(false);
-                        }}
-                    />
-                    <MenuSeparator />
-                    {store.groups.map(group => (
-                        <MenuItem
-                            key={group.id}
-                            label={group.name}
-                            icon={<span>🐙</span>}
-                            selected={store.activeGroupId === group.id}
-                            checkmark={store.activeGroupId === group.id}
-                            onClick={() => {
-                                store.activeGroupId = group.id;
-                                sidebarUI.setMenuOpen(false);
-                            }}
-                        />
-                    ))}
-                    <MenuSeparator />
-                    <MenuItem
-                        label="New List"
-                        icon={<Plus size={14} />}
-                        onClick={() => {
-                            sidebarUI.setMenuOpen(false);
-                            setEditingGroupId(null);
-                            setShowCreateList(true);
-                        }}
-                    />
-                </ContextMenu>
-
-                {/* List Actions Context Menu */}
-                <ContextMenu
-                    isOpen={sidebarUI.isActionsMenuOpen}
-                    onClose={() => sidebarUI.setActionsMenuOpen(false)}
-                    position={sidebarUI.actionsMenuPosition}
-                >
-                    <MenuItem
-                        label="Edit List"
-                        icon={<Edit2 size={14} />}
-                        onClick={() => {
-                            sidebarUI.setActionsMenuOpen(false);
-                            setEditingGroupId(store.activeGroupId);
-                            setShowCreateList(true);
-                        }}
-                    />
-                    <MenuItem
-                        label="Delete List"
-                        icon={<Trash2 size={14} />}
-                        onClick={() => {
-                            store.deleteGroup(store.activeGroupId!);
-                            sidebarUI.setActionsMenuOpen(false);
-
-                        }}
-                    />
-                </ContextMenu>
+                <GroupList
+                    activeGroupId={store.activeGroupId}
+                />
                 {/* ... existing header code ... */}
 
                 {/* Logic for duplicate/delete handlers tailored for wrapper */}
@@ -221,15 +124,6 @@ export const Sidebar = observer(() => {
 
             </aside>
 
-            {showCreateList && (
-                <CreateListModal
-                    groupId={editingGroupId}
-                    onClose={() => {
-                        setShowCreateList(false);
-                        setEditingGroupId(null);
-                    }}
-                />
-            )}
         </>
     );
 });

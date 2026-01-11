@@ -3,13 +3,10 @@ import { observer } from 'mobx-react-lite';
 import { Task } from '../../../models/core';
 import {
     Check,
-    Plus,
     Flag,
     Link2,
     RotateCw,
     Play,
-    GripVertical,
-    MoreVertical,
     Copy,
     Trash2,
     Timer
@@ -21,7 +18,7 @@ import { MakeRecurringTaskContext } from '../../ContextMenu/MakeRecurringTaskCon
 import { RecurringTaskActionsContext } from '../../ContextMenu/RecurringTaskActionsContext';
 import { TaskUIModel } from '../../../models/TaskUIModel';
 import { store } from '../../../models/store';
-import { format, getHours, getMinutes } from 'date-fns';
+import { format } from 'date-fns';
 import { SubtaskList } from '../../Shared/SubtaskList';
 import './TaskCard.css';
 
@@ -306,91 +303,11 @@ export const TaskCardBase = observer(({
                 }}
             />
 
-            <LabelContext
-                isOpen={ui.labelContext.isOpen}
-                onClose={() => ui.closeLabelContext()}
-                position={ui.labelContext.position}
-                labels={store.availableLabels}
-                recentLabels={store.availableLabels.slice(0, 3)}
-                onSelectLabel={(label) => {
-                    task.labels = [label.id];
-                    ui.closeLabelContext();
-                }}
-                onEditLabels={() => {
-                    ui.closeLabelContext();
-                    store.openSettings('labels');
-                }}
-                onCreateLabel={(name, color) => {
-                    store.addLabel(name, color);
-                }}
-            />
+            <LabelContext ui={ui} task={task} />
 
-            <MakeRecurringTaskContext
-                isOpen={ui.recurrenceContext.isOpen && ui.recurrenceContext.mode === 'set'}
-                onClose={() => ui.closeRecurrenceContext()}
-                position={ui.recurrenceContext.position}
-                selectedRecurrence={task.recurrence}
-                hasSpecificTime={!!task.scheduledDate && (getHours(task.scheduledDate) !== 0 || getMinutes(task.scheduledDate) !== 0)}
-                specificTime={task.scheduledDate ? format(task.scheduledDate, 'h:mm a') : '9:00 AM'}
-                onSelectRecurrence={(type) => {
-                    task.recurrence = type;
-                    ui.closeRecurrenceContext();
-                }}
-                onToggleSpecificTime={(enabled) => {
-                    if (!enabled) {
-                        if (task.scheduledDate) {
-                            const newDate = new Date(task.scheduledDate);
-                            newDate.setHours(0, 0, 0, 0);
-                            task.scheduledDate = newDate;
-                        }
-                    } else {
-                        if (task.scheduledDate) {
-                            const newDate = new Date(task.scheduledDate);
-                            newDate.setHours(9, 0, 0, 0);
-                            task.scheduledDate = newDate;
-                        } else {
-                            const now = new Date();
-                            now.setHours(9, 0, 0, 0);
-                            task.scheduledDate = now;
-                        }
-                    }
-                }}
-                onChangeTime={(timeStr) => {
-                    const [time, period] = timeStr.split(' ');
-                    const [hoursStr, minutesStr] = time.split(':');
-                    let hours = parseInt(hoursStr);
-                    const minutes = parseInt(minutesStr);
-                    if (period === 'PM' && hours < 12) hours += 12;
-                    if (period === 'AM' && hours === 12) hours = 0;
+            <MakeRecurringTaskContext ui={ui} task={task} />
 
-                    if (task.scheduledDate) {
-                        const newDate = new Date(task.scheduledDate);
-                        newDate.setHours(hours, minutes);
-                        task.scheduledDate = newDate;
-                    } else {
-                        const now = new Date();
-                        now.setHours(hours, minutes);
-                        task.scheduledDate = now;
-                    }
-                }}
-            />
-
-            <RecurringTaskActionsContext
-                isOpen={ui.recurrenceContext.isOpen && ui.recurrenceContext.mode === 'actions'}
-                onClose={() => ui.closeRecurrenceContext()}
-                position={ui.recurrenceContext.position}
-                recurrenceDescription={`Repeats ${task.recurrence}`}
-                onStopRepeating={() => {
-                    task.recurrence = 'none';
-                    ui.closeRecurrenceContext();
-                }}
-                onUpdateRecurrence={() => {
-                    ui.closeRecurrenceContext();
-                    setTimeout(() => {
-                        // Logic to reopen in set mode if needed
-                    }, 10);
-                }}
-            />
+            <RecurringTaskActionsContext ui={ui} task={task} />
 
             <ContextMenu
                 isOpen={ui.actionContext.isOpen}

@@ -1,3 +1,5 @@
+import { Task } from "../../models/core";
+import { TaskUIModel } from "../../models/TaskUIModel";
 import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import {
@@ -21,22 +23,25 @@ import { ContextMenu } from './ContextMenu';
 import './DateTimePickerContext.css';
 
 interface DateTimePickerContextProps {
-    isOpen: boolean;
-    onClose: () => void;
-    position: { x: number; y: number };
-    selectedDate?: Date;
-    onSelect: (date: Date) => void;
-    onRemoveTime?: () => void;
+    ui: TaskUIModel;
+    task: Task;
 }
 
 export const DateTimePickerContext = observer(({
-    isOpen,
-    onClose,
-    position,
-    selectedDate,
-    onSelect,
-    onRemoveTime
+    ui,
+    task
 }: DateTimePickerContextProps) => {
+    // Derived state from task
+    const selectedDate = (() => {
+        if (!task.scheduledDate) return undefined;
+        const d = new Date(task.scheduledDate);
+        if (task.scheduledTime) {
+            const [h, m] = task.scheduledTime.split(':').map(Number);
+            d.setHours(h, m);
+        }
+        return d;
+    })();
+
     const [viewDate, setViewDate] = useState(selectedDate || new Date());
     const [isTimePickerVisible, setIsTimePickerVisible] = useState(!!selectedDate && (getHours(selectedDate) !== 0 || getMinutes(selectedDate) !== 0));
 
@@ -46,6 +51,24 @@ export const DateTimePickerContext = observer(({
             setIsTimePickerVisible(getHours(selectedDate) !== 0 || getMinutes(selectedDate) !== 0);
         }
     }, [selectedDate]);
+
+    const handleSelect = (date: Date) => {
+        const h = date.getHours();
+        const m = date.getMinutes();
+        const newDate = new Date(date);
+        newDate.setHours(0, 0, 0, 0);
+
+        if (h !== 0 || m !== 0) {
+            const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            task.setScheduling(newDate, timeStr);
+        } else {
+            if (task.scheduledTime) {
+                task.setScheduling(newDate, "00:00");
+            } else {
+                task.setScheduling(newDate, undefined);
+            }
+        }
+    };
 
     const monthStart = startOfMonth(viewDate);
     const monthEnd = endOfMonth(monthStart);
@@ -63,7 +86,7 @@ export const DateTimePickerContext = observer(({
             newDate.setHours(getHours(selectedDate));
             newDate.setMinutes(getMinutes(selectedDate));
         }
-        onSelect(newDate);
+        handleSelect(newDate);
     };
 
     const handleTimeChange = (type: 'hours' | 'minutes', value: number) => {
@@ -73,14 +96,18 @@ export const DateTimePickerContext = observer(({
         } else {
             newDate = setMinutes(newDate, value);
         }
-        onSelect(newDate);
+        handleSelect(newDate);
     };
 
     const hours = selectedDate ? getHours(selectedDate) : 9;
     const minutes = selectedDate ? getMinutes(selectedDate) : 0;
 
     return (
-        <ContextMenu isOpen={isOpen} onClose={onClose} position={position}>
+        <ContextMenu
+            isOpen={ui.isContextMenuOpen}
+            onClose={() => ui.setContextMenuOpen(false)}
+            position={ui.contextPosition}
+        >
             <div className="dtp-container" onClick={e => e.stopPropagation()}>
                 <div className="dtp-header">
                     <span className="dtp-month">{format(viewDate, 'MMMM yyyy')}</span>
@@ -121,7 +148,7 @@ export const DateTimePickerContext = observer(({
                                 let baseDate = selectedDate ? new Date(selectedDate) : new Date(viewDate);
                                 // Default to 9:00 AM
                                 const newDate = setHours(setMinutes(baseDate, 0), 9);
-                                onSelect(newDate);
+                                handleSelect(newDate);
                             }}
                         >
                             Add to Timebox
@@ -134,7 +161,7 @@ export const DateTimePickerContext = observer(({
                                     value={hours.toString().padStart(2, '0')}
                                     onChange={e => {
                                         let val = parseInt(e.target.value);
-                                        if (e.target.value === '') return; // Allow empty while typing? Or handle differently. Better to safeguard.
+                                        if (e.target.value === '') return;
                                         if (isNaN(val)) return;
                                         val = Math.max(0, Math.min(23, val)); // 0-23
                                         handleTimeChange('hours', val);
@@ -157,7 +184,9 @@ export const DateTimePickerContext = observer(({
                                 className="dtp-remove-btn"
                                 onClick={() => {
                                     setIsTimePickerVisible(false);
-                                    onRemoveTime?.();
+                                    if (task.scheduledDate) {
+                                        task.setScheduling(task.scheduledDate, undefined);
+                                    }
                                 }}
                             >
                                 Remove from Timebox

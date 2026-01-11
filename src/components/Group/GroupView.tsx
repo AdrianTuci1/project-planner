@@ -20,7 +20,8 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
     const group = store.groups.find(g => g.id === groupId);
     if (!group) return <div>Group not found</div>;
 
-    const displayTasks = store.applyGlobalFilters(group.tasks);
+    const globalTasks = store.filteredTasks;
+    const hasTasks = globalTasks.length > 0;
 
     const handleTaskClick = (task: Task) => {
         store.openTaskModal(task);
@@ -33,20 +34,20 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                 <TopBar />
                 <div className="group-content">
                     {store.viewMode === 'tasks' ? (
-                        displayTasks.length > 0 ? (
+                        hasTasks ? (
                             <KanbanBoard
-                                tasks={displayTasks}
+                                tasks={globalTasks}
                                 onTaskClick={handleTaskClick}
-                                groupId={groupId}
+                                groupId={store.activeGroupId}
                             />
                         ) : (
                             <div className="empty-gantt">
-                                No tasks in this group.
+                                No tasks found (Global View).
                             </div>
                         )
                     ) : (
                         <CalendarView
-                            tasks={displayTasks}
+                            tasks={globalTasks}
                             onTaskClick={handleTaskClick}
                         />
                     )}
@@ -61,7 +62,7 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                     <Timebox />
                 ) : (
                     <TasksView
-                        tasks={displayTasks}
+                        tasks={globalTasks}
                         onTaskClick={handleTaskClick}
                         groupId={groupId}
                     />

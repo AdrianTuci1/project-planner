@@ -20,6 +20,11 @@ export class TaskUIModel {
         position: { x: 0, y: 0 }
     };
 
+    listContext = {
+        isOpen: false,
+        position: { x: 0, y: 0 }
+    };
+
     recurrenceContext = {
         isOpen: false,
         mode: 'set' as 'set' | 'actions', // 'set' for MakeRecurring, 'actions' for RecurringActions
@@ -82,6 +87,18 @@ export class TaskUIModel {
 
     closeLabelContext() {
         this.labelContext.isOpen = false;
+    }
+
+    openListContext(e: React.MouseEvent, pos?: { x: number; y: number }) {
+        e.stopPropagation();
+        this.listContext = {
+            isOpen: true,
+            position: pos || { x: e.clientX, y: e.clientY }
+        };
+    }
+
+    closeListContext() {
+        this.listContext.isOpen = false;
     }
 
     openRecurrenceContext(e: React.MouseEvent, mode: 'set' | 'actions', pos?: { x: number; y: number }) {
