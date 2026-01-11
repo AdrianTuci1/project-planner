@@ -4,7 +4,9 @@ import { store } from '../../models/store';
 import { Task } from '../../models/core';
 import { format, addDays, isSameDay, startOfDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { TaskCard } from '../Gantt/TaskCard/index';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { TaskCard, SortableTaskCard } from '../Gantt/TaskCard/index';
 import './TasksView.css';
 
 interface TasksViewProps {
@@ -12,6 +14,62 @@ interface TasksViewProps {
     onTaskClick: (task: Task) => void;
     groupId?: string | null;
 }
+
+const TasksList = observer(({ tasks, isAddingTask, setIsAddingTask, handleCreateTask, onTaskClick, handleDuplicateTask, handleDeleteTask }: any) => {
+    const { isOver, setNodeRef } = useDroppable({
+        id: 'tasks-list',
+        data: {
+            type: 'tasks-list',
+            date: store.viewDate
+        }
+    });
+
+    return (
+        <div
+            ref={setNodeRef}
+            className={`tasks-list ${isOver ? 'droppable-over' : ''}`}
+            style={isOver ? { backgroundColor: 'var(--bg-card-hover)', minHeight: '50px' } : undefined}
+        >
+            <TaskCard
+                isGhost
+                onAddClick={() => setIsAddingTask(true)}
+            />
+
+            {isAddingTask && (
+                <TaskCard
+                    isCreating
+                    onCreate={handleCreateTask}
+                    onCancel={() => setIsAddingTask(false)}
+                />
+            )}
+
+            {tasks.length > 0 && (
+                <SortableContext
+                    id="tasks-list"
+                    items={tasks.map((t: Task) => t.id)}
+                    strategy={verticalListSortingStrategy}
+                >
+                    {tasks.map((task: Task) => (
+                        <SortableTaskCard
+                            key={task.id}
+                            task={task}
+                            onTaskClick={onTaskClick}
+                            onDuplicate={handleDuplicateTask}
+                            onDelete={handleDeleteTask}
+                            containerData={{ type: 'tasks-list', date: store.viewDate }}
+                        />
+                    ))}
+                </SortableContext>
+            )}
+
+            {tasks.length === 0 && !isAddingTask && (
+                <div className="empty-tasks">
+                    <p>No tasks scheduled for this day</p>
+                </div>
+            )}
+        </div>
+    );
+});
 
 export const TasksView = observer(({ tasks, onTaskClick, groupId }: TasksViewProps) => {
     const [isAddingTask, setIsAddingTask] = useState(false);
@@ -137,36 +195,15 @@ export const TasksView = observer(({ tasks, onTaskClick, groupId }: TasksViewPro
             </div>
 
             {/* Tasks List */}
-            <div className="tasks-list">
-                <TaskCard
-                    isGhost
-                    onAddClick={() => setIsAddingTask(true)}
-                />
-
-                {isAddingTask && (
-                    <TaskCard
-                        isCreating
-                        onCreate={handleCreateTask}
-                        onCancel={() => setIsAddingTask(false)}
-                    />
-                )}
-
-                {tasksForDate.map(task => (
-                    <TaskCard
-                        key={task.id}
-                        task={task}
-                        onTaskClick={onTaskClick}
-                        onDuplicate={handleDuplicateTask}
-                        onDelete={handleDeleteTask}
-                    />
-                ))}
-
-                {tasksForDate.length === 0 && !isAddingTask && (
-                    <div className="empty-tasks">
-                        <p>No tasks scheduled for this day</p>
-                    </div>
-                )}
-            </div>
+            <TasksList
+                tasks={tasksForDate}
+                isAddingTask={isAddingTask}
+                setIsAddingTask={setIsAddingTask}
+                handleCreateTask={handleCreateTask}
+                onTaskClick={onTaskClick}
+                handleDuplicateTask={handleDuplicateTask}
+                handleDeleteTask={handleDeleteTask}
+            />
         </div>
     );
 });

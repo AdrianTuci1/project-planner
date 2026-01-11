@@ -40,6 +40,13 @@ export const DateTimePickerContext = observer(({
     const [viewDate, setViewDate] = useState(selectedDate || new Date());
     const [isTimePickerVisible, setIsTimePickerVisible] = useState(!!selectedDate && (getHours(selectedDate) !== 0 || getMinutes(selectedDate) !== 0));
 
+    React.useEffect(() => {
+        if (selectedDate) {
+            setViewDate(selectedDate);
+            setIsTimePickerVisible(getHours(selectedDate) !== 0 || getMinutes(selectedDate) !== 0);
+        }
+    }, [selectedDate]);
+
     const monthStart = startOfMonth(viewDate);
     const monthEnd = endOfMonth(monthStart);
     const startDate = startOfWeek(monthStart);
@@ -60,8 +67,7 @@ export const DateTimePickerContext = observer(({
     };
 
     const handleTimeChange = (type: 'hours' | 'minutes', value: number) => {
-        if (!selectedDate) return;
-        let newDate = new Date(selectedDate);
+        let newDate = selectedDate ? new Date(selectedDate) : new Date(viewDate);
         if (type === 'hours') {
             newDate = setHours(newDate, value);
         } else {
@@ -70,16 +76,8 @@ export const DateTimePickerContext = observer(({
         onSelect(newDate);
     };
 
-    const toggleAmPm = () => {
-        if (!selectedDate) return;
-        const currentHours = getHours(selectedDate);
-        const newHours = currentHours >= 12 ? currentHours - 12 : currentHours + 12;
-        onSelect(setHours(new Date(selectedDate), newHours));
-    };
-
-    const hours = selectedDate ? (getHours(selectedDate) % 12 || 12) : 9;
+    const hours = selectedDate ? getHours(selectedDate) : 9;
     const minutes = selectedDate ? getMinutes(selectedDate) : 0;
-    const ampm = selectedDate ? (getHours(selectedDate) >= 12 ? 'PM' : 'AM') : 'AM';
 
     return (
         <ContextMenu isOpen={isOpen} onClose={onClose} position={position}>
@@ -120,12 +118,13 @@ export const DateTimePickerContext = observer(({
                             className="dtp-add-time-btn"
                             onClick={() => {
                                 setIsTimePickerVisible(true);
-                                if (selectedDate) {
-                                    onSelect(setHours(setMinutes(new Date(selectedDate), 0), 9));
-                                }
+                                let baseDate = selectedDate ? new Date(selectedDate) : new Date(viewDate);
+                                // Default to 9:00 AM
+                                const newDate = setHours(setMinutes(baseDate, 0), 9);
+                                onSelect(newDate);
                             }}
                         >
-                            Add time (timebox)
+                            Add to Timebox
                         </button>
                     ) : (
                         <>
@@ -135,10 +134,10 @@ export const DateTimePickerContext = observer(({
                                     value={hours.toString().padStart(2, '0')}
                                     onChange={e => {
                                         let val = parseInt(e.target.value);
-                                        if (isNaN(val)) val = 0;
-                                        val = Math.max(1, Math.min(12, val));
-                                        const actualHour = ampm === 'PM' ? (val % 12) + 12 : (val % 12);
-                                        handleTimeChange('hours', actualHour);
+                                        if (e.target.value === '') return; // Allow empty while typing? Or handle differently. Better to safeguard.
+                                        if (isNaN(val)) return;
+                                        val = Math.max(0, Math.min(23, val)); // 0-23
+                                        handleTimeChange('hours', val);
                                     }}
                                 />
                                 <span className="dtp-time-separator">:</span>
@@ -147,12 +146,12 @@ export const DateTimePickerContext = observer(({
                                     value={minutes.toString().padStart(2, '0')}
                                     onChange={e => {
                                         let val = parseInt(e.target.value);
-                                        if (isNaN(val)) val = 0;
+                                        if (e.target.value === '') return;
+                                        if (isNaN(val)) return;
                                         val = Math.max(0, Math.min(59, val));
                                         handleTimeChange('minutes', val);
                                     }}
                                 />
-                                <span className="dtp-ampm" onClick={toggleAmPm}>{ampm}</span>
                             </div>
                             <button
                                 className="dtp-remove-btn"
@@ -161,7 +160,7 @@ export const DateTimePickerContext = observer(({
                                     onRemoveTime?.();
                                 }}
                             >
-                                Remove from timebox
+                                Remove from Timebox
                             </button>
                         </>
                     )}

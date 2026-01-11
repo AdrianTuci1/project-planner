@@ -4,6 +4,8 @@ import { Task } from '../../../models/core';
 import { GhostTaskCard } from './GhostTaskCard';
 import { CreatingTaskCard } from './CreatingTaskCard';
 import { StandardTaskCard } from './StandardTaskCard';
+import { ResizableTaskCard } from './ResizableTaskCard';
+import { SortableTaskCard } from './SortableTaskCard';
 import './TaskCard.css';
 
 export interface TaskCardProps {
@@ -62,3 +64,6 @@ export const TaskCard = observer(({
         />
     );
 });
+
+export { ResizableTaskCard };
+export { SortableTaskCard };

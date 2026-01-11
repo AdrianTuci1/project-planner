@@ -10,7 +10,6 @@
 
 .task-card:hover {
     border-color: var(--border-strong);
-    transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
 }
 
@@ -248,4 +247,19 @@
 
 .tc-time-value:hover {
     color: var(--accent-blue);
+}
+
+/* Resize Handle */
+.resize-handle {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    cursor: ns-resize;
+    z-index: 10;
+}
+
+.resize-handle:hover {
+    background: rgba(0, 0, 0, 0.1);
 }

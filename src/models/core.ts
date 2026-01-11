@@ -35,6 +35,7 @@ export interface ITask {
     subtasks: ISubtask[];
     createdAt: Date;
     scheduledDate?: Date; // For Gantt/Calendar
+    scheduledTime?: string; // Format "HH:mm"
     labels: string[];
     recurrence?: RecurrenceType;
 }
@@ -85,9 +86,11 @@ export class Task implements ITask {
     participants: IParticipant[] = [];
     subtasks: ISubtask[] = [];
     createdAt: Date;
-    scheduledDate?: Date;
+    scheduledDate?: Date = undefined;
     labels: string[] = [];
     recurrence: RecurrenceType = 'none';
+
+    scheduledTime?: string = undefined; // Format "HH:mm"
 
     constructor(title: string) {
         this.id = uuidv4();
@@ -121,6 +124,11 @@ export class Task implements ITask {
         this.status = this.status === 'done' ? 'todo' : 'done';
     }
 
+    setScheduling(date?: Date, time?: string) {
+        this.scheduledDate = date;
+        this.scheduledTime = time;
+    }
+
     clone() {
         const newTask = new Task(this.title);
         newTask.description = this.description;
@@ -134,6 +142,7 @@ export class Task implements ITask {
             return newSub;
         });
         newTask.scheduledDate = this.scheduledDate ? new Date(this.scheduledDate) : undefined;
+        newTask.scheduledTime = this.scheduledTime;
         newTask.labels = [...this.labels];
         newTask.recurrence = this.recurrence;
         return newTask;

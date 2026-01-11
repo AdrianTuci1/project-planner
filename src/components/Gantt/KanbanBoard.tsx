@@ -3,7 +3,9 @@ import { observer } from 'mobx-react-lite';
 import { Task } from '../../models/core';
 import { store } from '../../models/store';
 import { format, addDays, subDays, isSameDay, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import { TaskCard } from './TaskCard/index';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { TaskCard, SortableTaskCard } from './TaskCard/index';
 import { kanbanModel } from '../../models/KanbanModel';
 import './KanbanBoard.css';
 
@@ -12,6 +14,70 @@ interface KanbanBoardProps {
     onTaskClick: (task: Task) => void;
     groupId?: string | null;
 }
+
+const KanbanColumn = observer(({
+    date,
+    tasks,
+    isToday,
+    isAdding,
+    onAddClick,
+    onTaskClick,
+    onDuplicate,
+    onDelete,
+    onCreate,
+    onCancel,
+    groupId
+}: any) => {
+    const columnId = `kanban-column-${date.toISOString()}`;
+    const { isOver, setNodeRef } = useDroppable({
+        id: columnId,
+        data: {
+            type: 'kanban-column',
+            date: date,
+            groupId: groupId // Pass group ID for identification
+        }
+    });
+
+    return (
+        <div
+            ref={setNodeRef}
+            className={`day-column ${isOver ? 'droppable-over' : ''}`}
+        >
+            <div className="day-header">
+                <span className="day-name">{format(date, 'EEE')}</span>
+                <span>{format(date, 'MMM d')}</span>
+                {isToday && <span className="today-badge">Today</span>}
+            </div>
+
+            <TaskCard isGhost onAddClick={onAddClick} />
+
+            {isAdding && (
+                <TaskCard
+                    key="create-task"
+                    isCreating
+                    onCreate={onCreate}
+                    onCancel={onCancel}
+                />
+            )}
+
+            <div className="kanban-sortable-area">
+                <SortableContext id={columnId} items={tasks.map((t: Task) => t.id)} strategy={verticalListSortingStrategy}>
+                    {tasks.map((task: Task) => (
+                        <SortableTaskCard
+                            key={task.id}
+                            task={task}
+                            className="kanban-task-card"
+                            onTaskClick={onTaskClick}
+                            onDuplicate={onDuplicate}
+                            onDelete={onDelete}
+                            containerData={{ type: 'kanban-column', date: date }}
+                        />
+                    ))}
+                </SortableContext>
+            </div>
+        </div>
+    );
+});
 
 export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoardProps) => {
     const [addingTaskDate, setAddingTaskDate] = useState<Date | null>(null);
@@ -92,6 +158,7 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
             // Assuming for now Brain Dump items in Kanban behave like tasks
             const newTask = new Task(title);
             newTask.scheduledDate = date;
+            newTask.scheduledTime = undefined;
             store.dumpAreaTasks.push(newTask);
             return;
         }
@@ -99,6 +166,7 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
         if (targetGroup) {
             const newTask = new Task(title);
             newTask.scheduledDate = date;
+            newTask.scheduledTime = undefined;
             targetGroup.addTask(newTask);
             // We stay in create mode to allow adding multiple tasks
         }
@@ -145,38 +213,19 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
                     const isAddingToThisDay = addingTaskDate && isSameDay(addingTaskDate, date);
 
                     return (
-                        <div key={date.toISOString()} className="day-column">
-                            <div className="day-header">
-                                <span className="day-name">{format(date, 'EEE')}</span>
-                                <span>{format(date, 'MMM d')}</span>
-                                {isToday && <span className="today-badge">Today</span>}
-                            </div>
-
-                            <TaskCard
-                                isGhost
-                                onAddClick={() => setAddingTaskDate(date)}
-                            />
-
-                            {isAddingToThisDay && (
-                                <TaskCard
-                                    key="create-task"
-                                    isCreating
-                                    onCreate={(title) => handleCreateTask(title, date)}
-                                    onCancel={() => setAddingTaskDate(null)}
-                                />
-                            )}
-
-                            {dayTasks.map(task => (
-                                <TaskCard
-                                    key={task.id}
-                                    task={task}
-                                    className="kanban-task-card"
-                                    onTaskClick={onTaskClick}
-                                    onDuplicate={handleDuplicateTask}
-                                    onDelete={handleDeleteTask}
-                                />
-                            ))}
-                        </div>
+                        <KanbanColumn
+                            key={date.toISOString()}
+                            date={date}
+                            tasks={dayTasks}
+                            isToday={isToday}
+                            isAdding={isAddingToThisDay}
+                            onAddClick={() => setAddingTaskDate(date)}
+                            onTaskClick={onTaskClick}
+                            onDuplicate={handleDuplicateTask}
+                            onDelete={handleDeleteTask}
+                            onCreate={(title: string) => handleCreateTask(title, date)}
+                            onCancel={() => setAddingTaskDate(null)}
+                        />
                     );
                 })}
             </div>

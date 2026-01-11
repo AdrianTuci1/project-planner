@@ -1,40 +1,46 @@
-import React, { useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
-import { useDraggable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Task } from '../../../models/core';
 import { TaskCardBase } from './TaskCardBase';
 
-interface StandardTaskCardProps {
+interface SortableTaskCardProps {
     task: Task;
     onTaskClick?: (task: Task) => void;
     onDuplicate?: (task: Task) => void;
     onDelete?: (task: Task) => void;
-    style?: React.CSSProperties;
     className?: string;
+    containerData?: any;
 }
 
-export const StandardTaskCard = observer(({
+export const SortableTaskCard = observer(({
     task,
     onTaskClick,
     onDuplicate,
     onDelete,
-    style,
-    className
-}: StandardTaskCardProps) => {
-
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    className,
+    containerData
+}: SortableTaskCardProps) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({
         id: task.id,
         data: {
             type: 'task',
             task: task,
-            origin: 'standard'
+            origin: 'sortable',
+            containerData
         }
     });
 
-    const combinedStyle: React.CSSProperties = {
-        ...style,
-        transform: CSS.Translate.toString(transform),
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
     };
 
     return (
@@ -43,12 +49,12 @@ export const StandardTaskCard = observer(({
             onTaskClick={onTaskClick}
             onDuplicate={onDuplicate}
             onDelete={onDelete}
-            style={combinedStyle}
             className={className}
             setNodeRef={setNodeRef}
             attributes={attributes}
             listeners={listeners}
             isDragging={isDragging}
+            style={style}
         />
     );
 });

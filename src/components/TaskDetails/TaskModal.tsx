@@ -14,7 +14,7 @@ import {
     Copy,
     Link
 } from 'lucide-react';
-import { format, setHours, setMinutes, getHours, getMinutes } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 import { DateTimePickerContext } from '../ContextMenu/DateTimePickerContext';
 import { TimeInputContext } from '../ContextMenu/TimeInputContext';
 import { CreateLabelContext } from '../ContextMenu/CreateLabelContext';
@@ -75,7 +75,16 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                             </div>
                             <div className="meta-row-value">
                                 <span className="value-main">
-                                    {task.scheduledDate ? format(task.scheduledDate, 'EEEE, d MMM' + (getHours(task.scheduledDate) !== 0 || getMinutes(task.scheduledDate) !== 0 ? ' HH:mm' : '')) : 'No date set'}
+                                    {task.scheduledDate ? (() => {
+                                        const dateStr = format(task.scheduledDate, 'EEEE, d MMM');
+                                        if (task.scheduledTime) {
+                                            const [h, m] = task.scheduledTime.split(':').map(Number);
+                                            const timeDate = new Date();
+                                            timeDate.setHours(h, m);
+                                            return `${dateStr} ${format(timeDate, 'HH:mm')}`;
+                                        }
+                                        return dateStr;
+                                    })() : 'No date set'}
                                 </span>
                                 <span className="value-sub">(Move to List)</span>
                             </div>
@@ -265,13 +274,54 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                 isOpen={ui.isContextMenuOpen}
                 onClose={() => ui.setContextMenuOpen(false)}
                 position={ui.contextPosition}
-                selectedDate={task.scheduledDate}
+                selectedDate={(() => {
+                    if (!task.scheduledDate) return undefined;
+                    const d = new Date(task.scheduledDate);
+                    if (task.scheduledTime) {
+                        const [h, m] = task.scheduledTime.split(':').map(Number);
+                        d.setHours(h, m);
+                    }
+                    return d;
+                })()}
                 onSelect={(date) => {
-                    task.scheduledDate = date;
+                    const h = date.getHours();
+                    const m = date.getMinutes();
+                    // If the picker returns a time component, or if we already had a time and preserving it (handled by picker logic),
+                    // we update the time string.
+                    // Special case: If 00:00, we treat it as specific time "00:00" ONLY if scheduledTime was already set or we are explicitly in time mode?
+                    // Actually, let's trust the picker. If it sends hours/mins, we use them.
+
+                    // We need to decouple the Date (midnight) from the Time string.
+                    const newDate = new Date(date);
+                    newDate.setHours(0, 0, 0, 0);
+
+                    if (h !== 0 || m !== 0) {
+                        // Explicit time set
+                        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                        task.setScheduling(newDate, timeStr);
+                    } else {
+                        // Midnight value.
+                        // If we are coming from a time-change (e.g. set to 12:00 AM), we want to keep it as time "00:00".
+                        // If we are just picking a date (which defaults to midnight), we might want to KEEP existing time.
+
+                        // BUT, DateTimePickerContext's handleDateClick preserves existing time.
+                        // So if we receive 00:00, it means either:
+                        // A) Exisiting time was 00:00 (or undefined)
+                        // B) User explicitly set 12:00 AM
+
+                        // Let's assume if we are receiving this onSelect, checking if we originally had a time matches best.
+                        if (task.scheduledTime) {
+                            // If we had a time, and we got 00:00, it effectively means "00:00".
+                            task.setScheduling(newDate, "00:00");
+                        } else {
+                            // No previous time, and got 00:00 => Date only.
+                            task.setScheduling(newDate, undefined);
+                        }
+                    }
                 }}
                 onRemoveTime={() => {
                     if (task.scheduledDate) {
-                        task.scheduledDate = setHours(setMinutes(new Date(task.scheduledDate), 0), 0);
+                        task.setScheduling(task.scheduledDate, undefined);
                     }
                 }}
             />
@@ -306,9 +356,41 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                     onClose={() => ui.closeRecurrenceContext()}
                     position={ui.recurrenceContext.position}
                     selectedRecurrence={task.recurrence}
+                    hasSpecificTime={!!task.scheduledTime}
+                    specificTime={(() => {
+                        if (task.scheduledTime) {
+                            const [h, m] = task.scheduledTime.split(':').map(Number);
+                            const d = new Date();
+                            d.setHours(h, m);
+                            return format(d, 'h:mm a');
+                        }
+                        return '9:00 AM';
+                    })()}
                     onSelectRecurrence={(type) => {
                         task.recurrence = type;
                         ui.closeRecurrenceContext();
+                    }}
+                    onToggleSpecificTime={(enabled) => {
+                        if (!enabled) {
+                            if (task.scheduledDate) {
+                                task.setScheduling(task.scheduledDate, undefined);
+                            }
+                        } else {
+                            const d = task.scheduledDate ? new Date(task.scheduledDate) : startOfDay(new Date());
+                            d.setHours(0, 0, 0, 0);
+                            task.setScheduling(d, "09:00");
+                        }
+                    }}
+                    onChangeTime={(timeStr) => {
+                        const [time, period] = timeStr.split(' ');
+                        const [hoursStr, minutesStr] = time.split(':');
+                        let hours = parseInt(hoursStr);
+                        const minutes = parseInt(minutesStr);
+                        if (period === 'PM' && hours < 12) hours += 12;
+                        if (period === 'AM' && hours === 12) hours = 0;
+
+                        const newTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                        task.setScheduling(task.scheduledDate, newTime);
                     }}
                 />
             ) : (

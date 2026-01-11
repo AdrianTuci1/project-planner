@@ -65,6 +65,23 @@ class ProjectStore {
                 else localStorage.removeItem('activeGroupId');
             }
         );
+        // Migration: Separate Time from Date
+        const allTasks = this.allTasks;
+        allTasks.forEach(task => {
+            if (task.scheduledDate && !task.scheduledTime) {
+                const h = task.scheduledDate.getHours();
+                const m = task.scheduledDate.getMinutes();
+
+                // If time is not 00:00, extract it
+                if (h !== 0 || m !== 0) {
+                    task.scheduledTime = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                    // Reset date to midnight
+                    const d = new Date(task.scheduledDate);
+                    d.setHours(0, 0, 0, 0);
+                    task.scheduledDate = d;
+                }
+            }
+        });
     }
 
     setDate(date: Date) {
@@ -81,6 +98,11 @@ class ProjectStore {
 
     get activeGroup() {
         return this.groups.find(g => g.id === this.activeGroupId);
+    }
+
+    get allTasks() {
+        const groupTasks = this.groups.flatMap(g => g.tasks);
+        return [...this.dumpAreaTasks, ...groupTasks];
     }
 
     createGroup(name: string) {
@@ -192,29 +214,34 @@ class ProjectStore {
         const today = new Date();
 
         const task1 = new Task("Design Social Media Assets");
-        task1.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 30); // 4:30 PM today
+        task1.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0); // Date part
+        task1.scheduledTime = "16:30";
         task1.duration = 90;
         task1.labels = ['Design'];
         marketingGroup.addTask(task1);
 
         const task2 = new Task("Content Strategy Meeting");
-        task2.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 19, 0); // 7:00 PM today
+        task2.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0);
+        task2.scheduledTime = "19:00";
         task2.duration = 60;
         marketingGroup.addTask(task2);
 
         const task3 = new Task("Pampam");
-        task3.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 21, 30); // 9:30 PM in 2 days
+        task3.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 0, 0);
+        task3.scheduledTime = "21:30";
         task3.duration = 75;
         task3.labels = ['Important'];
         marketingGroup.addTask(task3);
 
         const task4 = new Task("Review Analytics");
-        task4.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 17, 0); // 5:00 PM tomorrow
+        task4.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0);
+        task4.scheduledTime = "17:00";
         task4.duration = 45;
         marketingGroup.addTask(task4);
 
         const task5 = new Task("Team Standup");
-        task5.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0); // 6:00 PM today
+        task5.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0);
+        task5.scheduledTime = "18:00";
         task5.duration = 30;
         marketingGroup.addTask(task5);
 

@@ -79,11 +79,21 @@
     flex-direction: column;
     gap: var(--space-3);
     padding-top: var(--space-2);
+    /* outline: 1px dashed red; */
 
 }
 
 .sidebar-tasks-list:empty {
-    display: none;
+    /* display: none;  <-- Caused issue where empty list wasn't droppable */
+    display: flex;
+    flex: 1;
+    /* Grow to fill space */
+    min-height: 200px;
+    /* Force substantial drop area */
+    background-color: rgba(0, 0, 0, 0.02);
+    /* Slight tint to show drop area */
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-4);
 }
 
 .active-list-selector {
