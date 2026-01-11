@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import {
@@ -13,7 +13,11 @@ import {
     Download,
     Cloud,
     LogOut,
-    Users
+    Users,
+    ChevronRight,
+    ArrowLeft,
+    Mail,
+    Lock
 } from 'lucide-react';
 import './SettingsModal.css';
 import { GeneralSettings } from './GeneralSettings';
@@ -26,14 +30,10 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
-    const [activeTab, setActiveTab] = useState('account');
-    const [emailToInvite, setEmailToInvite] = useState('');
+    const { settings } = store;
 
     const handleInvite = () => {
-        if (emailToInvite) {
-            alert(`Invited ${emailToInvite} to the team!`); // Mock invitation
-            setEmailToInvite('');
-        }
+        settings.inviteUser();
     };
 
     return (
@@ -44,13 +44,13 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                     <div className="settings-user-info">
                         <div className="settings-avatar-sm">T</div>
                         <div style={{ overflow: 'hidden' }}>
-                            <div style={{ fontWeight: 600, fontSize: '13px' }}>Tuci</div>
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden' }}>adrian.tucicovenco@gmail.com</div>
+                            <div style={{ fontWeight: 600, fontSize: '13px' }}>{settings.account.displayName}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden' }}>{settings.account.email}</div>
                         </div>
                     </div>
 
                     <div className="settings-section-title">User Settings</div>
-                    <div className={`settings-nav-item ${activeTab === 'account' ? 'active' : ''}`} onClick={() => setActiveTab('account')}>
+                    <div className={`settings-nav-item ${settings.activeTab === 'account' ? 'active' : ''}`} onClick={() => { settings.setActiveTab('account'); settings.setAccountView('main'); }}>
                         <User size={16} /> Account Settings
                     </div>
                     <div className="settings-nav-item"><CreditCard size={16} /> Subscription</div>
@@ -58,20 +58,20 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                     <div className="settings-separator" />
 
                     <div className="settings-section-title">Team</div>
-                    <div className={`settings-nav-item ${activeTab === 'team' ? 'active' : ''}`} onClick={() => setActiveTab('team')}>
+                    <div className={`settings-nav-item ${settings.activeTab === 'team' ? 'active' : ''}`} onClick={() => settings.setActiveTab('team')}>
                         <Users size={16} /> Manage Team
                     </div>
 
                     <div className="settings-separator" />
 
                     <div className="settings-section-title">App Settings</div>
-                    <div className={`settings-nav-item ${activeTab === 'general' ? 'active' : ''}`} onClick={() => setActiveTab('general')}>
+                    <div className={`settings-nav-item ${settings.activeTab === 'general' ? 'active' : ''}`} onClick={() => settings.setActiveTab('general')}>
                         <Settings size={16} /> General settings
                     </div>
-                    <div className={`settings-nav-item ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>
+                    <div className={`settings-nav-item ${settings.activeTab === 'calendar' ? 'active' : ''}`} onClick={() => settings.setActiveTab('calendar')}>
                         <Calendar size={16} /> Calendar accounts
                     </div>
-                    <div className={`settings-nav-item ${activeTab === 'labels' ? 'active' : ''}`} onClick={() => setActiveTab('labels')}>
+                    <div className={`settings-nav-item ${settings.activeTab === 'labels' ? 'active' : ''}`} onClick={() => settings.setActiveTab('labels')}>
                         <Tag size={16} /> Labels
                     </div>
                     <div className="settings-nav-item"><Grid size={16} /> Integrations</div>
@@ -79,7 +79,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                     <div className="settings-separator" />
 
                     <div className="settings-section-title">Power Features</div>
-                    <div className={`settings-nav-item ${activeTab === 'power' ? 'active' : ''}`} onClick={() => setActiveTab('power')}>
+                    <div className={`settings-nav-item ${settings.activeTab === 'power' ? 'active' : ''}`} onClick={() => settings.setActiveTab('power')}>
                         <Zap size={16} /> Toggle power features
                     </div>
 
@@ -99,12 +99,12 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                 <div className="settings-content">
                     <header className="settings-header">
                         <span>
-                            {activeTab === 'account' && 'Account Settings'}
-                            {activeTab === 'team' && 'Team Management'}
-                            {activeTab === 'general' && 'General Settings'}
-                            {activeTab === 'labels' && 'Label Settings'}
-                            {activeTab === 'power' && 'Power Features'}
-                            {activeTab === 'calendar' && 'Calendar Integration'}
+                            {settings.activeTab === 'account' && 'Account Settings'}
+                            {settings.activeTab === 'team' && 'Team Management'}
+                            {settings.activeTab === 'general' && 'General Settings'}
+                            {settings.activeTab === 'labels' && 'Label Settings'}
+                            {settings.activeTab === 'power' && 'Power Features'}
+                            {settings.activeTab === 'calendar' && 'Calendar Integration'}
                         </span>
                         <button className="icon-btn" onClick={onClose}>
                             <X size={20} />
@@ -112,37 +112,163 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                     </header>
 
                     <div className="settings-scroll-area">
-                        {activeTab === 'account' && (
+                        {settings.activeTab === 'account' && (
                             <>
-                                <div className="avatar-upload-section">
-                                    <div className="large-avatar">T</div>
-                                    <button className="btn-secondary">Upload photo</button>
-                                </div>
+                                {settings.accountView === 'main' && (
+                                    <>
+                                        <div className="avatar-upload-section">
+                                            <div className="large-avatar">T</div>
+                                            <button className="btn-secondary">Upload photo</button>
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label">Name</label>
-                                    <input className="form-input" defaultValue="Tuci" />
-                                </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Name</label>
+                                            <input
+                                                className="form-input"
+                                                value={settings.account.displayName}
+                                                onChange={(e) => settings.account.setDisplayName(e.target.value)}
+                                            />
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label">Email</label>
-                                    <input className="form-input" defaultValue="adrian.tucicovenco@gmail.com" />
-                                    <button className="btn-secondary" style={{ marginTop: 8 }}>Change Email</button>
-                                </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Email & Password</label>
 
-                                <div className="form-group">
-                                    <label className="form-label">Password</label>
-                                    <button className="btn-secondary">Change Password</button>
-                                </div>
+                                            {/* Email Card */}
+                                            <div className="connected-account-card" style={{ marginBottom: 16 }}>
+                                                <div className="account-info">
+                                                    <Mail size={20} className="text-muted" />
+                                                    <div>
+                                                        <div className="account-email" style={{ marginBottom: 2 }}>{settings.account.email}</div>
+                                                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Primary email</div>
+                                                    </div>
+                                                </div>
+                                                <button className="manage-btn" onClick={() => settings.setAccountView('email')}>
+                                                    Manage <ChevronRight size={14} />
+                                                </button>
+                                            </div>
 
-                                <div style={{ marginTop: 40, borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
-                                    <label className="form-label">App Version</label>
-                                    <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>3.7.5</div>
-                                </div>
+                                            {/* Password Card */}
+                                            <div className="connected-account-card">
+                                                <div className="account-info">
+                                                    <Lock size={20} className="text-muted" />
+                                                    <div>
+                                                        <div className="account-email" style={{ marginBottom: 2 }}>Password</div>
+                                                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Last changed 3 months ago</div>
+                                                    </div>
+                                                </div>
+                                                <button className="manage-btn" onClick={() => settings.setAccountView('password')}>
+                                                    Change <ChevronRight size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ marginTop: 40, borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
+                                            <label className="form-label">App Version</label>
+                                            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>3.7.5</div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {settings.accountView === 'email' && (
+                                    <div className="settings-fade-in">
+                                        <button className="back-btn" onClick={() => settings.setAccountView('main')}>
+                                            <ArrowLeft size={16} /> Back
+                                        </button>
+
+                                        <div className="manage-header-title-row">
+                                            <div className="manage-title">
+                                                <Mail size={24} /> Change Email
+                                            </div>
+                                        </div>
+                                        <div className="manage-divider" />
+
+                                        <div className="form-group">
+                                            <label className="form-label">Current Email</label>
+                                            <input className="form-input" disabled value={settings.account.email} style={{ opacity: 0.7 }} />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">New Email Address</label>
+                                            <input
+                                                className="form-input"
+                                                placeholder="Enter new email address"
+                                                value={settings.account.changeEmail.newEmail}
+                                                onChange={(e) => settings.account.setChangeEmailField('newEmail', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">Confirm Password</label>
+                                            <input
+                                                className="form-input"
+                                                type="password"
+                                                placeholder="Enter password to confirm"
+                                                value={settings.account.changeEmail.confirmPassword}
+                                                onChange={(e) => settings.account.setChangeEmailField('confirmPassword', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
+                                            <button className="btn-primary" onClick={() => settings.account.updateEmail()}>Update Email</button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {settings.accountView === 'password' && (
+                                    <div className="settings-fade-in">
+                                        <button className="back-btn" onClick={() => settings.setAccountView('main')}>
+                                            <ArrowLeft size={16} /> Back
+                                        </button>
+
+                                        <div className="manage-header-title-row">
+                                            <div className="manage-title">
+                                                <Lock size={24} /> Change Password
+                                            </div>
+                                        </div>
+                                        <div className="manage-divider" />
+
+                                        <div className="form-group">
+                                            <label className="form-label">Current Password</label>
+                                            <input
+                                                className="form-input"
+                                                type="password"
+                                                placeholder="Enter current password"
+                                                value={settings.account.changePassword.currentPassword}
+                                                onChange={(e) => settings.account.setChangePasswordField('currentPassword', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">New Password</label>
+                                            <input
+                                                className="form-input"
+                                                type="password"
+                                                placeholder="Enter new password"
+                                                value={settings.account.changePassword.newPassword}
+                                                onChange={(e) => settings.account.setChangePasswordField('newPassword', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">Confirm New Password</label>
+                                            <input
+                                                className="form-input"
+                                                type="password"
+                                                placeholder="Retype new password"
+                                                value={settings.account.changePassword.confirmNewPassword}
+                                                onChange={(e) => settings.account.setChangePasswordField('confirmNewPassword', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
+                                            <button className="btn-primary" onClick={() => settings.account.updatePassword()}>Update Password</button>
+                                        </div>
+                                    </div>
+                                )}
                             </>
                         )}
 
-                        {activeTab === 'team' && (
+                        {settings.activeTab === 'team' && (
                             <div>
                                 <h3>Your Team</h3>
                                 <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: 20 }}>
@@ -155,8 +281,8 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                                         <input
                                             className="form-input"
                                             placeholder="colleague@example.com"
-                                            value={emailToInvite}
-                                            onChange={(e) => setEmailToInvite(e.target.value)}
+                                            value={settings.emailToInvite}
+                                            onChange={(e) => settings.setEmailToInvite(e.target.value)}
                                         />
                                         <button className="btn-primary" onClick={handleInvite}>Invite</button>
                                     </div>
@@ -177,10 +303,10 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                             </div>
                         )}
 
-                        {activeTab === 'general' && <GeneralSettings />}
-                        {activeTab === 'labels' && <LabelsSettings />}
-                        {activeTab === 'power' && <PowerFeaturesSettings />}
-                        {activeTab === 'calendar' && <CalendarSettings />}
+                        {settings.activeTab === 'general' && <GeneralSettings />}
+                        {settings.activeTab === 'labels' && <LabelsSettings />}
+                        {settings.activeTab === 'power' && <PowerFeaturesSettings />}
+                        {settings.activeTab === 'calendar' && <CalendarSettings />}
                     </div>
                 </div>
             </div>

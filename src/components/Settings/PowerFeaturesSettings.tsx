@@ -84,7 +84,7 @@ export const PowerFeaturesSettings = () => {
         },
         {
             title: "API Token",
-            description: "Enable this to allow third party apps (like Zapier) to connect to Ellie.",
+            description: "Enable this to allow third party apps (like Zapier) to connect to Simplu.",
             icon: <Link size={18} />,
             gradientClass: "gradient-4",
             isEnabled: false
@@ -105,7 +105,7 @@ export const PowerFeaturesSettings = () => {
         },
         {
             title: "Email forwarding",
-            description: "Forward emails directly into Ellie to create tasks.",
+            description: "Forward emails directly into Simplu to create tasks.",
             icon: <Mail size={18} />,
             gradientClass: "gradient-7",
             isEnabled: false

@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { observer } from 'mobx-react-lite';
+import { store } from '../../models/store';
 import { ChevronRight, Apple, ArrowLeft } from 'lucide-react';
 import './CalendarSettings.css';
 
-export const CalendarSettings = () => {
-    // Local state to simulate connection
-    const [isConnected, setIsConnected] = useState(false);
-    const [createTasksFromEvents, setCreateTasksFromEvents] = useState(false);
-    const [showManageView, setShowManageView] = useState(false);
-    const [addTasksToCalendar, setAddTasksToCalendar] = useState(false); // separate state for the manage view toggle
+export const CalendarSettings = observer(() => {
+    const { calendar } = store.settings;
+    // Local state removed, using model
 
     // Google Icon component
     const GoogleIcon = ({ size = 18 }: { size?: number }) => (
@@ -20,19 +19,18 @@ export const CalendarSettings = () => {
     );
 
     const handleConnectGoogle = () => {
-        setIsConnected(true);
+        calendar.connectGoogle();
     };
 
     const handleDisconnect = () => {
-        setIsConnected(false);
-        setShowManageView(false);
+        calendar.disconnect();
     };
 
-    if (showManageView) {
+    if (calendar.showManageView) {
         return (
             <div className="calendar-settings-container">
                 <div className="manage-view-header">
-                    <button className="back-btn" onClick={() => setShowManageView(false)}>
+                    <button className="back-btn" onClick={() => calendar.setShowManageView(false)}>
                         <ArrowLeft size={16} /> Back
                     </button>
 
@@ -40,7 +38,7 @@ export const CalendarSettings = () => {
                         <div className="manage-title">
                             <GoogleIcon size={24} /> Google Calendar
                         </div>
-                        <div className="manage-email">adrian.tucicovenco@gmail.com</div>
+                        <div className="manage-email">{calendar.connectedEmail}</div>
                     </div>
 
                     <div className="manage-divider" />
@@ -56,8 +54,8 @@ export const CalendarSettings = () => {
                     <label className="calendar-switch">
                         <input
                             type="checkbox"
-                            checked={addTasksToCalendar}
-                            onChange={(e) => setAddTasksToCalendar(e.target.checked)}
+                            checked={calendar.addTasksToCalendar}
+                            onChange={(e) => calendar.toggleAddTasksToCalendar(e.target.checked)}
                         />
                         <span className="calendar-slider" />
                     </label>
@@ -72,6 +70,7 @@ export const CalendarSettings = () => {
         );
     }
 
+
     return (
         <div className="calendar-settings-container">
             <h2 className="calendar-settings-title">Connected calendars</h2>
@@ -80,15 +79,15 @@ export const CalendarSettings = () => {
             </p>
 
             {/* Connected Account Section */}
-            {isConnected && (
+            {calendar.isConnected && (
                 <div className="connected-account-card">
                     <div className="account-info">
                         <div className="google-icon-wrapper">
                             <GoogleIcon />
                         </div>
-                        <span className="account-email">adrian.tucicovenco@gmail.com</span>
+                        <span className="account-email">{calendar.connectedEmail}</span>
                     </div>
-                    <button className="manage-btn" onClick={() => setShowManageView(true)}>
+                    <button className="manage-btn" onClick={() => calendar.setShowManageView(true)}>
                         Manage <ChevronRight size={14} />
                     </button>
                 </div>
@@ -111,7 +110,7 @@ export const CalendarSettings = () => {
             </div>
 
             {/* Settings Card */}
-            {isConnected && (
+            {calendar.isConnected && (
                 <div className="settings-card">
                     <div className="settings-card-header">
                         <div className="settings-card-title">Calendar event settings</div>
@@ -130,8 +129,8 @@ export const CalendarSettings = () => {
                             <label className="calendar-switch">
                                 <input
                                     type="checkbox"
-                                    checked={createTasksFromEvents}
-                                    onChange={(e) => setCreateTasksFromEvents(e.target.checked)}
+                                    checked={calendar.createTasksFromEvents}
+                                    onChange={(e) => calendar.toggleCreateTasksFromEvents(e.target.checked)}
                                 />
                                 <span className="calendar-slider" />
                             </label>
@@ -141,4 +140,4 @@ export const CalendarSettings = () => {
             )}
         </div>
     );
-};
+});

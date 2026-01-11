@@ -4,8 +4,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
+    background-color: rgba(0, 0, 0, 0.2);
+
     z-index: 10000;
     display: flex;
     justify-content: center;

@@ -3,6 +3,7 @@ import { Group, Task, IParticipant } from "./core";
 import { v4 as uuidv4 } from 'uuid';
 import { api } from "../services/api";
 import { addMonths, subMonths, startOfDay, endOfDay } from "date-fns";
+import { SettingsModel } from "./settings/SettingsModel";
 
 // Mock Data
 const MOCK_USER: IParticipant = {
@@ -44,6 +45,10 @@ class ProjectStore {
 
     // Daily Shutdown State
     isDailyShutdownOpen: boolean = false;
+
+    // Settings Modal State
+    isSettingsOpen: boolean = false;
+    settings: SettingsModel = new SettingsModel();
 
     // Task Modal State
     activeTask: Task | null = null; // Replaces local state in GroupView
@@ -251,6 +256,19 @@ class ProjectStore {
     toggleDailyShutdown() {
         this.isDailyShutdownOpen = !this.isDailyShutdownOpen;
     }
+
+    openSettings(tab: string = 'account') {
+        this.settings.setActiveTab(tab);
+        this.isSettingsOpen = true;
+    }
+
+    closeSettings() {
+        this.isSettingsOpen = false;
+    }
+
+    // setSettingsTab(tab: string) {
+    //     this.settingsActiveTab = tab;
+    // }
 
     openTaskModal(task: Task) {
         this.activeTask = task;

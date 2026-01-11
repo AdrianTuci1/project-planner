@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
-import { Search, CheckCircle2, Circle, Link2 } from 'lucide-react';
+import { Search, Link2 } from 'lucide-react';
 import { format } from 'date-fns';
 import './SearchSpotlight.css';
 

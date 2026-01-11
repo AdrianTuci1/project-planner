@@ -100,6 +100,13 @@ export const CreatingTaskCard = observer(({
                     // We'll leave it as is visually or try to handle it if we create a temporary task.
                     ui.closeLabelContext();
                 }}
+                onEditLabels={() => {
+                    ui.closeLabelContext();
+                    store.openSettings('labels');
+                }}
+                onCreateLabel={(name, color) => {
+                    store.addLabel(name, color);
+                }}
             />
 
             <MakeRecurringTaskContext

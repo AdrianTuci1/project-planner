@@ -316,6 +316,13 @@ export const TaskCardBase = observer(({
                     task.labels = [label.id];
                     ui.closeLabelContext();
                 }}
+                onEditLabels={() => {
+                    ui.closeLabelContext();
+                    store.openSettings('labels');
+                }}
+                onCreateLabel={(name, color) => {
+                    store.addLabel(name, color);
+                }}
             />
 
             <MakeRecurringTaskContext

@@ -1,16 +1,113 @@
-# React + Vite
+# Project Management Tool
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a comprehensive project management application built with **React**, **Vite**, and **MobX**. It features task tracking, time management (timeboxing), drag-and-drop organization, and analytics.
 
-Currently, two official plugins are available:
+## 🗂 System Structure & Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The application is structured to separate data logic (models) from UI presentation (components).
 
-## React Compiler
+### Directory Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **`src/components`**: Contains all React components, organized by feature.
+  - **`Gantt/`**: Kanban board and Task Card views.
+  - **`Sidebar/`**: Navigation and project/group lists.
+  - **`Calendar/`** (in `Gantt` or root): Calendar and Timeboxing views.
+  - **`TaskDetails/`**: Modal for editing task details.
+  - **`Timer/`**: Task timer functionality.
+  - **`Settings/`**: Application settings modal.
+- **`src/models`**: Contains the state management logic and data interfaces.
+  - **`core.ts`**: Defines the fundamental TypeScript interfaces and classes (`Task`, `Group`, `Subtask`).
+  - **`store.ts`**: The main **MobX** store (`ProjectStore`) that acts as the single source of truth for the application state.
+- **`src/services`**: API and data fetching services.
+- **`src/hooks`**: Custom React hooks.
 
-## Expanding the ESLint configuration
+### State Management (MobX)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The application uses **MobX** for state management, providing a reactive and observable state.
+
+- **`ProjectStore`** (`src/models/store.ts`): The root store.
+  - Manages **Groups** and **Tasks**.
+  - Handles **UI State** (view modes, sidebar visibility, modals).
+  - Manages **Timer** state (running, paused, elapsed time).
+  - Handles **Data Persistence** (local storage and API synchronization).
+
+---
+
+## 💾 Data Models
+
+The core data entities are defined in `src/models/core.ts`.
+
+### 1. Task (`ITask`)
+The fundamental unit of work.
+- **`id`**: Unique identifier (UUID).
+- **`title`**: Task name.
+- **`status`**: Current state (`todo`, `in-progress`, `done`).
+- **`description`**: Detailed text content.
+- **`subtasks`**: Array of `ISubtask` items.
+- **`scheduledDate`**: Date assigned for the task (for Calendar/Timeboxing).
+- **`scheduledTime`**: Specific time block (e.g., "14:00").
+- **`duration`**: Estimated time in minutes.
+- **`actualDuration`**: Actual recorded time.
+- **`labels`**: Array of label IDs.
+- **`participants`**: Users assigned to the task.
+
+### 2. Group (`IGroup`)
+Represents a collection of tasks (equivalent to a Project or a Column).
+- **`id`**: Unique identifier.
+- **`name`**: Display name of the group.
+- **`tasks`**: Array of `Task` objects belonging to this group.
+- **`participants`**: Users assigned to this group.
+
+### 3. Subtask (`ISubtask`)
+A small checklist item within a Task.
+- **`id`**: Unique identifier.
+- **`title`**: Text content.
+- **`isCompleted`**: Boolean status.
+
+### 4. Label (`ILabel`)
+Tags for categorizing tasks.
+- **`id`**, **`name`**, **`color`**.
+
+---
+
+## 🚀 Getting Started
+
+This project is built with React + Vite.
+
+### Prerequisites
+- Node.js (v18+ recommended)
+- npm or yarn
+
+### Installation
+
+```bash
+npm install
+```
+
+### Development
+
+To start the development server:
+
+```bash
+npm run dev
+```
+
+### Build
+
+To build for production:
+
+```bash
+npm run build
+```
+
+---
+
+## 🛠 Tech Stack
+
+- **Framework**: React 19
+- **Build Tool**: Vite
+- **State Management**: MobX
+- **Drag & Drop**: @dnd-kit
+- **Styling**: CSS (Modules/Global) + Tailwind (if configured)
+- **Icons**: Lucide React
+- **Dates**: date-fns

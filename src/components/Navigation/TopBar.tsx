@@ -40,7 +40,7 @@ export const TopBar = observer(() => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [filterMenuOpen, setFilterMenuOpen] = useState(false);
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    // const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Moved to store
     const [isSearchOpen, setIsSearchOpen] = useState(false); // New state for search
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
@@ -168,7 +168,7 @@ export const TopBar = observer(() => {
                 position={menuPosition}
                 onSettings={() => {
                     setUserMenuOpen(false);
-                    setIsSettingsOpen(true);
+                    store.openSettings('account');
                 }}
                 onAnalytics={() => {
                     setUserMenuOpen(false);
@@ -181,8 +181,8 @@ export const TopBar = observer(() => {
                 onLogout={() => console.log('Logout')}
             />
 
-            {isSettingsOpen && (
-                <SettingsModal onClose={() => setIsSettingsOpen(false)} />
+            {store.isSettingsOpen && (
+                <SettingsModal onClose={() => store.closeSettings()} />
             )}
 
             <FilterContext
@@ -198,6 +198,10 @@ export const TopBar = observer(() => {
                 onToggleTimeboxed={(val) => store.toggleShowTimeboxed(val)}
                 onSelectAll={() => store.filterLabelIds = store.availableLabels.map(l => l.id)}
                 onClearAll={() => store.filterLabelIds = []}
+                onEditLabels={() => {
+                    setFilterMenuOpen(false);
+                    store.openSettings('labels');
+                }}
             />
         </div>
     );

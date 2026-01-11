@@ -45,6 +45,7 @@ export const LabelContext: React.FC<LabelContextProps> = ({
     const [isCreating, setIsCreating] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
     const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
+    const [creationView, setCreationView] = useState<'main' | 'colors'>('main');
 
     const filteredLabels = labels.filter((label) =>
         label.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -52,65 +53,95 @@ export const LabelContext: React.FC<LabelContextProps> = ({
 
     const handleCreate = () => {
         if (newLabelName.trim()) {
-            onCreateLabel?.(newLabelName.trim(), selectedColor);
-            setNewLabelName('');
-            setSelectedColor(PRESET_COLORS[0]);
-            setIsCreating(false);
-            // Optionally close context or keep open to select?
-            // Usually we want to apply it immediately which the parent callback should do.
+            if (onCreateLabel) {
+                onCreateLabel(newLabelName.trim(), selectedColor);
+                setNewLabelName('');
+                setSelectedColor(PRESET_COLORS[0]);
+                setIsCreating(false);
+                setCreationView('main');
+            } else {
+                console.error("onCreateLabel prop is missing!");
+            }
         }
     };
 
     const handleCancelCreate = () => {
         setIsCreating(false);
         setNewLabelName('');
+        setCreationView('main');
     }
 
     return (
         <ContextMenu isOpen={isOpen} onClose={onClose} position={position}>
             {isCreating ? (
-                <>
-                    <div style={{ padding: 'var(--space-2)' }}>
-                        <div style={{ marginBottom: 'var(--space-3)' }}>
-                            <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)', fontWeight: 600 }}>
-                                Color
-                            </label>
+                creationView === 'main' ? (
+                    <>
+                        <div style={{ padding: 'var(--space-2)' }}>
+                            <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                                <button
+                                    className="color-trigger-btn"
+                                    style={{
+                                        width: '32px',
+                                        height: '32px',
+                                        borderRadius: '6px',
+                                        backgroundColor: selectedColor,
+                                        border: '1px solid var(--border-subtle)',
+                                        cursor: 'pointer',
+                                        flexShrink: 0
+                                    }}
+                                    onClick={() => setCreationView('colors')}
+                                    title="Select color"
+                                />
+                                <input
+                                    type="text"
+                                    className="context-menu-input"
+                                    placeholder="Label name"
+                                    style={{ margin: 0, flex: 1 }}
+                                    value={newLabelName}
+                                    onChange={(e) => setNewLabelName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleCreate();
+                                        if (e.key === 'Escape') handleCancelCreate();
+                                    }}
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="context-menu-button-group" style={{ marginTop: 'var(--space-2)' }}>
+                                <button className="context-menu-button" onClick={handleCancelCreate}>Cancel</button>
+                                <button className="context-menu-button primary" onClick={handleCreate} disabled={!newLabelName.trim()}>Create</button>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="menu-header">
+                            <button
+                                className="icon-btn-sm"
+                                onClick={() => setCreationView('main')}
+                                style={{ marginRight: 'var(--space-2)' }}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
+                            </button>
+                            <span className="menu-title">Select Color</span>
+                        </div>
+
+                        <div style={{ padding: 'var(--space-2)' }}>
                             <div className="color-picker-grid">
                                 {PRESET_COLORS.map((color) => (
                                     <div
                                         key={color}
                                         className={`color-picker-item ${selectedColor === color ? 'selected' : ''}`}
                                         style={{ backgroundColor: color }}
-                                        onClick={() => setSelectedColor(color)}
+                                        onClick={() => {
+                                            setSelectedColor(color);
+                                            setCreationView('main');
+                                        }}
                                     />
                                 ))}
                             </div>
                         </div>
-
-                        <div style={{ marginBottom: 'var(--space-3)' }}>
-                            <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)', fontWeight: 600 }}>
-                                Label name
-                            </label>
-                            <input
-                                type="text"
-                                className="context-menu-input"
-                                placeholder="Enter label name..."
-                                value={newLabelName}
-                                onChange={(e) => setNewLabelName(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleCreate();
-                                    if (e.key === 'Escape') handleCancelCreate();
-                                }}
-                                autoFocus
-                            />
-                        </div>
-
-                        <div className="context-menu-button-group">
-                            <button className="context-menu-button" onClick={handleCancelCreate}>Cancel</button>
-                            <button className="context-menu-button primary" onClick={handleCreate} disabled={!newLabelName.trim()}>Create</button>
-                        </div>
-                    </div>
-                </>
+                    </>
+                )
             ) : (
                 <>
                     <MenuSearch
