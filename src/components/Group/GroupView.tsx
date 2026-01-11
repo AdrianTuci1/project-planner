@@ -8,6 +8,7 @@ import { TasksView } from '../Tasks/TasksView';
 import { TopBar } from '../Navigation/TopBar';
 import { TaskModal } from '../TaskDetails/TaskModal';
 import { UpgradeModal } from '../Upgrade/UpgradeModal';
+import { TaskTimer } from '../Timer/TaskTimer';
 import { Task } from '../../models/core';
 import './GroupView.css';
 
@@ -50,6 +51,8 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                         />
                     )}
                 </div>
+                {/* Task Timer */}
+                <TaskTimer />
             </div>
 
             {/* Right Sidebar (Timebox or TasksView based on view mode) */}
@@ -72,6 +75,7 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
 
             {/* Upgrade Modal */}
             <UpgradeModal />
+
         </div>
     );
 });

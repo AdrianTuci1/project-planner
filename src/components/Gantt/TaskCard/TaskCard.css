@@ -212,6 +212,19 @@
     margin-top: var(--space-1);
 }
 
+.tc-time-recording {
+    display: flex;
+    align-items: center;
+    padding: 2px 4px;
+    margin-left: calc(var(--space-2) * -1);
+    margin-right: calc(var(--space-2) * -1);
+    margin-bottom: calc(var(--space-2) * -1);
+    margin-top: var(--space-1);
+    overflow: hidden;
+    border-bottom-left-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
+}
+
 .tc-play-btn {
     color: var(--text-main);
     cursor: pointer;
@@ -260,6 +273,16 @@
     z-index: 10;
 }
 
-.resize-handle:hover {
-    background: rgba(0, 0, 0, 0.1);
+
+
+.ghost-time-chip {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-left: auto;
 }

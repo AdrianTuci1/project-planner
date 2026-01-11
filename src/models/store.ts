@@ -41,6 +41,12 @@ class ProjectStore {
     // Upgrade Modal State
     isUpgradeModalOpen: boolean = false;
 
+    // Timer State
+    activeTimerTaskId: string | null = null;
+    timerStatus: 'idle' | 'running' | 'paused' = 'idle';
+    timerStartTime: number | null = null;
+    timerAccumulatedTime: number = 0; // in seconds
+
     constructor() {
         makeAutoObservable(this);
         this.seedData();
@@ -204,6 +210,125 @@ class ProjectStore {
                 this.dumpAreaTasks.splice(dumpTaskIndex, 1);
             }
         }
+    }
+
+    deleteTask(taskId: string) {
+        // Try to remove from dump area first
+        const dumpIndex = this.dumpAreaTasks.findIndex(t => t.id === taskId);
+        if (dumpIndex > -1) {
+            this.dumpAreaTasks.splice(dumpIndex, 1);
+            return;
+        }
+
+        // Try to remove from groups
+        for (const group of this.groups) {
+            const taskIndex = group.tasks.findIndex(t => t.id === taskId);
+            if (taskIndex > -1) {
+                group.removeTask(taskId);
+                return;
+            }
+        }
+    }
+
+    duplicateTask(task: Task) {
+        // Check dump area
+        const dumpIndex = this.dumpAreaTasks.findIndex(t => t.id === task.id);
+        if (dumpIndex > -1) {
+            const clone = task.clone();
+            this.dumpAreaTasks.splice(dumpIndex + 1, 0, clone);
+            return clone;
+        }
+
+        // Check groups
+        for (const group of this.groups) {
+            const groupTask = group.tasks.find(t => t.id === task.id);
+            if (groupTask) {
+                return group.duplicateTask(task.id);
+            }
+        }
+    }
+
+    // Timer Actions
+    startTimer(taskId: string) {
+        // If another timer is running, stop it first (or pause it? For now, let's just switch)
+        if (this.activeTimerTaskId && this.activeTimerTaskId !== taskId) {
+            this.stopTimer();
+        }
+
+        this.activeTimerTaskId = taskId;
+        this.timerStatus = 'running';
+        this.timerStartTime = Date.now();
+    }
+
+    pauseTimer() {
+        if (this.timerStatus === 'running' && this.timerStartTime) {
+            const now = Date.now();
+            const elapsed = Math.floor((now - this.timerStartTime) / 1000);
+            this.timerAccumulatedTime += elapsed;
+            this.timerStartTime = null;
+            this.timerStatus = 'paused';
+        }
+    }
+
+    resumeTimer() {
+        if (this.timerStatus === 'paused') {
+            this.timerStartTime = Date.now();
+            this.timerStatus = 'running';
+        }
+    }
+
+    stopTimer() {
+        if (this.activeTimerTaskId) {
+            if (this.timerStatus === 'running' && this.timerStartTime) {
+                const now = Date.now();
+                const elapsed = Math.floor((now - this.timerStartTime) / 1000);
+                this.timerAccumulatedTime += elapsed;
+            }
+
+            // Find the task and update its actual duration
+            // Search in active group, dump area, or all tasks
+            let task = this.getTaskById(this.activeTimerTaskId);
+
+            if (task) {
+                // Update actual duration (convert seconds to minutes)
+                const addedMinutes = Math.floor(this.timerAccumulatedTime / 60);
+                // If accumulated time is less than a minute but > 0, maybe round up or ignore? 
+                // Let's just add at least 1 minute if it was running for at least 30 seconds
+                // Or just standard floor. Let's stick to minutes.
+
+                // Better approach: Floating point or just minutes. 
+                // Existing actualDuration is likely in minutes based on `formatTime` in TaskCardBase (minutes / 60).
+                // Let's add the minutes.
+                const totalMinutes = Math.round(this.timerAccumulatedTime / 60);
+                if (totalMinutes > 0) {
+                    task.actualDuration = (task.actualDuration || 0) + totalMinutes;
+                }
+            }
+
+            this.resetTimer();
+        }
+    }
+
+    cancelTimer() {
+        this.resetTimer();
+    }
+
+    private resetTimer() {
+        this.activeTimerTaskId = null;
+        this.timerStatus = 'idle';
+        this.timerStartTime = null;
+        this.timerAccumulatedTime = 0;
+    }
+
+    getTaskById(taskId: string): Task | undefined {
+        // Search all groups
+        for (const group of this.groups) {
+            const task = group.tasks.find(t => t.id === taskId);
+            if (task) return task;
+        }
+        // Search dump area
+        const dumpTask = this.dumpAreaTasks.find(t => t.id === taskId);
+        return dumpTask;
     }
 
     private seedData() {

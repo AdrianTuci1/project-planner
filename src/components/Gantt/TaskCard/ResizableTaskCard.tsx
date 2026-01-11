@@ -6,6 +6,7 @@ import { Task } from '../../../models/core';
 import { store } from '../../../models/store';
 import { format } from 'date-fns';
 import './TaskCard.css';
+import { TaskContextMenu } from './TaskContextMenu';
 
 interface ResizableTaskCardProps {
     task: Task;
@@ -61,7 +62,9 @@ export const ResizableTaskCard = observer(({
         });
 
         // Measure initially
-        setColWidth(parent.offsetWidth);
+        if (parent) {
+            setColWidth(parent.offsetWidth);
+        }
 
         // Observe
         resizeObserver.observe(parent);
@@ -129,6 +132,42 @@ export const ResizableTaskCard = observer(({
     // Font size logic based on height (approximated by duration usually, but here relies on parent styling or explicit height)
     // We'll trust the parent 'style' passed in contains height/width/top etc.
 
+    const [contextMenu, setContextMenu] = React.useState<{ x: number; y: number } | null>(null);
+
+    const handleContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Calculate position relative to viewport
+        const rect = e.currentTarget.getBoundingClientRect();
+        // Position to the left of the card, aligned with the top
+        // Give 4px spacing
+        setContextMenu({
+            x: rect.left - 210, // Assuming menu width approx 200px + 10 padding. We might need to adjust or measure.
+            y: rect.top
+        });
+    };
+
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
+    };
+
+    const handleMarkAsComplete = () => {
+        task.toggleStatus();
+    };
+
+    const handleDuplicate = () => {
+        store.duplicateTask(task);
+    };
+
+    const handleRemoveFromTimebox = () => {
+        task.scheduledTime = undefined;
+    };
+
+    const handleDelete = () => {
+        store.deleteTask(task.id);
+    };
+
     return (
         <div
             ref={setRefs}
@@ -137,6 +176,7 @@ export const ResizableTaskCard = observer(({
             onClick={(e) => {
                 onTaskClick?.(task);
             }}
+            onContextMenu={handleContextMenu}
             {...listeners}
             {...attributes}
         >
@@ -168,6 +208,17 @@ export const ResizableTaskCard = observer(({
                     e.stopPropagation(); // Prevent drag
                     onResizeStart?.(e);
                 }}
+            />
+
+            <TaskContextMenu
+                isOpen={!!contextMenu}
+                onClose={handleCloseContextMenu}
+                position={contextMenu || { x: 0, y: 0 }}
+                task={task}
+                onMarkAsComplete={handleMarkAsComplete}
+                onDuplicate={handleDuplicate}
+                onRemoveFromTimebox={handleRemoveFromTimebox}
+                onDelete={handleDelete}
             />
         </div>
     );

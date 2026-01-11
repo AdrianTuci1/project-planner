@@ -20,6 +20,8 @@ export interface TaskCardProps {
     onDelete?: (task: Task) => void;
     style?: React.CSSProperties;
     className?: string;
+    actualTime?: number;
+    estimatedTime?: number;
 }
 
 export const TaskCard = observer(({
@@ -33,11 +35,13 @@ export const TaskCard = observer(({
     onDuplicate,
     onDelete,
     style,
-    className
+    className,
+    actualTime,
+    estimatedTime
 }: TaskCardProps) => {
 
     if (isGhost) {
-        return <GhostTaskCard onAddClick={onAddClick} />;
+        return <GhostTaskCard onAddClick={onAddClick} actualTime={actualTime} estimatedTime={estimatedTime} />;
     }
 
     if (isCreating) {

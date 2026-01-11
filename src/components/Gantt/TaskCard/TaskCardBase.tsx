@@ -11,7 +11,8 @@ import {
     GripVertical,
     MoreVertical,
     Copy,
-    Trash2
+    Trash2,
+    Timer
 } from 'lucide-react';
 import { TimeEntryContext } from '../../ContextMenu/TimeEntryContext';
 import { ContextMenu, MenuItem } from '../../ContextMenu/ContextMenu';
@@ -22,6 +23,53 @@ import { TaskUIModel } from '../../../models/TaskUIModel';
 import { store } from '../../../models/store';
 import { format, getHours, getMinutes } from 'date-fns';
 import './TaskCard.css';
+
+
+const ActiveTimerDisplay = ({ startTime, accumulated }: { startTime: number | null, accumulated: number }) => {
+    const [elapsed, setElapsed] = React.useState(accumulated);
+
+    React.useEffect(() => {
+        if (!startTime) {
+            setElapsed(accumulated);
+            return;
+        }
+
+        const update = () => {
+            const now = Date.now();
+            const currentRun = Math.floor((now - startTime) / 1000);
+            setElapsed(accumulated + currentRun);
+        };
+
+        update();
+        const interval = setInterval(update, 1000);
+        return () => clearInterval(interval);
+    }, [startTime, accumulated]);
+
+    const format = (total: number) => {
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
+    return (
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: 'white',
+            width: '100%',
+            padding: '4px 8px', // Add some internal padding back since we removed container padding
+            backgroundColor: '#374151', // Dark background like the image
+            height: '28px', // Match button height roughly
+            borderRadius: '4px',
+        }}>
+            <Timer size={14} />
+            <span style={{ fontSize: '12px', fontWeight: 500 }}>
+                Timer active ({format(elapsed)})
+            </span>
+        </div>
+    );
+};
 
 export interface TaskCardBaseProps {
     task: Task;
@@ -237,19 +285,31 @@ export const TaskCardBase = observer(({
                     </>
                 )}
 
-                {ui.isTimeExpanded && (
-                    <div className="tc-time-expanded" onClick={e => e.stopPropagation()}>
-                        <div className="tc-play-btn">
-                            <Play size={20} fill="currentColor" />
-                        </div>
-                        <div className="tc-time-column" onClick={(e) => ui.openTimeContext(e, 'actual')}>
-                            <span className="tc-time-label">Actual</span>
-                            <span className="tc-time-value">{formatTime(task.actualDuration)}</span>
-                        </div>
-                        <div className="tc-time-column" onClick={(e) => ui.openTimeContext(e, 'estimated')}>
-                            <span className="tc-time-label">Estimated</span>
-                            <span className="tc-time-value">{formatTime(task.duration)}</span>
-                        </div>
+                {(ui.isTimeExpanded || store.activeTimerTaskId === task.id) && (
+                    <div className={store.activeTimerTaskId ? "tc-time-recording" : "tc-time-expanded"} onClick={e => e.stopPropagation()}>
+                        {store.activeTimerTaskId === task.id ? (
+                            <ActiveTimerDisplay startTime={store.timerStartTime} accumulated={store.timerAccumulatedTime} />
+                        ) : (
+                            <>
+                                <div
+                                    className="tc-play-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        store.startTimer(task.id);
+                                    }}
+                                >
+                                    <Play size={20} fill="currentColor" />
+                                </div>
+                                <div className="tc-time-column" onClick={(e) => ui.openTimeContext(e, 'actual')}>
+                                    <span className="tc-time-label">Actual</span>
+                                    <span className="tc-time-value">{formatTime(task.actualDuration)}</span>
+                                </div>
+                                <div className="tc-time-column" onClick={(e) => ui.openTimeContext(e, 'estimated')}>
+                                    <span className="tc-time-label">Estimated</span>
+                                    <span className="tc-time-value">{formatTime(task.duration)}</span>
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
             </div>

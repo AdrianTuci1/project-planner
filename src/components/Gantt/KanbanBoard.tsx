@@ -49,7 +49,20 @@ const KanbanColumn = observer(({
                 {isToday && <span className="today-badge">Today</span>}
             </div>
 
-            <TaskCard isGhost onAddClick={onAddClick} />
+            {/* Calculate totals for Ghost Card */}
+            {(() => {
+                const totalActual = tasks.reduce((acc: number, t: Task) => acc + (t.actualDuration || 0), 0);
+                const totalEstimated = tasks.reduce((acc: number, t: Task) => acc + (t.duration || 0), 0);
+
+                return (
+                    <TaskCard
+                        isGhost
+                        onAddClick={onAddClick}
+                        actualTime={totalActual}
+                        estimatedTime={totalEstimated}
+                    />
+                );
+            })()}
 
             {isAdding && (
                 <TaskCard

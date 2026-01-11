@@ -1,0 +1,173 @@
+.task-timer-container {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    align-items: center;
+    background-color: #000000;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    font-family: 'Inter', sans-serif;
+    gap: 12px;
+    height: 56px;
+    /* Fixed height for smaller look */
+    /* width: auto; Let width adjust to content but try to be stable */
+}
+
+.task-timer-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-right: 4px;
+    width: 130px;
+}
+
+.task-timer-time {
+    font-size: 24px;
+    /* Smaller font as requested */
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.task-timer-task-name {
+    margin-top: 2px;
+    font-size: 11px;
+    /* Smaller */
+    opacity: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60px;
+}
+
+/* Container for controls to manage hover */
+.task-timer-controls-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.task-timer-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    /* Overlay effect: Position absolute left of the pause button? */
+    /* Or just show them next to it? User said "doesn't resize". */
+    /* We can move them in from the right or fade them in place if we reserve space? No that's not compact. */
+    /* Best bet: Absolute positioning relative to wrapper, expanding to LEFT. */
+    position: absolute;
+    right: 100%;
+    /* Start from left side of pause button */
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    visibility: hidden;
+    padding-right: 8px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    /* Prevent interaction when hidden */
+}
+
+/* The wrapper (Pause button area) hover trigger */
+.task-timer-controls-wrapper:hover .task-timer-controls {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    right: 30px;
+    /* Shift slightly so they don't overlap with pause button trigger too much */
+}
+
+/* Or simply: hovering the PAUSE button reveals them */
+
+.timer-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.timer-btn:hover {
+    transform: scale(1.1);
+}
+
+.timer-btn:active {
+    transform: scale(0.95);
+}
+
+.timer-btn.complete {
+    background-color: white;
+    color: #10B981;
+}
+
+.timer-btn.stop {
+    background-color: white;
+    color: #EF4444;
+}
+
+.timer-btn.pause {
+    background-color: #333;
+    /* Darker grey for pause in dark mode */
+    color: white;
+}
+
+/* Specific hover on the pause button trigger area */
+.task-timer-controls-trigger {
+    /* This is the pause button itself or a wrapper around it */
+    position: relative;
+    z-index: 2;
+}
+
+/* Reveal mechanism */
+/* We need the controls to sit to the left of the pause button */
+.task-timer-controls-wrapper:hover .task-timer-controls {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0) translateY(-50%);
+}
+
+.task-timer-controls {
+    transform: translateX(10px) translateY(-50%);
+}
+
+/* Message State */
+.task-timer-message {
+    font-size: 13px;
+    font-weight: 500;
+    color: white;
+    white-space: normal;
+    /* Allow wrapping */
+    text-align: center;
+    /* Center the text */
+    line-height: 1.2;
+    /* Tighter line height for 2 lines */
+    animation: fadeIn 0.3s ease;
+    padding: 0 4px;
+    width: 140px;
+    /* Slightly wider to accommodate text better if needed, or stick to 130px */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
