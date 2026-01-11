@@ -17,15 +17,13 @@ interface GroupViewProps {
 }
 
 export const GroupView = observer(({ groupId }: GroupViewProps) => {
-    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
     const group = store.groups.find(g => g.id === groupId);
     if (!group) return <div>Group not found</div>;
 
     const displayTasks = store.applyGlobalFilters(group.tasks);
 
     const handleTaskClick = (task: Task) => {
-        setSelectedTask(task);
+        store.openTaskModal(task);
     };
 
     return (
@@ -71,8 +69,8 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
             )}
 
             {/* Task Details Modal */}
-            {selectedTask && (
-                <TaskModal task={selectedTask} onClose={() => setSelectedTask(null)} />
+            {store.activeTask && (
+                <TaskModal task={store.activeTask} onClose={() => store.closeTaskModal()} />
             )}
 
             {/* Upgrade Modal */}

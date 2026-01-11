@@ -8,7 +8,8 @@ import {
     Calendar as CalendarIcon,
     Layout,
     PanelLeft,
-    PanelRight
+    PanelRight,
+    Search
 } from 'lucide-react';
 import { addDays } from 'date-fns';
 import '../Layout/KanbanLayout.css';
@@ -16,6 +17,7 @@ import '../Layout/KanbanLayout.css';
 import { UserContext } from '../ContextMenu/UserContext';
 import { FilterContext } from '../ContextMenu/FilterContext';
 import { SettingsModal } from '../Settings/SettingsModal';
+import { SearchSpotlight } from './SearchSpotlight';
 
 const topbarStyles = `
   .trial-button {
@@ -39,6 +41,7 @@ export const TopBar = observer(() => {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [filterMenuOpen, setFilterMenuOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false); // New state for search
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
     const handleUserClick = (e: React.MouseEvent) => {
@@ -107,6 +110,13 @@ export const TopBar = observer(() => {
                     </div>
 
                     <div
+                        className="topbar-button"
+                        onClick={() => setIsSearchOpen(true)}
+                    >
+                        <Search size={14} />
+                    </div>
+
+                    <div
                         className={`topbar-button filter ${filterMenuOpen ? 'active' : ''}`}
                         onClick={handleFilterClick}
                     >
@@ -147,6 +157,10 @@ export const TopBar = observer(() => {
                     />
                 </div>
             </div>
+
+            {isSearchOpen && (
+                <SearchSpotlight onClose={() => setIsSearchOpen(false)} />
+            )}
 
             <UserContext
                 isOpen={userMenuOpen}

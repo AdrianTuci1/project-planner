@@ -1,6 +1,8 @@
-import { makeAutoObservable, reaction } from "mobx"; // Using mobx for transparent reactivity with OOP
+import { makeAutoObservable, reaction, runInAction } from "mobx"; // Using mobx for transparent reactivity with OOP
 import { Group, Task, IParticipant } from "./core";
 import { v4 as uuidv4 } from 'uuid';
+import { api } from "../services/api";
+import { addMonths, subMonths, startOfDay, endOfDay } from "date-fns";
 
 // Mock Data
 const MOCK_USER: IParticipant = {
@@ -14,13 +16,12 @@ class ProjectStore {
     dumpAreaTasks: Task[] = [];
     currentUser: IParticipant = MOCK_USER;
 
-    availableLabels: { id: string; name: string; color: string }[] = [
-        { id: 'l1', name: 'Design', color: '#8B5CF6' },
-        { id: 'l2', name: 'Important', color: '#EF4444' },
-        { id: 'l3', name: 'Home', color: '#FF2D55' },
-        { id: 'l4', name: 'Work', color: '#3B82F6' },
-        { id: 'l5', name: 'Lam', color: '#FFD60A' },
-    ];
+    // API State
+    isLoading: boolean = false;
+    error: string | null = null;
+    lastFetchRange: { start: Date, end: Date } | null = null;
+
+    availableLabels: { id: string; name: string; color: string }[] = [];
 
     // UI State
     activeGroupId: string | null = null;
@@ -44,6 +45,9 @@ class ProjectStore {
     // Daily Shutdown State
     isDailyShutdownOpen: boolean = false;
 
+    // Task Modal State
+    activeTask: Task | null = null; // Replaces local state in GroupView
+
     // Timer State
     activeTimerTaskId: string | null = null;
     timerStatus: 'idle' | 'running' | 'paused' = 'idle';
@@ -52,7 +56,8 @@ class ProjectStore {
 
     constructor() {
         makeAutoObservable(this);
-        this.seedData();
+        // this.seedData(); // Removed local seed data
+        this.initializeData();
 
         // Load persistence
         const savedViewMode = localStorage.getItem('viewMode') as 'calendar' | 'tasks';
@@ -74,23 +79,70 @@ class ProjectStore {
                 else localStorage.removeItem('activeGroupId');
             }
         );
-        // Migration: Separate Time from Date
-        const allTasks = this.allTasks;
-        allTasks.forEach(task => {
-            if (task.scheduledDate && !task.scheduledTime) {
-                const h = task.scheduledDate.getHours();
-                const m = task.scheduledDate.getMinutes();
 
-                // If time is not 00:00, extract it
-                if (h !== 0 || m !== 0) {
-                    task.scheduledTime = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-                    // Reset date to midnight
-                    const d = new Date(task.scheduledDate);
-                    d.setHours(0, 0, 0, 0);
-                    task.scheduledDate = d;
+        // React to viewDate changes to re-fetch if needed (Optimization for later: check if date is within loaded range)
+        // For now, we fetch on init. We could add a reaction here if we wanted "infinite scroll" of time.
+        reaction(
+            () => this.viewDate,
+            (newDate) => {
+                // Check if newDate is outside lastFetchRange
+                if (this.lastFetchRange) {
+                    // Simple check: if view date is outside active range, refetch.
+                    // Implementation deferred to keep it simple as requested (+/- 1 month from today on load)
                 }
             }
-        });
+        );
+    }
+
+    async initializeData() {
+        this.isLoading = true;
+        this.error = null;
+        try {
+            // Determine range: Today +/- 1 Month
+            const today = new Date();
+            const start = startOfDay(subMonths(today, 1));
+            const end = endOfDay(addMonths(today, 1));
+
+            this.lastFetchRange = { start, end };
+
+            const data = await api.getInitialData(start, end);
+
+            runInAction(() => {
+                // Hydrate Groups
+                this.groups = data.groups.map((g: any) => {
+                    const group = new Group(g.name);
+                    group.id = g.id;
+                    group.tasks = g.tasks.map((t: any) => this.hydrateTask(t));
+                    return group;
+                });
+
+                // Hydrate Dump Tasks
+                this.dumpAreaTasks = data.dumpTasks.map((t: any) => this.hydrateTask(t));
+
+                // Hydrate Labels
+                this.availableLabels = data.availableLabels;
+            });
+        } catch (err) {
+            runInAction(() => {
+                this.error = "Failed to load tasks";
+                console.error(err);
+            });
+        } finally {
+            runInAction(() => {
+                this.isLoading = false;
+            });
+        }
+    }
+
+    private hydrateTask(data: any): Task {
+        const task = new Task(data.title);
+        task.id = data.id;
+        task.scheduledDate = data.scheduledDate ? new Date(data.scheduledDate) : undefined;
+        task.scheduledTime = data.scheduledTime;
+        task.duration = data.duration;
+        task.labels = data.labels || [];
+        task.status = data.status || 'todo';
+        return task;
     }
 
     setDate(date: Date) {
@@ -200,8 +252,20 @@ class ProjectStore {
         this.isDailyShutdownOpen = !this.isDailyShutdownOpen;
     }
 
-    getLabelColor(labelName: string): string {
-        const label = this.availableLabels.find(l => l.name === labelName);
+    openTaskModal(task: Task) {
+        this.activeTask = task;
+    }
+
+    closeTaskModal() {
+        this.activeTask = null;
+    }
+
+    getLabel(labelId: string) {
+        return this.availableLabels.find(l => l.id === labelId);
+    }
+
+    getLabelColor(labelId: string): string {
+        const label = this.getLabel(labelId);
         return label ? label.color : '#60A5FA'; // Default blue if not found
     }
 
@@ -212,6 +276,7 @@ class ProjectStore {
             color
         };
         this.availableLabels.push(newLabel);
+        return newLabel;
     }
 
     updateLabel(id: string, name: string, color: string) {
@@ -326,13 +391,6 @@ class ProjectStore {
             if (task) {
                 // Update actual duration (convert seconds to minutes)
                 const addedMinutes = Math.floor(this.timerAccumulatedTime / 60);
-                // If accumulated time is less than a minute but > 0, maybe round up or ignore? 
-                // Let's just add at least 1 minute if it was running for at least 30 seconds
-                // Or just standard floor. Let's stick to minutes.
-
-                // Better approach: Floating point or just minutes. 
-                // Existing actualDuration is likely in minutes based on `formatTime` in TaskCardBase (minutes / 60).
-                // Let's add the minutes.
                 const totalMinutes = Math.round(this.timerAccumulatedTime / 60);
                 if (totalMinutes > 0) {
                     task.actualDuration = (task.actualDuration || 0) + totalMinutes;
@@ -363,49 +421,6 @@ class ProjectStore {
         // Search dump area
         const dumpTask = this.dumpAreaTasks.find(t => t.id === taskId);
         return dumpTask;
-    }
-
-    private seedData() {
-        const marketingGroup = this.createGroup("Marketing Campaign");
-        // this.activeGroupId = marketingGroup.id;
-
-        // Create tasks with specific times for calendar view
-        const today = new Date();
-
-        const task1 = new Task("Design Social Media Assets");
-        task1.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0); // Date part
-        task1.scheduledTime = "16:30";
-        task1.duration = 90;
-        task1.labels = ['l1']; // Design
-        marketingGroup.addTask(task1);
-
-        const task2 = new Task("Content Strategy Meeting");
-        task2.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0);
-        task2.scheduledTime = "19:00";
-        task2.duration = 60;
-        marketingGroup.addTask(task2);
-
-        const task3 = new Task("Pampam");
-        task3.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 0, 0);
-        task3.scheduledTime = "21:30";
-        task3.duration = 75;
-        task3.labels = ['l2']; // Important
-        marketingGroup.addTask(task3);
-
-        const task4 = new Task("Review Analytics");
-        task4.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0);
-        task4.scheduledTime = "17:00";
-        task4.duration = 45;
-        marketingGroup.addTask(task4);
-
-        const task5 = new Task("Team Standup");
-        task5.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0);
-        task5.scheduledTime = "18:00";
-        task5.duration = 30;
-        marketingGroup.addTask(task5);
-
-        this.dumpAreaTasks.push(new Task("Buy coffee beans"));
-        this.dumpAreaTasks.push(new Task("Call electrician"));
     }
 }
 

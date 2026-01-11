@@ -120,9 +120,13 @@ export class TaskUIModel {
     }
 
     handleAddSubtask(e: React.KeyboardEvent, task?: Task) {
-        if (e.key === 'Enter' && this.newSubtaskTitle.trim() && task) {
-            task.addSubtask(this.newSubtaskTitle);
-            this.newSubtaskTitle = '';
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            if (this.newSubtaskTitle.trim() && task) {
+                task.addSubtask(this.newSubtaskTitle);
+                this.newSubtaskTitle = '';
+            }
         }
     }
 

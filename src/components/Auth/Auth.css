@@ -1,0 +1,207 @@
+/* Auth Layout */
+.auth-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    overflow: hidden;
+}
+
+.auth-content-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-8);
+    background-color: var(--bg-app);
+    position: relative;
+}
+
+.auth-form-wrapper {
+    width: 100%;
+    max-width: 400px;
+    animation: fadeIn var(--transition-normal);
+}
+
+.auth-image-col {
+    flex: 1;
+    display: none;
+    /* Hidden on small screens */
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-sidebar) 100%);
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .auth-image-col {
+        display: flex;
+    }
+}
+
+.auth-image-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+    mix-blend-mode: overlay;
+}
+
+.auth-gradient-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, transparent 0%, var(--bg-app) 120%);
+    pointer-events: none;
+}
+
+/* Auth Typography */
+.auth-title {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    margin-bottom: var(--space-2);
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+}
+
+.auth-subtitle {
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-8);
+    line-height: 1.5;
+}
+
+/* Auth Forms */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.auth-label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+}
+
+.auth-input {
+    width: 100%;
+    padding: var(--space-3);
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    font-size: var(--text-base);
+    font-family: var(--font-sans);
+    transition: all var(--transition-fast);
+    box-sizing: border-box;
+    /* Crucial for padding */
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.2);
+}
+
+.auth-input::placeholder {
+    color: var(--text-muted);
+}
+
+.auth-button {
+    margin-top: var(--space-4);
+    padding: var(--space-3);
+    background-color: var(--text-main);
+    /* White on dark */
+    color: var(--bg-app);
+    /* Dark text */
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.auth-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.auth-button:active {
+    transform: translateY(0);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Chips */
+.auth-chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.auth-chip {
+    padding: var(--space-2) var(--space-4);
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    user-select: none;
+}
+
+.auth-chip:hover {
+    background-color: var(--bg-card-hover);
+    color: var(--text-main);
+    border-color: var(--text-muted);
+}
+
+.auth-chip.selected {
+    background-color: var(--text-main);
+    color: var(--bg-app);
+    border-color: var(--text-main);
+    font-weight: 600;
+}
+
+/* Wizard Navigation */
+.auth-nav-buttons {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+}
+
+.auth-back-button {
+    padding: var(--space-3);
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    font-size: var(--text-base);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.auth-back-button:hover {
+    color: var(--text-main);
+}

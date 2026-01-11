@@ -1,0 +1,118 @@
+/* Shared SubtaskList Styles */
+
+.tc-divider {
+    height: 1px;
+    background-color: var(--border-subtle);
+    margin: var(--space-1) 0;
+}
+
+.tc-subtasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+/* Modal specific adjustment */
+.modal-overlay .tc-subtasks-list {
+    gap: 8px;
+    /* Standard spacing for modal */
+    padding-left: 0;
+}
+
+.tc-subtask-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 2px 0;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s;
+}
+
+.tc-subtask-item:hover {
+    background-color: var(--bg-card-hover);
+}
+
+.tc-subtask-check {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--text-muted);
+    /* Updated to match Modal's slightly thicker border */
+    border-radius: 4px;
+    /* More rounded like Modal */
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tc-subtask-check:hover {
+    border-color: var(--accent-blue);
+}
+
+.tc-subtask-check.checked {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: white;
+}
+
+.tc-subtask-input {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: var(--text-sm);
+    flex: 1;
+    outline: none;
+}
+
+.tc-subtask-label {
+    font-size: 13px;
+    color: var(--text-main);
+    flex: 1;
+    cursor: text;
+}
+
+.tc-add-subtask {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    padding: var(--space-1) 0;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.tc-add-subtask:hover {
+    color: var(--text-main);
+}
+
+.tc-subtask-drag-handle {
+    cursor: grab;
+    color: var(--text-muted);
+    opacity: 1;
+    transition: opacity 0.2s;
+}
+
+.tc-subtask-item:hover .tc-subtask-drag-handle {
+    opacity: 1;
+}
+
+.tc-subtask-delete {
+    cursor: pointer;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: all 0.2s;
+    margin-left: auto;
+}
+
+.tc-subtask-item:hover .tc-subtask-delete {
+    opacity: 1;
+}
+
+.tc-subtask-delete:hover {
+    color: var(--accent-pink);
+    background-color: var(--bg-hover);
+    border-radius: 4px;
+}

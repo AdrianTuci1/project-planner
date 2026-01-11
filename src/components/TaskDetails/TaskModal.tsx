@@ -7,19 +7,21 @@ import {
     Clock,
     Tag,
     RotateCw,
-    Plus,
-    Trash2,
     MoreVertical,
     Repeat,
     Copy,
-    Link
+    Link,
+    Trash2
 } from 'lucide-react';
 import { format, startOfDay } from 'date-fns';
+
 import { DateTimePickerContext } from '../ContextMenu/DateTimePickerContext';
 import { TimeInputContext } from '../ContextMenu/TimeInputContext';
-import { CreateLabelContext } from '../ContextMenu/CreateLabelContext';
+import { LabelContext } from '../ContextMenu/LabelContext';
+import { store } from '../../models/store';
 import { MakeRecurringTaskContext } from '../ContextMenu/MakeRecurringTaskContext';
 import { RecurringTaskActionsContext } from '../ContextMenu/RecurringTaskActionsContext';
+import { SubtaskList } from '../Shared/SubtaskList';
 import './TaskModal.css';
 
 interface TaskModalProps {
@@ -91,7 +93,6 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         </div>
 
                         {/* Estimated Time */}
-                        {/* Estimated Time */}
                         <div
                             className="meta-row"
                             onClick={(e) => {
@@ -111,7 +112,6 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                             </div>
                         </div>
 
-                        {/* Actual Time */}
                         {/* Actual Time */}
                         <div
                             className="meta-row"
@@ -138,7 +138,6 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         </div>
 
                         {/* Label */}
-                        {/* Label */}
                         <div
                             className="meta-row"
                             onClick={(e) => {
@@ -153,7 +152,20 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                             </div>
                             <div className="meta-row-value">
                                 <span className="value-placeholder">
-                                    {task.labels.length > 0 ? task.labels.join(', ') : 'Select a label'}
+                                    {task.labels.length > 0 ? (
+                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                            {task.labels.map(labelId => {
+                                                const label = store.getLabel(labelId);
+                                                if (!label) return null;
+                                                return (
+                                                    <div key={labelId} className="tc-label-chip" style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                        <div className="tc-label-dot" style={{ backgroundColor: label.color }} />
+                                                        <span style={{ fontSize: '12px' }}>{label.name}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : 'Select a label'}
                                 </span>
                             </div>
                         </div>
@@ -211,25 +223,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                     {/* Subtasks Section */}
                     <div className="tc-section">
                         <div className="tc-section-label">Subtasks</div>
-                        <div className="tc-subtasks-list">
-                            {task.subtasks.map((sub: any) => (
-                                <div key={sub.id} className="tc-subtask-item">
-                                    <div
-                                        className={`tc-subtask-check ${sub.isCompleted ? 'checked' : ''}`}
-                                        onClick={() => sub.toggle()}
-                                    />
-                                    <input
-                                        className="tc-subtask-input"
-                                        value={sub.title}
-                                        onChange={(e) => sub.title = e.target.value}
-                                    />
-                                </div>
-                            ))}
-                            <button className="tc-add-subtask-btn" onClick={() => ui.setSubtaskMode(true)}>
-                                <Plus size={18} />
-                                <span>Add subtask</span>
-                            </button>
-                        </div>
+                        <SubtaskList task={task} autoFocusNew={ui.isSubtaskMode} />
                     </div>
                 </div>
 
@@ -341,12 +335,20 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                 }}
             />
 
-            <CreateLabelContext
+            <LabelContext
                 isOpen={ui.labelContext.isOpen}
                 onClose={() => ui.closeLabelContext()}
                 position={ui.labelContext.position}
-                onCreateLabel={(name) => {
-                    task.labels.push(name);
+                labels={store.availableLabels}
+                recentLabels={store.availableLabels.slice(0, 3)}
+                onSelectLabel={(label) => {
+                    task.labels = [label.id];
+                    ui.closeLabelContext();
+                }}
+                onCreateLabel={(name, color) => {
+                    const newLabel = store.addLabel(name, color);
+                    task.labels = [newLabel.id];
+                    ui.closeLabelContext();
                 }}
             />
 

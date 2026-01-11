@@ -30,7 +30,7 @@ const SidebarTaskList = observer(({ tasks, activeGroup, onDuplicate, onDelete }:
     return (
         <div
             ref={setNodeRef}
-            className={`sidebar-tasks-list ${isOver ? 'droppable-over' : ''}`}
+            className={`sidebar-tasks-list`}
             style={{ minHeight: '50px' }} // Removed background color change on drag
         >
             <SortableContext

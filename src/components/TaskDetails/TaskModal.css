@@ -381,3 +381,56 @@
 .context-item.delete svg {
     color: var(--accent-pink);
 }
+
+.tc-subtask-drag-handle {
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 0.2s;
+    padding: 2px;
+}
+
+.tc-subtask-item:hover .tc-subtask-drag-handle {
+    opacity: 1;
+}
+
+.tc-subtask-delete {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.2s;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.tc-subtask-item:hover .tc-subtask-delete {
+    opacity: 1;
+}
+
+.tc-subtask-delete:hover {
+    color: var(--accent-pink);
+    background-color: var(--bg-hover);
+}
+
+.tc-subtask-add-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    /* background-color: var(--bg-card-hover); */
+    border-radius: var(--radius-sm);
+}
+
+.tc-subtask-check.disabled {
+    cursor: default;
+    border-style: dashed;
+    border-color: var(--text-muted);
+    opacity: 0.5;
+}

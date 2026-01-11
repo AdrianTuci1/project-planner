@@ -1,64 +1,31 @@
-import React from 'react';
-import { AppLayout } from './components/Layout/AppLayout';
-import { MainView } from './components/MainView';
-import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, pointerWithin, DragOverlay } from '@dnd-kit/core';
-import { useAppDragEnd } from './hooks/useAppDragEnd';
-import './index.css';
-import './animations.css';
+import React, { useState } from 'react';
+import { MainApp } from './MainApp';
+import { Login } from './components/Auth/Login';
+import { Onboarding } from './components/Auth/Onboarding';
 import { observer } from 'mobx-react-lite';
-import { store } from './models/store';
-import { TaskCardBase } from './components/Gantt/TaskCard/TaskCardBase';
-
-
 
 const App = observer(() => {
-  const { handleDragEnd, handleDragOver } = useAppDragEnd();
-  const [activeId, setActiveId] = React.useState<string | null>(null);
+  // specific state for auth flow
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasOnboarded, setHasOnboarded] = useState(false);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
-
-  const handleDragStart = (event: any) => {
-    setActiveId(event.active.id);
+  const handleLogin = () => {
+    setIsAuthenticated(true);
   };
 
-  const handleDragEndWrapper = (event: any) => {
-    handleDragEnd(event);
-    setActiveId(null);
+  const handleOnboardingComplete = () => {
+    setHasOnboarded(true);
   };
 
-  const activeTask = activeId ? store.allTasks.find(t => t.id === (activeId.startsWith('calendar-') ? activeId.replace('calendar-', '') : activeId)) : null;
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
 
-  return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={pointerWithin}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEndWrapper}
-      onDragOver={handleDragOver}
-      autoScroll={false}
-    >
-      <AppLayout>
-        <MainView />
-      </AppLayout>
-      <DragOverlay dropAnimation={null}>
-        {activeTask && activeId && !activeId.startsWith('calendar-') && !activeId.startsWith('timebox-') ? (
-          <div style={{ cursor: 'grabbing' }}>
-            <TaskCardBase
-              task={activeTask}
-              isDragging={false} /* Overlay looks solid */
-              className="drag-overlay-card"
-            />
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
-  );
+  if (!hasOnboarded) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
+
+  return <MainApp />;
 });
 
 export default App;

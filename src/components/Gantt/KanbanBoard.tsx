@@ -41,7 +41,7 @@ const KanbanColumn = observer(({
     return (
         <div
             ref={setNodeRef}
-            className={`day-column ${isOver ? 'droppable-over' : ''}`}
+            className={`day-column`}
         >
             <div className="day-header">
                 <span className="day-name">{format(date, 'EEE')}</span>

@@ -22,6 +22,7 @@ import { RecurringTaskActionsContext } from '../../ContextMenu/RecurringTaskActi
 import { TaskUIModel } from '../../../models/TaskUIModel';
 import { store } from '../../../models/store';
 import { format, getHours, getMinutes } from 'date-fns';
+import { SubtaskList } from '../../Shared/SubtaskList';
 import './TaskCard.css';
 
 
@@ -173,24 +174,41 @@ export const TaskCardBase = observer(({
                                     onClick={(e) => ui.openLabelContext(e)}
                                 >
                                     {task.labels && task.labels.length > 0 ? (
-                                        <>
-                                            <div
-                                                className="tc-label-dot"
-                                                style={{ backgroundColor: store.getLabelColor(task.labels[0]) }}
-                                            />
-                                            {task.labels[0]}
-                                        </>
+                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                            {task.labels.map(labelId => {
+                                                const label = store.getLabel(labelId);
+                                                if (!label) return null;
+                                                return (
+                                                    <div key={labelId} className="tc-label-chip" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <div
+                                                            className="tc-label-dot"
+                                                            style={{ backgroundColor: label.color }}
+                                                        />
+                                                        {label.name}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     ) : (
                                         "Select Label"
                                     )}
                                 </div>
                                 <div className="tc-actions">
                                     <Flag size={14} className="tc-action-icon" />
-                                    <Link2
-                                        size={14}
-                                        className="tc-action-icon"
+                                    <div
+                                        style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer' }}
                                         onClick={(e) => { e.stopPropagation(); ui.setSubtaskMode(!ui.isSubtaskMode); }}
-                                    />
+                                    >
+                                        <Link2
+                                            size={14}
+                                            className="tc-action-icon"
+                                        />
+                                        {task.subtasks.length > 0 && (
+                                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                                                {task.subtasks.filter(s => s.isCompleted).length}/{task.subtasks.length}
+                                            </span>
+                                        )}
+                                    </div>
                                     <RotateCw
                                         size={14}
                                         className={`tc-action-icon ${task.recurrence && task.recurrence !== 'none' ? 'active' : ''}`}
@@ -209,12 +227,20 @@ export const TaskCardBase = observer(({
                         ) : (
                             <>
                                 {task.labels && task.labels.length > 0 && (
-                                    <div className="tc-label">
-                                        <div
-                                            className="tc-label-dot"
-                                            style={{ backgroundColor: store.getLabelColor(task.labels[0]) }}
-                                        />
-                                        {task.labels[0]}
+                                    <div className="tc-label" style={{ display: 'flex', gap: '4px' }}>
+                                        {task.labels.map(labelId => {
+                                            const label = store.getLabel(labelId);
+                                            if (!label) return null;
+                                            return (
+                                                <div
+                                                    key={labelId}
+                                                    className="tc-label-dot"
+                                                    style={{ backgroundColor: label.color }}
+                                                    title={label.name}
+                                                />
+                                            );
+                                        })}
+                                        {task.labels.length === 1 && store.getLabel(task.labels[0])?.name}
                                     </div>
                                 )}
                                 {task.scheduledDate && task.scheduledTime && (
@@ -235,53 +261,7 @@ export const TaskCardBase = observer(({
                 {ui.isSubtaskMode && (
                     <>
                         <div className="tc-divider" />
-                        <div className="tc-subtasks-list" onClick={e => e.stopPropagation()}>
-                            {task.subtasks.map((sub, index) => (
-                                <div
-                                    key={sub.id}
-                                    className="tc-subtask-item"
-                                    draggable
-                                    onDragStart={(e) => {
-                                        e.stopPropagation();
-                                        e.dataTransfer.setData('text/plain', index.toString());
-                                    }}
-                                    onDragOver={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                    }}
-                                    onDrop={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
-                                        if (fromIndex !== index) {
-                                            task.reorderSubtask(fromIndex, index);
-                                        }
-                                    }}
-                                >
-                                    <GripVertical size={12} color="var(--text-muted)" style={{ cursor: 'grab' }} />
-                                    <div
-                                        className={`tc-checkbox ${sub.isCompleted ? 'checked' : ''}`}
-                                        onClick={() => sub.isCompleted = !sub.isCompleted}
-                                    >
-                                        {sub.isCompleted && <Check size={10} />}
-                                    </div>
-                                    <span style={{ fontSize: '13px', color: 'var(--text-main)', textDecoration: sub.isCompleted ? 'line-through' : 'none' }}>
-                                        {sub.title}
-                                    </span>
-                                    <MoreVertical size={12} className="tc-action-icon" style={{ marginLeft: 'auto' }} />
-                                </div>
-                            ))}
-                            <div className="tc-add-subtask">
-                                <Plus size={14} />
-                                <input
-                                    className="tc-subtask-input"
-                                    placeholder="Add subtask"
-                                    value={ui.newSubtaskTitle}
-                                    onChange={e => ui.setNewSubtaskTitle(e.target.value)}
-                                    onKeyDown={(e) => ui.handleAddSubtask(e, task)}
-                                />
-                            </div>
-                        </div>
+                        <SubtaskList task={task} />
                     </>
                 )}
 
@@ -333,7 +313,7 @@ export const TaskCardBase = observer(({
                 labels={store.availableLabels}
                 recentLabels={store.availableLabels.slice(0, 3)}
                 onSelectLabel={(label) => {
-                    task.labels = [label.name];
+                    task.labels = [label.id];
                     ui.closeLabelContext();
                 }}
             />
