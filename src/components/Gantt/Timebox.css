@@ -156,6 +156,8 @@
     padding: 0;
     position: relative;
     background-color: var(--bg-sidebar);
+    height: 100px;
+    /* Explicit height to match row */
 }
 
 .time-slot-sub {
@@ -163,6 +165,8 @@
     /* 15 mins = 1/4 of hour */
     /* border-bottom: 1px dashed var(--border-subtle); Optional: internal grids */
     box-sizing: border-box;
+    width: 100%;
+    /* Ensure full width */
 }
 
 .time-slot-sub:last-child {

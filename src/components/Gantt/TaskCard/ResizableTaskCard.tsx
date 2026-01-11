@@ -5,7 +5,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { Task } from '../../../models/core';
 import { store } from '../../../models/store';
 import { format } from 'date-fns';
-import { Check } from 'lucide-react';
 import './TaskCard.css';
 
 interface ResizableTaskCardProps {
@@ -24,14 +23,20 @@ export const ResizableTaskCard = observer(({
     style,
     className,
     onResizeStart,
-    containerData
-}: ResizableTaskCardProps) => {
+    containerData,
+    dragPrefix // New prop for namespacing (e.g. 'timebox')
+}: ResizableTaskCardProps & { dragPrefix?: string }) => {
+    // Determine unique ID based on context. Default to 'calendar' for backward compat in CalendarView.
+    // Ideally update CalendarView to pass 'calendar' prefix explicitly too.
+    const prefix = dragPrefix || (containerData?.type === 'timebox-slot' ? 'timebox' : 'calendar');
+    const draggableId = `${prefix}-${task.id}`;
+
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-        id: `calendar-${task.id}`,
+        id: draggableId,
         data: {
             type: 'task',
             task: task,
-            origin: 'calendar',
+            origin: prefix, // Pass origin matches prefix
             containerData
         }
     });
@@ -39,15 +44,86 @@ export const ResizableTaskCard = observer(({
     // Determine background color
     const backgroundColor = task.labels.length > 0 ? store.getLabelColor(task.labels[0]) : '#e6c581ff';
 
+    // Measure column width for horizontal snapping
+    const [colWidth, setColWidth] = React.useState(0);
+    const measureRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        if (!measureRef.current?.parentElement) return;
+
+        const parent = measureRef.current.parentElement;
+        const resizeObserver = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                if (entry.contentBoxSize) {
+                    setColWidth(entry.contentRect.width);
+                }
+            }
+        });
+
+        // Measure initially
+        setColWidth(parent.offsetWidth);
+
+        // Observe
+        resizeObserver.observe(parent);
+
+        return () => resizeObserver.disconnect();
+    }, []);
+
+    // Snap to grid logic
+    const snapStepY = 25; // 15 mins
+    const snapStepX = colWidth || 1; // Default to 1 (no snap) if 0 to avoid NaN
+    const stickyThreshold = 75; // Pixels to move before unlocking horizontal drag
+
+    let x = transform ? transform.x : 0;
+    let y = transform ? transform.y : 0;
+
+    if (transform) {
+        y = Math.round(y / snapStepY) * snapStepY;
+
+        if (colWidth > 0) {
+            // Horizontal Sticky Logic
+            if (Math.abs(x) < stickyThreshold) {
+                // Inside deadzone -> Lock to column center (0)
+                x = 0;
+            } else {
+                // Outside deadzone -> Snap to nearest column grid
+                x = Math.round(x / snapStepX) * snapStepX;
+            }
+        }
+    }
+
+    const snappedTransform = transform ? {
+        ...transform,
+        x,
+        y
+    } : null;
+
     // Merge styles
     const combinedStyle: React.CSSProperties = {
         ...style,
         backgroundColor,
-        transform: CSS.Translate.toString(transform),
-        opacity: isDragging ? 0.5 : 1,
+        transform: CSS.Translate.toString(snappedTransform),
+        opacity: 1, // Always solid as requested
+        zIndex: isDragging ? 100 : (style?.zIndex ?? 1), // Boost Z when dragging
+        boxShadow: isDragging ? '0 5px 15px rgba(0,0,0,0.25)' : undefined, // "Snappy" lift effect
         touchAction: 'none', // Recommended for dnd-kit
-        cursor: 'grab',
-        ...style, // allow override
+        cursor: isDragging ? 'grabbing' : 'grab',
+        pointerEvents: isDragging ? 'none' : 'auto', // Allow dropping "through" the card onto the slot
+        ...style,
+    };
+
+    // Ensure override doesn't kill the drag visuals
+    if (isDragging) {
+        combinedStyle.zIndex = 100;
+    }
+
+    // Attach ref to listeners or element? 
+    // attributes & listeners go to the div. We also need our measureRef.
+    // We can merge refs.
+    const setRefs = (node: HTMLDivElement | null) => {
+        setNodeRef(node);
+        // @ts-ignore
+        measureRef.current = node;
     };
 
     // Font size logic based on height (approximated by duration usually, but here relies on parent styling or explicit height)
@@ -55,7 +131,7 @@ export const ResizableTaskCard = observer(({
 
     return (
         <div
-            ref={setNodeRef}
+            ref={setRefs}
             style={combinedStyle}
             className={`calendar-event ${task.status === 'done' ? 'completed' : ''} ${className || ''}`}
             onClick={(e) => {

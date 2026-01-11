@@ -219,11 +219,23 @@ export class DragDropManager {
     public handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
 
-        if (!over) return;
+        console.log('[DragDropManager] handleDragEnd', {
+            activeId: active.id,
+            overId: over?.id,
+            activeData: active.data.current,
+            overData: over?.data.current
+        });
+
+        if (!over) {
+            console.warn('[DragDropManager] No drop target (over is null)');
+            return;
+        }
 
         const activeId = active.id as string;
-        // Handle namespaced IDs (e.g. calendar-123)
-        const taskId = activeId.startsWith('calendar-') ? activeId.replace('calendar-', '') : activeId;
+        // Handle namespaced IDs (e.g. calendar-123 or timebox-123)
+        let taskId = activeId;
+        if (activeId.startsWith('calendar-')) taskId = activeId.replace('calendar-', '');
+        else if (activeId.startsWith('timebox-')) taskId = activeId.replace('timebox-', '');
 
         const task = store.allTasks.find(t => t.id === taskId);
 
@@ -243,15 +255,18 @@ export class DragDropManager {
         }
 
         const dropType = overData.type;
+        console.log('[DragDropManager] Processing drop:', { dropType, origin: active.data.current?.origin });
 
         // Helper to determine if we are reordering within the same container
         const activeContainerId = active.data.current?.sortable?.containerId;
         const overContainerId = over.data.current?.sortable?.containerId || over.id;
         const isReordering = activeContainerId === overContainerId;
 
-        // ISOLATION RULE: Calendar items can ONLY interact with calendar cells
-        if (active.data.current?.origin === 'calendar') {
-            if (dropType !== 'calendar-cell') {
+        // ISOLATION RULE: Calendar/Timebox items can ONLY interact with calendar cells OR Timebox slots
+        const origin = active.data.current?.origin;
+        if (origin === 'calendar' || origin === 'timebox') {
+            if (dropType !== 'calendar-cell' && dropType !== 'timebox-slot') {
+                console.warn('[DragDropManager] Isolation rule blocked drop:', { origin, dropType });
                 return;
             }
         }
@@ -259,6 +274,8 @@ export class DragDropManager {
         const strategy = this.strategies.get(dropType);
         if (strategy) {
             strategy.handle(task, overData, event, { activeId, overId: over.id as string, isReordering });
+        } else {
+            console.warn('[DragDropManager] No strategy found for type:', dropType);
         }
     }
 }

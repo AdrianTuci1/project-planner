@@ -1,7 +1,7 @@
 import React from 'react';
 import { AppLayout } from './components/Layout/AppLayout';
 import { MainView } from './components/MainView';
-import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, closestCorners, DragOverlay } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, pointerWithin, DragOverlay } from '@dnd-kit/core';
 import { useAppDragEnd } from './hooks/useAppDragEnd';
 import './index.css';
 import './animations.css';
@@ -37,7 +37,7 @@ const App = observer(() => {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEndWrapper}
       onDragOver={handleDragOver}
@@ -47,7 +47,7 @@ const App = observer(() => {
         <MainView />
       </AppLayout>
       <DragOverlay dropAnimation={null}>
-        {activeTask ? (
+        {activeTask && activeId && !activeId.startsWith('calendar-') && !activeId.startsWith('timebox-') ? (
           <div style={{ cursor: 'grabbing' }}>
             <TaskCardBase
               task={activeTask}

@@ -12,6 +12,33 @@ interface CalendarViewProps {
     onTaskClick: (task: Task) => void;
 }
 
+const CalendarSlot = observer(({ date, hour, minute }: { date: Date, hour: number, minute: number }) => {
+    const cellId = `calendar-slot-${date.toISOString()}-${hour}-${minute}`;
+    const { isOver, setNodeRef } = useDroppable({
+        id: cellId,
+        data: {
+            type: 'calendar-cell',
+            date: date,
+            hour: hour,
+            minute: minute // Granular target!
+        }
+    });
+
+    return (
+        <div
+            ref={setNodeRef}
+            className={`calendar-slot ${isOver ? 'is-over' : ''}`}
+            style={{
+                height: '25%', // 15 mins
+                width: '100%',
+                borderBottom: minute !== 45 ? '1px dashed rgba(0,0,0,0.05)' : 'none', // Subtle guide lines
+                backgroundColor: isOver ? 'rgba(139, 92, 246, 0.1)' : 'transparent', // Highlight color
+                transition: 'background-color 0.1s'
+            }}
+        />
+    );
+});
+
 const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart }: {
     date: Date,
     hour: number,
@@ -19,20 +46,6 @@ const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart }
     onTaskClick: (task: Task) => void,
     onResizeStart: (e: React.MouseEvent | React.TouchEvent, task: Task) => void
 }) => {
-    // Create a deterministic ID for the drop zone
-    // We use a simplified ISO string or timestamp to ensure uniqueness
-    const cellId = `calendar-cell-${date.toISOString()}-${hour}`;
-
-    // Setup droppable
-    const { isOver, setNodeRef } = useDroppable({
-        id: cellId,
-        data: {
-            type: 'calendar-cell',
-            date: date,
-            hour: hour
-        }
-    });
-
     const today = startOfDay(new Date());
     const isToday = isSameDay(date, today);
 
@@ -56,18 +69,18 @@ const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart }
         });
     };
 
-    const formatTaskTime = (date: Date) => {
-        return format(date, 'h:mm');
-    };
-
     const cellTasks = getTasksForDayHour(date, hour);
 
     return (
-        <td
-            ref={setNodeRef}
-            className={`hour-cell ${isToday ? 'today-cell' : ''} ${isOver ? 'droppable-over' : ''}`}
-            style={isOver ? { backgroundColor: 'var(--bg-card-hover)' } : undefined}
-        >
+        <td className={`hour-cell ${isToday ? 'today-cell' : ''}`}>
+            {/* Background Slots Layer */}
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', zIndex: 0 }}>
+                {[0, 15, 30, 45].map(m => (
+                    <CalendarSlot key={m} date={date} hour={hour} minute={m} />
+                ))}
+            </div>
+
+            {/* Tasks Layer */}
             {cellTasks.map(task => {
                 const [h, m] = task.scheduledTime!.split(':').map(Number);
                 const taskMinute = m;
@@ -90,7 +103,8 @@ const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart }
                         containerData={{
                             type: 'calendar-cell',
                             date: date,
-                            hour: hour
+                            hour: hour,
+                            minute: m // Pass specific minute so drops on card work recursively/contextually if needed
                         }}
                         style={{
                             top: `${top}%`,

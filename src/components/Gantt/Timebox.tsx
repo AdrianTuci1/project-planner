@@ -33,8 +33,10 @@ const TimeboxSlot = observer(({ date, hour, minute, tasks }: TimeboxSlotProps) =
             ref={setNodeRef}
             className="time-slot-sub"
             style={{
-                backgroundColor: isOver ? 'var(--bg-card-hover)' : undefined,
-                height: '100%' // Ensure it takes full height of the simplified row if we use simple structure
+                backgroundColor: isOver ? 'rgba(139, 92, 246, 0.1)' : undefined,
+                height: '25%',
+                borderBottom: minute !== 45 ? '1px dashed rgba(0,0,0,0.05)' : 'none',
+                transition: 'background-color 0.1s'
             }}
         >
             {/* We don't render tasks INSIDE the slot div to avoid overflow clipping issues if the slot is small.
@@ -180,13 +182,18 @@ export const Timebox = observer(() => {
                                                     window.addEventListener('mouseup', handleUp);
                                                     window.addEventListener('touchend', handleUp);
                                                 }}
+                                                containerData={{
+                                                    type: 'timebox-slot',
+                                                    date: store.timeboxDate,
+                                                    hour: hour,
+                                                    minute: Number(m) // Use task's current minute as the drop target context
+                                                }}
                                                 style={{
                                                     top: `${top}%`,
                                                     height: `${height}%`,
                                                     position: 'absolute',
                                                     zIndex: 10,
-                                                    width: '90%',
-                                                    left: '5%', // Indent slightly
+                                                    width: '95%',
                                                     fontSize: duration <= 15 ? '10px' : '12px'
                                                 }}
                                             />
