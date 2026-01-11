@@ -147,16 +147,14 @@ export const TasksView = observer(({ tasks, onTaskClick, groupId }: TasksViewPro
     };
 
     const handleDeleteTask = (task: Task) => {
-        if (confirm('Are you sure you want to delete this task?')) {
-            if (groupId === null) {
-                store.dumpAreaTasks = store.dumpAreaTasks.filter(t => t.id !== task.id);
-                return;
-            }
+        if (groupId === null) {
+            store.dumpAreaTasks = store.dumpAreaTasks.filter(t => t.id !== task.id);
+            return;
+        }
 
-            const targetGroup = getTargetGroup();
-            if (targetGroup) {
-                targetGroup.removeTask(task.id);
-            }
+        const targetGroup = getTargetGroup();
+        if (targetGroup) {
+            targetGroup.removeTask(task.id);
         }
     };
 

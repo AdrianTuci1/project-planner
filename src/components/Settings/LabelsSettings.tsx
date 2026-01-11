@@ -79,9 +79,7 @@ export const LabelsSettings = observer(() => {
 
     const handleDelete = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (window.confirm('Are you sure you want to delete this label?')) {
-            store.deleteLabel(id);
-        }
+        store.deleteLabel(id);
     };
 
     return (

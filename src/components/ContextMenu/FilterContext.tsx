@@ -27,11 +27,7 @@ export const FilterContext: React.FC<FilterContextProps> = ({
     isOpen,
     onClose,
     position,
-    labels = [
-        { id: '1', name: 'Home', color: '#FF2D55' },
-        { id: '2', name: 'Lam', color: '#FFD60A' },
-        { id: '3', name: 'Work', color: '#FF2D55' },
-    ],
+    labels = [],
     selectedLabels = [],
     showComplete = true,
     showTimeboxed = true,

@@ -160,6 +160,10 @@ export const TopBar = observer(() => {
                     setUserMenuOpen(false);
                     store.toggleAnalytics();
                 }}
+                onDailyShutdown={() => {
+                    setUserMenuOpen(false);
+                    store.toggleDailyShutdown();
+                }}
                 onLogout={() => console.log('Logout')}
             />
 

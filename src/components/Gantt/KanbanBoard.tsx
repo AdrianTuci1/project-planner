@@ -200,17 +200,16 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
     };
 
     const handleDeleteTask = (task: Task) => {
-        if (confirm('Are you sure you want to delete this task?')) {
-            if (groupId === null) {
-                store.dumpAreaTasks = store.dumpAreaTasks.filter(t => t.id !== task.id);
-                return;
-            }
-
-            const targetGroup = getTargetGroup();
-            if (targetGroup) {
-                targetGroup.removeTask(task.id);
-            }
+        if (groupId === null) {
+            store.dumpAreaTasks = store.dumpAreaTasks.filter(t => t.id !== task.id);
+            return;
         }
+
+        const targetGroup = getTargetGroup();
+        if (targetGroup) {
+            targetGroup.removeTask(task.id);
+        }
+
     };
 
     return (

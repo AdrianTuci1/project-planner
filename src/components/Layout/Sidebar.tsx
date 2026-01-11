@@ -169,10 +169,9 @@ export const Sidebar = observer(() => {
                         label="Delete List"
                         icon={<Trash2 size={14} />}
                         onClick={() => {
-                            if (confirm('Are you sure you want to delete this list?')) {
-                                store.deleteGroup(store.activeGroupId!);
-                                sidebarUI.setActionsMenuOpen(false);
-                            }
+                            store.deleteGroup(store.activeGroupId!);
+                            sidebarUI.setActionsMenuOpen(false);
+
                         }}
                     />
                 </ContextMenu>
@@ -200,7 +199,7 @@ export const Sidebar = observer(() => {
                     </div>
 
                     <SidebarTaskList
-                        tasks={(store.activeGroupId === null ? store.dumpAreaTasks : activeGroup?.tasks || []).filter(t => !t.scheduledDate)}
+                        tasks={store.applyGlobalFilters((store.activeGroupId === null ? store.dumpAreaTasks : activeGroup?.tasks || [])).filter(t => !t.scheduledDate)}
                         activeGroup={activeGroup}
                         onDuplicate={(t: Task) => {
                             if (store.activeGroupId === null) {

@@ -6,11 +6,13 @@ import { TopBar } from '../Navigation/TopBar';
 import './AppLayout.css';
 
 import { Analytics } from '../Analytics/Analytics';
+import { DailyShutdown } from '../DailyShutdown/DailyShutdown';
 
 export const AppLayout = observer(({ children }: { children: React.ReactNode }) => {
     return (
         <div className="app-layout">
             <Analytics />
+            <DailyShutdown />
             {!store.isAnalyticsOpen && (
                 <>
                     {store.isSidebarOpen && <Sidebar />}

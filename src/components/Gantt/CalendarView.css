@@ -140,9 +140,6 @@
     background: rgba(139, 92, 246, 0.03);
 }
 
-.hour-cell.today-cell:hover {
-    background: rgba(139, 92, 246, 0.08);
-}
 
 /* Calendar Events */
 .calendar-event {
@@ -161,7 +158,6 @@
 }
 
 .calendar-event:hover {
-    transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 5;
     /* Bring to front on hover */

@@ -41,6 +41,9 @@ class ProjectStore {
     // Upgrade Modal State
     isUpgradeModalOpen: boolean = false;
 
+    // Daily Shutdown State
+    isDailyShutdownOpen: boolean = false;
+
     // Timer State
     activeTimerTaskId: string | null = null;
     timerStatus: 'idle' | 'running' | 'paused' = 'idle';
@@ -111,6 +114,33 @@ class ProjectStore {
         return [...this.dumpAreaTasks, ...groupTasks];
     }
 
+    get filteredTasks() {
+        return this.applyGlobalFilters(this.allTasks);
+    }
+
+    applyGlobalFilters(tasks: Task[]) {
+        let filtered = tasks;
+
+        // 1. Filter by Labels
+        if (this.filterLabelIds.length > 0) {
+            filtered = filtered.filter(t =>
+                t.labels.some(labelId => this.filterLabelIds.includes(labelId))
+            );
+        }
+
+        // 2. Filter Completed
+        if (!this.showCompletedTasks) {
+            filtered = filtered.filter(t => t.status !== 'done');
+        }
+
+        // 3. Filter Timeboxed (Scheduled)
+        if (!this.showTimeboxedTasks) {
+            filtered = filtered.filter(t => !t.scheduledDate);
+        }
+
+        return filtered;
+    }
+
     createGroup(name: string) {
         const group = new Group(name);
         this.groups.push(group);
@@ -164,6 +194,10 @@ class ProjectStore {
 
     closeUpgradeModal() {
         this.isUpgradeModalOpen = false;
+    }
+
+    toggleDailyShutdown() {
+        this.isDailyShutdownOpen = !this.isDailyShutdownOpen;
     }
 
     getLabelColor(labelName: string): string {
@@ -342,7 +376,7 @@ class ProjectStore {
         task1.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0); // Date part
         task1.scheduledTime = "16:30";
         task1.duration = 90;
-        task1.labels = ['Design'];
+        task1.labels = ['l1']; // Design
         marketingGroup.addTask(task1);
 
         const task2 = new Task("Content Strategy Meeting");
@@ -355,7 +389,7 @@ class ProjectStore {
         task3.scheduledDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 0, 0);
         task3.scheduledTime = "21:30";
         task3.duration = 75;
-        task3.labels = ['Important'];
+        task3.labels = ['l2']; // Important
         marketingGroup.addTask(task3);
 
         const task4 = new Task("Review Analytics");

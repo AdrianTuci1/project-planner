@@ -121,7 +121,16 @@ export class Task implements ITask {
     }
 
     toggleStatus() {
-        this.status = this.status === 'done' ? 'todo' : 'done';
+        if (this.status === 'done') {
+            this.status = 'todo';
+            this.actualDuration = 0; // Reset
+        } else {
+            this.status = 'done';
+            // Logic: If actual time < 1 min, use estimated if available
+            if ((this.actualDuration || 0) < 1 && this.duration && this.duration > 0) {
+                this.actualDuration = this.duration;
+            }
+        }
     }
 
     setScheduling(date?: Date, time?: string) {

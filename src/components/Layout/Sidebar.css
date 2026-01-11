@@ -29,7 +29,7 @@
 
 .app-name {
     font-weight: 600;
-    font-size: var(--text-base);
+    font-size: var(--text-lg);
     color: var(--text-main);
     flex: 1;
 }

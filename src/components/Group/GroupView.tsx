@@ -22,6 +22,8 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
     const group = store.groups.find(g => g.id === groupId);
     if (!group) return <div>Group not found</div>;
 
+    const displayTasks = store.applyGlobalFilters(group.tasks);
+
     const handleTaskClick = (task: Task) => {
         setSelectedTask(task);
     };
@@ -33,9 +35,9 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                 <TopBar />
                 <div className="group-content">
                     {store.viewMode === 'tasks' ? (
-                        group.tasks.length > 0 ? (
+                        displayTasks.length > 0 ? (
                             <KanbanBoard
-                                tasks={group.tasks}
+                                tasks={displayTasks}
                                 onTaskClick={handleTaskClick}
                                 groupId={groupId}
                             />
@@ -46,7 +48,7 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                         )
                     ) : (
                         <CalendarView
-                            tasks={group.tasks}
+                            tasks={displayTasks}
                             onTaskClick={handleTaskClick}
                         />
                     )}
@@ -61,7 +63,7 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                     <Timebox />
                 ) : (
                     <TasksView
-                        tasks={group.tasks}
+                        tasks={displayTasks}
                         onTaskClick={handleTaskClick}
                         groupId={groupId}
                     />
