@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import { Controller } from './controllers/controller.interface';
+import { Routes } from './routes/routes.interface';
 
 dotenv.config();
 
@@ -11,12 +11,12 @@ export class App {
     public app: Application;
     public port: number;
 
-    constructor(controllers: Controller[], port: number) {
+    constructor(routes: Routes[], port: number) {
         this.app = express();
         this.port = port;
 
         this.initializeMiddlewares();
-        this.initializeControllers(controllers);
+        this.initializeRoutes(routes);
     }
 
     private initializeMiddlewares() {
@@ -27,9 +27,9 @@ export class App {
         this.app.use(express.urlencoded({ extended: true }));
     }
 
-    private initializeControllers(controllers: Controller[]) {
-        controllers.forEach((controller) => {
-            this.app.use('/', controller.router);
+    private initializeRoutes(routes: Routes[]) {
+        routes.forEach((route) => {
+            this.app.use('/', route.router);
         });
     }
 

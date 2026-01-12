@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 
 export class GroupsService {
@@ -12,12 +12,38 @@ export class GroupsService {
 
     public async getGroups(startDate: string, endDate: string) {
         // In a real scenario, you might filter by user or date here.
-        // For now, we return all groups as per the prompt requirements for a simple modular server.
         const command = new ScanCommand({
             TableName: this.tableName,
         });
 
         const result = await this.docClient.send(command);
         return result.Items || [];
+    }
+
+    public async createGroup(group: any) {
+        const command = new PutCommand({
+            TableName: this.tableName,
+            Item: group
+        });
+        await this.docClient.send(command);
+        return group;
+    }
+
+    public async updateGroup(id: string, group: any) {
+        const command = new PutCommand({
+            TableName: this.tableName,
+            Item: { ...group, id }
+        });
+        await this.docClient.send(command);
+        return { ...group, id };
+    }
+
+    public async deleteGroup(id: string) {
+        const command = new DeleteCommand({
+            TableName: this.tableName,
+            Key: { id }
+        });
+        await this.docClient.send(command);
+        return { id };
     }
 }

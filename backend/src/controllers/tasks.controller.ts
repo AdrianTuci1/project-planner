@@ -1,23 +1,10 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import { Controller } from './controller.interface';
+import { Request, Response, NextFunction } from 'express';
 import { TasksService } from '../services/tasks.service';
-import { AuthMiddleware } from '../middleware/auth.middleware';
 
-export class TasksController implements Controller {
-    public path = '/tasks';
-    public router = Router();
-    private tasksService = new TasksService();
-    private authMiddleware = new AuthMiddleware();
+export class TasksController {
+    public tasksService = new TasksService();
 
-    constructor() {
-        this.initializeRoutes();
-    }
-
-    private initializeRoutes() {
-        this.router.get(`${this.path}/dump`, this.authMiddleware.verifyToken, this.getDump);
-    }
-
-    private getDump = async (req: Request, res: Response, next: NextFunction) => {
+    public getDump = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { startDate, endDate } = req.query;
             const tasks = await this.tasksService.getDump(startDate as string, endDate as string);
@@ -26,4 +13,36 @@ export class TasksController implements Controller {
             next(error);
         }
     }
+
+    public createTask = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const task = req.body;
+            const result = await this.tasksService.createTask(task);
+            res.status(201).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public updateTask = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const task = req.body;
+            const result = await this.tasksService.updateTask(id, task);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public deleteTask = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            await this.tasksService.deleteTask(id);
+            res.status(200).send();
+        } catch (error) {
+            next(error);
+        }
+    }
 }
+

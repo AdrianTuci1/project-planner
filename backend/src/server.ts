@@ -1,8 +1,8 @@
 import { App } from './app';
-import { GroupsController } from './controllers/groups.controller';
-import { TasksController } from './controllers/tasks.controller';
-import { LabelsController } from './controllers/labels.controller';
-import { SettingsController } from './controllers/settings.controller';
+import { GroupsRoute } from './routes/groups.route';
+import { TasksRoute } from './routes/tasks.route';
+import { LabelsRoute } from './routes/labels.route';
+import { SettingsRoute } from './routes/settings.route';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,10 +11,10 @@ const port = parseInt(process.env.PORT || '3001'); // Default to 3001 to avoid R
 
 const app = new App(
     [
-        new GroupsController(),
-        new TasksController(),
-        new LabelsController(),
-        new SettingsController(),
+        new GroupsRoute(),
+        new TasksRoute(),
+        new LabelsRoute(),
+        new SettingsRoute(),
     ],
     port,
 );

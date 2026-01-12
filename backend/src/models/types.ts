@@ -27,3 +27,23 @@ export interface GeneralSettings {
     rolloverRecurring: boolean;
     rolloverTo: string;
 }
+
+export interface Group {
+    id: string;
+    title: string;
+    type: string;
+    [key: string]: any;
+}
+
+export interface Task {
+    id: string;
+    title: string;
+    [key: string]: any;
+}
+
+export interface Label {
+    id: string;
+    name: string;
+    color: string;
+    [key: string]: any;
+}

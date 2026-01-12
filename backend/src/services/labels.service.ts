@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 
 export class LabelsService {
@@ -17,5 +17,32 @@ export class LabelsService {
 
         const result = await this.docClient.send(command);
         return result.Items || [];
+    }
+
+    public async createLabel(label: any) {
+        const command = new PutCommand({
+            TableName: this.tableName,
+            Item: label
+        });
+        await this.docClient.send(command);
+        return label;
+    }
+
+    public async updateLabel(id: string, label: any) {
+        const command = new PutCommand({
+            TableName: this.tableName,
+            Item: { ...label, id }
+        });
+        await this.docClient.send(command);
+        return { ...label, id };
+    }
+
+    public async deleteLabel(id: string) {
+        const command = new DeleteCommand({
+            TableName: this.tableName,
+            Key: { id }
+        });
+        await this.docClient.send(command);
+        return { id };
     }
 }

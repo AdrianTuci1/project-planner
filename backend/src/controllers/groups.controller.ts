@@ -1,23 +1,10 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import { Controller } from './controller.interface';
+import { Request, Response, NextFunction } from 'express';
 import { GroupsService } from '../services/groups.service';
-import { AuthMiddleware } from '../middleware/auth.middleware';
 
-export class GroupsController implements Controller {
-    public path = '/groups';
-    public router = Router();
-    private groupsService = new GroupsService();
-    private authMiddleware = new AuthMiddleware();
+export class GroupsController {
+    public groupsService = new GroupsService();
 
-    constructor() {
-        this.initializeRoutes();
-    }
-
-    private initializeRoutes() {
-        this.router.get(this.path, this.authMiddleware.verifyToken, this.getGroups);
-    }
-
-    private getGroups = async (req: Request, res: Response, next: NextFunction) => {
+    public getGroups = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { startDate, endDate } = req.query;
             const groups = await this.groupsService.getGroups(
@@ -29,4 +16,36 @@ export class GroupsController implements Controller {
             next(error);
         }
     };
-}
+
+    public createGroup = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const group = req.body;
+            const result = await this.groupsService.createGroup(group);
+            res.status(201).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public updateGroup = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const group = req.body;
+            const result = await this.groupsService.updateGroup(id, group);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public deleteGroup = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            await this.groupsService.deleteGroup(id);
+            res.status(200).send();
+        } catch (error) {
+            next(error);
+        }
+    };
+};
+

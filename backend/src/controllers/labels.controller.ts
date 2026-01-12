@@ -1,23 +1,10 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import { Controller } from './controller.interface';
+import { Request, Response, NextFunction } from 'express';
 import { LabelsService } from '../services/labels.service';
-import { AuthMiddleware } from '../middleware/auth.middleware';
 
-export class LabelsController implements Controller {
-    public path = '/labels';
-    public router = Router();
-    private labelsService = new LabelsService();
-    private authMiddleware = new AuthMiddleware();
+export class LabelsController {
+    public labelsService = new LabelsService();
 
-    constructor() {
-        this.initializeRoutes();
-    }
-
-    private initializeRoutes() {
-        this.router.get(this.path, this.authMiddleware.verifyToken, this.getLabels);
-    }
-
-    private getLabels = async (req: Request, res: Response, next: NextFunction) => {
+    public getLabels = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const labels = await this.labelsService.getLabels();
             res.status(200).json(labels);
@@ -25,4 +12,36 @@ export class LabelsController implements Controller {
             next(error);
         }
     }
+
+    public createLabel = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const label = req.body;
+            const result = await this.labelsService.createLabel(label);
+            res.status(201).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public updateLabel = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const label = req.body;
+            const result = await this.labelsService.updateLabel(id, label);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public deleteLabel = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            await this.labelsService.deleteLabel(id);
+            res.status(200).send();
+        } catch (error) {
+            next(error);
+        }
+    }
 }
+
