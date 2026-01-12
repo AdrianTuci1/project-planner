@@ -99,7 +99,7 @@ export const GroupList = observer(({ activeGroupId, onSelectGroup, className }: 
                     <MenuItem
                         key={group.id}
                         label={group.name}
-                        icon={<span>🐙</span>}
+                        icon={<span>{group.icon}</span>}
                         selected={activeGroupId === group.id}
                         checkmark={activeGroupId === group.id}
                         onClick={() => handleSelect(group.id)}
@@ -146,7 +146,7 @@ export const GroupList = observer(({ activeGroupId, onSelectGroup, className }: 
 
             {showCreateList && (
                 <CreateListModal
-                    groupId={editingGroupId}
+                    groupId={editingGroupId || undefined}
                     onClose={() => {
                         setShowCreateList(false);
                         setEditingGroupId(null);

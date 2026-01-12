@@ -53,6 +53,9 @@ export type RecurrenceType =
 export interface IGroup {
     id: string;
     name: string;
+    icon: string;
+    defaultLabelId?: string;
+    autoAddLabelEnabled: boolean;
     tasks: ITask[];
     participants: IParticipant[];
 }
@@ -161,16 +164,28 @@ export class Task implements ITask {
 export class Group implements IGroup {
     id: string;
     name: string;
+    icon: string;
+    defaultLabelId?: string;
+    autoAddLabelEnabled: boolean = false;
     tasks: Task[] = [];
     participants: IParticipant[] = [];
 
-    constructor(name: string) {
+    constructor(name: string, icon: string = '📝', defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
         this.id = uuidv4();
         this.name = name;
+        this.icon = icon;
+        this.defaultLabelId = defaultLabelId;
+        this.autoAddLabelEnabled = autoAddLabelEnabled;
         makeAutoObservable(this);
     }
 
     addTask(task: Task) {
+        // Apply auto-label if enabled and label exists
+        if (this.autoAddLabelEnabled && this.defaultLabelId) {
+            if (!task.labels.includes(this.defaultLabelId)) {
+                task.labels.push(this.defaultLabelId);
+            }
+        }
         this.tasks.push(task);
     }
 

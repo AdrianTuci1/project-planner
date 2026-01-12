@@ -115,7 +115,7 @@ class ProjectStore {
             runInAction(() => {
                 // Hydrate Groups
                 this.groups = data.groups.map((g: any) => {
-                    const group = new Group(g.name);
+                    const group = new Group(g.name, g.icon, g.defaultLabelId, g.autoAddLabelEnabled);
                     group.id = g.id;
                     group.tasks = g.tasks.map((t: any) => this.hydrateTask(t));
                     return group;
@@ -198,8 +198,8 @@ class ProjectStore {
         return filtered;
     }
 
-    createGroup(name: string) {
-        const group = new Group(name);
+    createGroup(name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
+        const group = new Group(name, icon || '📝', defaultLabelId, autoAddLabelEnabled);
         this.groups.push(group);
         return group;
     }
@@ -214,10 +214,13 @@ class ProjectStore {
         }
     }
 
-    updateGroup(groupId: string, name: string) {
+    updateGroup(groupId: string, name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled?: boolean) {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
             group.name = name;
+            if (icon) group.icon = icon;
+            if (defaultLabelId !== undefined) group.defaultLabelId = defaultLabelId;
+            if (autoAddLabelEnabled !== undefined) group.autoAddLabelEnabled = autoAddLabelEnabled;
         }
     }
 
