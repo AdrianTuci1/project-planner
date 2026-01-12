@@ -6,11 +6,10 @@ import {
     RotateCw,
 } from 'lucide-react';
 import { TaskUIModel } from '../../../models/TaskUIModel';
-import { store } from '../../../models/store';
 import './TaskCard.css';
-import { TimeEntryContext } from '../../ContextMenu/TimeEntryContext';
-import { LabelContext } from '../../ContextMenu/LabelContext';
-import { MakeRecurringTaskContext } from '../../ContextMenu/MakeRecurringTaskContext';
+import { ContextMenu } from '../../ContextMenu/ContextMenu';
+import { LabelPickerContent } from '../../ContextMenu/LabelPickerContent';
+import { RecurrencePickerContent } from '../../ContextMenu/RecurrencePickerContent';
 
 interface CreatingTaskCardProps {
     onCreate?: (title: string) => void;
@@ -86,40 +85,38 @@ export const CreatingTaskCard = observer(({
                 Let's stick to original behavior: The context menus were rendered.
             */}
 
-            <LabelContext
+            <ContextMenu
                 isOpen={ui.labelContext.isOpen}
                 onClose={() => ui.closeLabelContext()}
                 position={ui.labelContext.position}
-                labels={store.availableLabels}
-                recentLabels={store.availableLabels.slice(0, 3)}
-                onSelectLabel={(label) => {
-                    // Logic for creation mode? 
-                    // Original code: task.labels = [label.name]; 
-                    // But here task is undefined.
-                    // So likely this feature was broken or limited in original creation mode without a task object.
-                    // We'll leave it as is visually or try to handle it if we create a temporary task.
-                    ui.closeLabelContext();
-                }}
-                onEditLabels={() => {
-                    ui.closeLabelContext();
-                    store.openSettings('labels');
-                }}
-                onCreateLabel={(name, color) => {
-                    store.addLabel(name, color);
-                }}
-            />
+            >
+                <LabelPickerContent
+                    onSelect={(labelId) => {
+                        // TODO: Implement label selection for creating task
+                        console.log('Selected label during creation:', labelId);
+                        ui.closeLabelContext();
+                    }}
+                    onClose={() => ui.closeLabelContext()}
+                    selectedLabelIds={[]}
+                />
+            </ContextMenu>
 
-            <MakeRecurringTaskContext
+            <ContextMenu
                 isOpen={ui.recurrenceContext.isOpen && ui.recurrenceContext.mode === 'set'}
                 onClose={() => ui.closeRecurrenceContext()}
                 position={ui.recurrenceContext.position}
-                selectedRecurrence={'none'} // default
-                hasSpecificTime={false}
-                specificTime={'9:00 AM'}
-                onSelectRecurrence={() => ui.closeRecurrenceContext()}
-                onToggleSpecificTime={() => { }}
-                onChangeTime={() => { }}
-            />
+            >
+                <RecurrencePickerContent
+                    selectedRecurrence={'none'} // default
+                    hasSpecificTime={false}
+                    specificTime={'9:00 AM'}
+                    onSelectRecurrence={() => ui.closeRecurrenceContext()}
+                    onToggleSpecificTime={() => { }}
+                    onChangeTime={() => { }}
+                    onClose={() => ui.closeRecurrenceContext()}
+                    baseDate={new Date()}
+                />
+            </ContextMenu>
         </div>
     );
 });

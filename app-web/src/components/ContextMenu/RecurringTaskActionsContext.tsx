@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { ContextMenu, MenuItem } from './ContextMenu';
 import { Task } from '../../models/core';
 import { TaskUIModel } from '../../models/TaskUIModel';
+import { store } from '../../models/store';
 
 interface RecurringTaskActionsContextProps {
     ui: TaskUIModel;
@@ -13,9 +14,40 @@ export const RecurringTaskActionsContext = observer(({
     ui,
     task
 }: RecurringTaskActionsContextProps) => {
+
+    const [view, setView] = React.useState<'menu' | 'stop-confirmation'>('menu');
+
+    if (view === 'stop-confirmation') {
+        return (
+            <ContextMenu
+                isOpen={ui.recurrenceContext.isOpen && ui.recurrenceContext.mode === 'actions'}
+                onClose={() => ui.closeRecurrenceContext()}
+                position={ui.recurrenceContext.position}
+            >
+                <div style={{ padding: '8px 12px', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    Do you still want to keep the tasks?
+                </div>
+                <MenuItem
+                    label="Keep the tasks"
+                    onClick={() => {
+                        store.stopRecurrence(task);
+                        ui.closeRecurrenceContext();
+                    }}
+                />
+                <MenuItem
+                    label="Delete all occurrences" color="var(--text-danger)"
+                    onClick={() => {
+                        store.deleteRecurringSeries(task);
+                        ui.closeRecurrenceContext();
+                    }}
+                />
+            </ContextMenu>
+        );
+    }
+
     return (
         <ContextMenu
-            isOpen={ui.recurrenceContext.isOpen}
+            isOpen={ui.recurrenceContext.isOpen && ui.recurrenceContext.mode === 'actions'}
             onClose={() => ui.closeRecurrenceContext()}
             position={ui.recurrenceContext.position}
         >
@@ -29,13 +61,7 @@ export const RecurringTaskActionsContext = observer(({
                 label={task.recurrence || 'Recurring'}
                 arrow
                 onClick={() => {
-                    // Switch to 'set' mode to edit recurrence
-                    // We need a way to switch modes in UI model.
-                    // As per TaskUIModel: mode: 'set' | 'actions'
                     ui.recurrenceContext.mode = 'set';
-                    // Context closes/re-renders? 
-                    // If we change mode, TaskModal will re-render and show MakeRecurringTaskContext because of conditional rendering there.
-                    // So we just update the model.
                 }}
             />
 
@@ -48,8 +74,7 @@ export const RecurringTaskActionsContext = observer(({
                 }
                 label="Stop repeating"
                 onClick={() => {
-                    task.recurrence = 'none';
-                    ui.closeRecurrenceContext();
+                    setView('stop-confirmation');
                 }}
             />
 
@@ -61,8 +86,7 @@ export const RecurringTaskActionsContext = observer(({
                 }
                 label="Update all incomplete tasks to match this task"
                 onClick={() => {
-                    // Placeholder for future logic
-                    console.log("Update all incomplete tasks - not implemented");
+                    store.updateRecurringSeries(task);
                     ui.closeRecurrenceContext();
                 }}
             />
@@ -75,8 +99,7 @@ export const RecurringTaskActionsContext = observer(({
                 }
                 label="Delete all instances"
                 onClick={() => {
-                    // Placeholder for future logic
-                    console.log("Delete all instances - not implemented");
+                    store.deleteRecurringSeries(task);
                     ui.closeRecurrenceContext();
                 }}
             />

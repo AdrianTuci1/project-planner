@@ -114,6 +114,23 @@ export class TaskUIModel {
         this.recurrenceContext.isOpen = false;
     }
 
+    priorityContext = {
+        isOpen: false,
+        position: { x: 0, y: 0 }
+    };
+
+    openPriorityContext(e: React.MouseEvent, pos?: { x: number; y: number }) {
+        e.stopPropagation();
+        this.priorityContext = {
+            isOpen: true,
+            position: pos || { x: e.clientX, y: e.clientY }
+        };
+    }
+
+    closePriorityContext() {
+        this.priorityContext.isOpen = false;
+    }
+
 
     openActionContext(e: React.MouseEvent) {
         e.preventDefault();

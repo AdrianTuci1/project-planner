@@ -12,7 +12,8 @@ import {
     Repeat,
     Copy,
     Link,
-    Trash2
+    Trash2,
+    Flag
 } from 'lucide-react';
 import { format, startOfDay } from 'date-fns';
 
@@ -22,6 +23,7 @@ import { LabelContext } from '../ContextMenu/LabelContext';
 import { store } from '../../models/store';
 import { MakeRecurringTaskContext } from '../ContextMenu/MakeRecurringTaskContext';
 import { RecurringTaskActionsContext } from '../ContextMenu/RecurringTaskActionsContext';
+import { PriorityContext } from '../ContextMenu/PriorityContext';
 import { SubtaskList } from '../Shared/SubtaskList';
 import { GroupList } from '../Shared/GroupList';
 import './TaskModal.css';
@@ -158,6 +160,31 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                                     <span className="value-placeholder">Click to edit</span>
                                 )}
                                 <span className="value-sub">(Start timer)</span>
+                            </div>
+                        </div>
+
+                        {/* Priority */}
+                        <div
+                            className="meta-row"
+                            onClick={(e) => {
+                                const valueEl = e.currentTarget.querySelector('.meta-row-value');
+                                const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
+                                ui.openPriorityContext(e, pos);
+                            }}
+                        >
+                            <div className="meta-row-label">
+                                {(() => {
+                                    const color = task.priority === 'high' ? '#EF4444' :
+                                        task.priority === 'medium' ? '#F97316' :
+                                            task.priority === 'low' ? '#3B82F6' : undefined;
+                                    return <Flag size={18} color={color} fill={color || 'none'} />;
+                                })()}
+                                <span>Priority</span>
+                            </div>
+                            <div className="meta-row-value">
+                                <span className="value-main" style={{ textTransform: 'capitalize' }}>
+                                    {task.priority || 'None'}
+                                </span>
                             </div>
                         </div>
 
@@ -299,6 +326,8 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
             ) : (
                 <RecurringTaskActionsContext ui={ui} task={task} />
             )}
+
+            <PriorityContext ui={ui} task={task} />
 
             {/* List Selection Context */}
             <ListSelectionContext ui={ui} task={task} />

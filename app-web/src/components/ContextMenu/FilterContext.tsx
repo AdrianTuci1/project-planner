@@ -58,6 +58,7 @@ export const FilterContext: React.FC<FilterContextProps> = ({
                         key={label.id}
                         colorDot={label.color}
                         label={label.name}
+                        checkmark={selectedLabels.includes(label.id)}
                         onClick={() => onToggleLabel?.(label.id)}
                     />
                 ))}

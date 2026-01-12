@@ -38,7 +38,10 @@ export interface ITask {
     scheduledTime?: string; // Format "HH:mm"
     labels: string[];
     recurrence?: RecurrenceType;
+    priority: PriorityType;
 }
+
+export type PriorityType = 'high' | 'medium' | 'low' | 'none';
 
 export type RecurrenceType =
     | 'none'
@@ -92,6 +95,7 @@ export class Task implements ITask {
     scheduledDate?: Date = undefined;
     labels: string[] = [];
     recurrence: RecurrenceType = 'none';
+    priority: PriorityType = 'none';
 
     scheduledTime?: string = undefined; // Format "HH:mm"
 
@@ -144,9 +148,9 @@ export class Task implements ITask {
     clone() {
         const newTask = new Task(this.title);
         newTask.description = this.description;
-        newTask.status = this.status;
+        newTask.status = 'todo'; // Reset status
         newTask.duration = this.duration;
-        newTask.actualDuration = this.actualDuration;
+        newTask.actualDuration = 0; // Reset actual duration
         newTask.participants = [...this.participants];
         newTask.subtasks = this.subtasks.map(s => {
             const newSub = new Subtask(s.title);
@@ -157,6 +161,7 @@ export class Task implements ITask {
         newTask.scheduledTime = this.scheduledTime;
         newTask.labels = [...this.labels];
         newTask.recurrence = this.recurrence;
+        newTask.priority = this.priority;
         return newTask;
     }
 }

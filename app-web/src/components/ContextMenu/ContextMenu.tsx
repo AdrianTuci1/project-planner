@@ -88,6 +88,7 @@ interface MenuItemProps {
     disabled?: boolean;
     onClick?: () => void;
     colorDot?: string;
+    color?: string;
 }
 
 export const MenuItem: React.FC<MenuItemProps> = ({
@@ -100,11 +101,13 @@ export const MenuItem: React.FC<MenuItemProps> = ({
     disabled,
     onClick,
     colorDot,
+    color,
 }) => {
     return (
         <div
             className={`context-menu-item ${selected ? 'selected' : ''} ${disabled ? 'disabled' : ''}`}
             onClick={disabled ? undefined : onClick}
+            style={color ? { color } : undefined}
         >
             {colorDot && (
                 <span

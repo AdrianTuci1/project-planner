@@ -399,13 +399,14 @@
     display: flex;
     align-items: center;
     color: var(--text-muted);
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.2s;
     padding: 2px;
 }
 
 .tc-subtask-item:hover .tc-subtask-drag-handle {
     opacity: 1;
+    color: var(--text-main);
 }
 
 .tc-subtask-delete {
@@ -416,7 +417,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
+    opacity: 1;
     transition: all 0.2s;
     padding: 4px;
     border-radius: 4px;

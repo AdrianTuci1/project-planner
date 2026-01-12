@@ -73,7 +73,10 @@ export const SubtaskList = observer(({ task, autoFocusNew = false }: SubtaskList
                         className="tc-subtask-input"
                         value={sub.title}
                         onChange={(e) => sub.title = e.target.value}
-                        style={{ textDecoration: sub.isCompleted ? 'line-through' : 'none' }}
+                        style={{
+                            textDecoration: sub.isCompleted ? 'line-through' : 'none',
+                            color: sub.isCompleted ? 'var(--text-muted)' : 'inherit'
+                        }}
                     />
                     <div className="tc-subtask-delete" onClick={() => task.removeSubtask(sub.id)}>
                         <Trash2 size={12} />

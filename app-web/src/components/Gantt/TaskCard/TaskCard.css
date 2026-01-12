@@ -145,6 +145,7 @@
 }
 
 .task-card:hover .tc-actions,
+.task-card.hovered .tc-actions,
 .task-card.creating .tc-actions {
     opacity: 1;
 }

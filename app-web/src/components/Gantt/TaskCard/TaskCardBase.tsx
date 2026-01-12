@@ -16,6 +16,7 @@ import { ContextMenu, MenuItem } from '../../ContextMenu/ContextMenu';
 import { LabelContext } from '../../ContextMenu/LabelContext';
 import { MakeRecurringTaskContext } from '../../ContextMenu/MakeRecurringTaskContext';
 import { RecurringTaskActionsContext } from '../../ContextMenu/RecurringTaskActionsContext';
+import { PriorityContext } from '../../ContextMenu/PriorityContext';
 import { TaskUIModel } from '../../../models/TaskUIModel';
 import { store } from '../../../models/store';
 import { format } from 'date-fns';
@@ -129,6 +130,13 @@ export const TaskCardBase = observer(({
         combinedStyle.scale = '1.02';
     }
 
+    const isAnyContextOpen = ui.isSubtaskMode ||
+        ui.timeContext.isOpen ||
+        ui.labelContext.isOpen ||
+        ui.recurrenceContext.isOpen ||
+        ui.priorityContext.isOpen ||
+        ui.actionContext.isOpen;
+
     return (
         <>
             <div
@@ -136,7 +144,7 @@ export const TaskCardBase = observer(({
                 {...listeners}
                 {...attributes}
                 tabIndex={0}
-                className={`task-card ${ui.isHovered ? 'hovered' : ''} ${isDragging ? 'ghost' : ''} ${className || ''}`}
+                className={`task-card ${ui.isHovered || isAnyContextOpen ? 'hovered' : ''} ${isDragging ? 'ghost' : ''} ${className || ''}`}
                 style={combinedStyle}
                 onMouseEnter={() => ui.setHovered(true)}
                 onMouseLeave={() => ui.setHovered(false)}
@@ -162,9 +170,9 @@ export const TaskCardBase = observer(({
                     </div>
                 </div>
 
-                {(ui.isHovered || (task.labels && task.labels.length > 0) || (task.scheduledDate && task.scheduledTime)) && (
+                {(ui.isHovered || isAnyContextOpen || (task.labels && task.labels.length > 0) || (task.scheduledDate && task.scheduledTime)) && (
                     <div className="tc-footer">
-                        {ui.isHovered ? (
+                        {ui.isHovered || isAnyContextOpen ? (
                             <>
                                 <div
                                     className="tc-label"
@@ -191,7 +199,24 @@ export const TaskCardBase = observer(({
                                     )}
                                 </div>
                                 <div className="tc-actions">
-                                    <Flag size={14} className="tc-action-icon" />
+                                    <div
+                                        className="tc-action-icon"
+                                        style={{ cursor: 'pointer' }}
+                                        onClick={(e) => ui.openPriorityContext(e)}
+                                    >
+                                        <Flag
+                                            size={14}
+                                            className={task.priority !== 'none' ? 'active' : ''}
+                                            style={{
+                                                color: task.priority === 'high' ? '#EF4444' :
+                                                    task.priority === 'medium' ? '#F97316' :
+                                                        task.priority === 'low' ? '#3B82F6' : undefined,
+                                                fill: task.priority === 'high' ? '#EF4444' :
+                                                    task.priority === 'medium' ? '#F97316' :
+                                                        task.priority === 'low' ? '#3B82F6' : 'none'
+                                            }}
+                                        />
+                                    </div>
                                     <div
                                         style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer' }}
                                         onClick={(e) => { e.stopPropagation(); ui.setSubtaskMode(!ui.isSubtaskMode); }}
@@ -305,9 +330,15 @@ export const TaskCardBase = observer(({
 
             <LabelContext ui={ui} task={task} />
 
-            <MakeRecurringTaskContext ui={ui} task={task} />
+            {ui.recurrenceContext.isOpen && ui.recurrenceContext.mode === 'set' && (
+                <MakeRecurringTaskContext ui={ui} task={task} />
+            )}
 
-            <RecurringTaskActionsContext ui={ui} task={task} />
+            {ui.recurrenceContext.isOpen && ui.recurrenceContext.mode === 'actions' && (
+                <RecurringTaskActionsContext ui={ui} task={task} />
+            )}
+
+            <PriorityContext ui={ui} task={task} />
 
             <ContextMenu
                 isOpen={ui.actionContext.isOpen}
