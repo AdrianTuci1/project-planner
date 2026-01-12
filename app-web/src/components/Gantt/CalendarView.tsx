@@ -3,8 +3,9 @@ import { observer } from 'mobx-react-lite';
 import { useDroppable } from '@dnd-kit/core';
 import { Task } from '../../models/core';
 import { store } from '../../models/store';
-import { format, addDays, isSameDay, startOfWeek, startOfDay, getHours, getMinutes, setHours, startOfMonth, endOfMonth, endOfWeek, isSameMonth } from 'date-fns';
+import { format, addDays, isSameDay, startOfWeek, startOfDay, startOfMonth, endOfMonth, endOfWeek, isSameMonth } from 'date-fns';
 import { ResizableTaskCard } from './TaskCard/ResizableTaskCard';
+import { calculateOverlappingLayout } from './layoutUtils';
 import './CalendarView.css';
 
 interface CalendarViewProps {
@@ -70,6 +71,7 @@ const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart }
     };
 
     const cellTasks = getTasksForDayHour(date, hour);
+    const layoutData = calculateOverlappingLayout(cellTasks);
 
     return (
         <td className={`hour-cell ${isToday ? 'today-cell' : ''}`}>
@@ -94,6 +96,9 @@ const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart }
 
                 const fontSize = duration <= 15 ? '10px' : '12px';
 
+                // Get layout data
+                const layout = layoutData.get(task.id) || { left: 3, width: 94, zIndex: 1 };
+
                 return (
                     <ResizableTaskCard
                         key={task.id}
@@ -111,11 +116,11 @@ const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart }
                             height: `${height}%`,
                             fontSize: fontSize,
                             position: 'absolute',
-                            zIndex: 1,
+                            zIndex: layout.zIndex,
                             maxWidth: '100%',
                             boxSizing: 'border-box',
-                            width: '94%', // slight gap
-                            left: '3%'
+                            width: `${layout.width}%`,
+                            left: `${layout.left}%`
                         }}
                     />
                 );
