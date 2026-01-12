@@ -69,7 +69,9 @@ export const Sidebar = observer(() => {
             <aside className="sidebar">
                 {/* App Header / User */}
                 <div className="sidebar-header">
-                    <img className="user-avatar" src="/logo.png" alt="" />
+                    <div className="avatar-wrapper">
+                        <img className="user-avatar" src="/logo.png" alt="" />
+                    </div>
                     <span className="app-name">
                         simplu
                     </span>

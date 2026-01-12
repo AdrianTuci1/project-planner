@@ -12,8 +12,39 @@ export class CalendarDropStrategy implements DragStrategy {
         event: DragEndEvent,
         context: { activeId: string; overId: string; isReordering: boolean }
     ): void {
-        // Calendar items moved internally OR List items dropped here (scheduling)
+        const { date, hour } = overData;
+
+        // Case 1: Month View Drop (Date only)
+        if (date && hour === undefined) {
+            runInAction(() => {
+                const newDate = startOfDay(date);
+                // If task already has a time, preserve it.
+                // If not, maybe we don't set a time? Or set default?
+                // Standard behavior: preserve time if exists.
+                // If moving from "Unscheduled" (Sidebar) to Month View -> Set date, no time?
+                // The current app model distinguishes "Timeboxed" (has date AND time) vs "Scheduled" (has date only?)
+                // Actually, `task.scheduledTime` is optional string 'HH:mm'.
+                // If we drop on Month View, we essentially just change the Date.
+
+                task.scheduledDate = newDate;
+                // If task had no time and we want to enforce timeboxing on calendar, we might default to 9 AM
+                // But if the user drops on Month view, they might just mean "do it this day".
+                // Lets check if the App supports tasks with date but NO time?
+                // `getTasksForDayHour` filters by `t.scheduledTime` presence.
+                // So if we don't set a time, it won't appear on the Day/Week/Timebox grid?
+                // It WILL appear on Month View because month logic (likely) just checks date.
+
+                // DECISION: If task has no time, set default 09:00. If it has time, keep it.
+                if (!task.scheduledTime) {
+                    task.scheduledTime = '09:00';
+                }
+            });
+            return;
+        }
+
+        // Case 2: Time Grid Drop (Date + Hour)
         if (overData.date && overData.hour !== undefined) {
+            // ... (Existing Logic)
             const { date, hour } = overData;
 
             // Calculate minute based on drop position relative to the hour cell

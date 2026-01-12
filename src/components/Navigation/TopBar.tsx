@@ -4,6 +4,7 @@ import { store } from '../../models/store';
 import {
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
     Filter,
     Calendar as CalendarIcon,
     Layout,
@@ -18,6 +19,8 @@ import { UserContext } from '../ContextMenu/UserContext';
 import { FilterContext } from '../ContextMenu/FilterContext';
 import { SettingsModal } from '../Settings/SettingsModal';
 import { SearchSpotlight } from './SearchSpotlight';
+
+import { CalendarViewMenu } from '../Gantt/CalendarViewMenu';
 
 const topbarStyles = `
   .trial-button {
@@ -40,6 +43,7 @@ export const TopBar = observer(() => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [filterMenuOpen, setFilterMenuOpen] = useState(false);
+    const [viewMenuOpen, setViewMenuOpen] = useState(false);
     // const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Moved to store
     const [isSearchOpen, setIsSearchOpen] = useState(false); // New state for search
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -54,6 +58,14 @@ export const TopBar = observer(() => {
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
         setMenuPosition({ x: rect.left, y: rect.bottom + 5 });
         setFilterMenuOpen(true);
+    };
+
+    const handleViewClick = (e: React.MouseEvent) => {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        // Center the menu relative to the button (rect.left + rect.width / 2)
+        // Subtract half of the menu width (~240px / 2 = 120px) to center it.
+        setMenuPosition({ x: rect.left + (rect.width / 2) - 120, y: rect.bottom + 5 });
+        setViewMenuOpen(true);
     };
 
     const toggleSidebar = () => {
@@ -116,6 +128,17 @@ export const TopBar = observer(() => {
                         <Search size={14} />
                     </div>
 
+                    {store.viewMode === 'calendar' && (
+                        <div
+                            className="topbar-button"
+                            onClick={handleViewClick}
+                            style={{ minWidth: 50, justifyContent: 'space-between' }}
+                        >
+                            <span>{store.calendarViewType.charAt(0).toUpperCase() + store.calendarViewType.slice(1)}</span>
+                            <ChevronDown size={14} />
+                        </div>
+                    )}
+
                     <div
                         className={`topbar-button filter ${filterMenuOpen ? 'active' : ''}`}
                         onClick={handleFilterClick}
@@ -137,9 +160,11 @@ export const TopBar = observer(() => {
                             onClick={() => store.setViewMode('tasks')}
                         >
                             <Layout size={14} style={{ transform: 'rotate(270deg)' }} />
-                            <span>Kanban Board</span>
+                            <span>Kanban</span>
                         </div>
                     </div>
+
+
 
                     <div
                         className="avatar-button"
@@ -156,7 +181,7 @@ export const TopBar = observer(() => {
                         style={{ color: 'var(--text-secondary)' }}
                     />
                 </div>
-            </div>
+            </div >
 
             {isSearchOpen && (
                 <SearchSpotlight onClose={() => setIsSearchOpen(false)} />
@@ -181,9 +206,17 @@ export const TopBar = observer(() => {
                 onLogout={() => console.log('Logout')}
             />
 
-            {store.isSettingsOpen && (
-                <SettingsModal onClose={() => store.closeSettings()} />
-            )}
+            {
+                store.isSettingsOpen && (
+                    <SettingsModal onClose={() => store.closeSettings()} />
+                )
+            }
+
+            <CalendarViewMenu
+                isOpen={viewMenuOpen}
+                onClose={() => setViewMenuOpen(false)}
+                position={menuPosition}
+            />
 
             <FilterContext
                 isOpen={filterMenuOpen}
@@ -203,6 +236,6 @@ export const TopBar = observer(() => {
                     store.openSettings('labels');
                 }}
             />
-        </div>
+        </div >
     );
 });

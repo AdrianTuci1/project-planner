@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { useDroppable } from '@dnd-kit/core';
 import { Task } from '../../models/core';
 import { store } from '../../models/store';
-import { format, addDays, isSameDay, startOfWeek, startOfDay, getHours, getMinutes, setHours } from 'date-fns';
+import { format, addDays, isSameDay, startOfWeek, startOfDay, getHours, getMinutes, setHours, startOfMonth, endOfMonth, endOfWeek, isSameMonth } from 'date-fns';
 import { ResizableTaskCard } from './TaskCard/ResizableTaskCard';
 import './CalendarView.css';
 
@@ -177,9 +177,20 @@ export const CalendarView = observer(({ tasks, onTaskClick }: CalendarViewProps)
         window.addEventListener('touchend', handleUp);
     };
 
-    // Get the start of the week for the current viewDate
-    const weekStart = startOfWeek(store.viewDate, { weekStartsOn: 0 }); // Sunday start
-    const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    // Calculate days based on view type
+    let days: Date[] = [];
+    if (store.calendarViewType === 'day') {
+        days = [store.viewDate];
+    } else if (store.calendarViewType === 'week') {
+        const weekStart = startOfWeek(store.viewDate, { weekStartsOn: 0 }); // Sunday start
+        days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    } else {
+        // Month view - Placeholder logic for now, will implement MonthGrid next
+        // For now, allow it to render a week or just return null/different component
+        // But to avoid breaking, let's just show the week of the viewDate
+        const weekStart = startOfWeek(store.viewDate, { weekStartsOn: 0 });
+        days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    }
 
     const today = startOfDay(new Date());
 
@@ -196,47 +207,124 @@ export const CalendarView = observer(({ tasks, onTaskClick }: CalendarViewProps)
 
     return (
         <div className="calendar-view-container">
-            <table className="calendar-table">
-                <thead className="calendar-header">
-                    <tr>
-                        <th className="time-column-header"></th>
-                        {days.map(date => {
-                            const isToday = isSameDay(date, today);
-                            return (
-                                <th key={date.toString()} className={`day-column-header ${isToday ? 'today' : ''}`}>
-                                    <div className="day-header-content">
-                                        <span className="day-name">{format(date, 'EEE')}</span>
-                                        <span className={`day-number ${isToday ? 'today-number' : ''}`}>
-                                            {format(date, 'd')}
-                                        </span>
-                                    </div>
-                                </th>
-                            );
-                        })}
-                    </tr>
-                </thead>
-                <tbody className="calendar-body">
-                    {hours.map(hour => (
-                        <tr key={hour} className="hour-row">
-                            <td className="time-label">
-                                <div className="time-cell-visual">
-                                    <span className="time-text">{getHourLabel(hour)}</span>
-                                </div>
-                            </td>
-                            {days.map(date => (
-                                <CalendarCell
-                                    key={`${date.toString()}-${hour}`}
-                                    date={date}
-                                    hour={hour}
-                                    tasks={tasks}
-                                    onTaskClick={onTaskClick}
-                                    onResizeStart={handleResizeStart}
-                                />
-                            ))}
+            {store.calendarViewType === 'month' ? (
+                <MonthGrid tasks={tasks} onTaskClick={onTaskClick} />
+            ) : (
+                <table className="calendar-table">
+                    <thead className="calendar-header">
+                        <tr>
+                            <th className="time-column-header"></th>
+                            {days.map(date => {
+                                const isToday = isSameDay(date, today);
+                                return (
+                                    <th key={date.toString()} className={`day-column-header ${isToday ? 'today' : ''}`} style={{ width: store.calendarViewType === 'day' ? '100%' : undefined }}>
+                                        <div className="day-header-content">
+                                            <span className="day-name">{format(date, 'EEE')}</span>
+                                            <span className={`day-number ${isToday ? 'today-number' : ''}`}>
+                                                {format(date, 'd')}
+                                            </span>
+                                        </div>
+                                    </th>
+                                );
+                            })}
                         </tr>
+                    </thead>
+                    <tbody className="calendar-body">
+                        {hours.map(hour => (
+                            <tr key={hour} className="hour-row">
+                                <td className="time-label">
+                                    <div className="time-cell-visual">
+                                        <span className="time-text">{getHourLabel(hour)}</span>
+                                    </div>
+                                </td>
+                                {days.map(date => (
+                                    <CalendarCell
+                                        key={`${date.toString()}-${hour}`}
+                                        date={date}
+                                        hour={hour}
+                                        tasks={tasks}
+                                        onTaskClick={onTaskClick}
+                                        onResizeStart={handleResizeStart}
+                                    />
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+        </div>
+    );
+});
+
+// Month Grid Component
+const MonthGrid = observer(({ tasks, onTaskClick }: { tasks: Task[], onTaskClick: (task: Task) => void }) => {
+    const start = startOfWeek(startOfMonth(store.viewDate), { weekStartsOn: 0 });
+    const end = endOfWeek(endOfMonth(store.viewDate), { weekStartsOn: 0 });
+
+    const days = [];
+    let day = start;
+    while (day <= end) {
+        days.push(day);
+        day = addDays(day, 1);
+    }
+
+    const weeks = [];
+    for (let i = 0; i < days.length; i += 7) {
+        weeks.push(days.slice(i, i + 7));
+    }
+
+    return (
+        <div className="month-grid">
+            {/* Header */}
+            <div className="month-header-row">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                    <div key={d} className="month-header-cell">{d}</div>
+                ))}
+            </div>
+
+            {/* Rows */}
+            {weeks.map((week, i) => (
+                <div key={i} className="month-row">
+                    {week.map(date => (
+                        <MonthCell key={date.toString()} date={date} tasks={tasks} onTaskClick={onTaskClick} />
                     ))}
-                </tbody>
-            </table>
+                </div>
+            ))}
+        </div>
+    );
+});
+
+const MonthCell = observer(({ date, tasks, onTaskClick }: { date: Date, tasks: Task[], onTaskClick: (task: Task) => void }) => {
+    const { isOver, setNodeRef } = useDroppable({
+        id: `month-cell-${date.toISOString()}`,
+        data: {
+            type: 'month-cell',
+            date: date
+        }
+    });
+
+    const dayTasks = tasks.filter(t => t.scheduledDate && isSameDay(t.scheduledDate, date));
+    const isCurrentMonth = isSameMonth(date, store.viewDate);
+    const isToday = isSameDay(date, new Date());
+
+    return (
+        <div
+            ref={setNodeRef}
+            className={`month-cell ${!isCurrentMonth ? 'other-month' : ''} ${isOver ? 'is-over' : ''}`}
+        >
+            <div className={`month-day-number ${isToday ? 'today' : ''}`}>{format(date, 'd')}</div>
+            <div className="month-cell-tasks">
+                {dayTasks.map(task => (
+                    <div
+                        key={task.id}
+                        className="month-task-item"
+                        onClick={(e) => { e.stopPropagation(); onTaskClick(task); }}
+                        style={{ backgroundColor: store.getLabelColor(task.labels[0] || '') + '20', borderLeft: `3px solid ${store.getLabelColor(task.labels[0] || '')}` }}
+                    >
+                        <span className="month-task-title">{task.title}</span>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 });

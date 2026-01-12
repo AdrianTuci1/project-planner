@@ -19,6 +19,14 @@
     margin-bottom: var(--space-6);
 }
 
+.avatar-wrapper {
+    display: flex;
+    align-items: center;
+    outline: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+
+}
+
 .user-avatar {
     width: 32px;
     height: 32px;

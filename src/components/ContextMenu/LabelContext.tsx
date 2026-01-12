@@ -15,8 +15,13 @@ export const LabelContext = observer(({
     task
 }: LabelContextProps) => {
     const handleSelect = (labelId: string) => {
-        task.labels = [labelId];
-        ui.closeLabelContext();
+        const currentLabels = task.labels || [];
+        if (currentLabels.includes(labelId)) {
+            task.labels = currentLabels.filter(id => id !== labelId);
+        } else {
+            task.labels = [...currentLabels, labelId];
+        }
+        // Don't close automatically to allow multi-select
     };
 
     return (
@@ -25,7 +30,11 @@ export const LabelContext = observer(({
             onClose={() => ui.closeLabelContext()}
             position={ui.labelContext.position}
         >
-            <LabelPickerContent onSelect={handleSelect} onClose={() => ui.closeLabelContext()} />
+            <LabelPickerContent
+                onSelect={handleSelect}
+                onClose={() => ui.closeLabelContext()}
+                selectedLabelIds={task.labels || []}
+            />
         </ContextMenu>
     );
 });

@@ -29,6 +29,7 @@ class ProjectStore {
     isSidebarOpen: boolean = true;
     isRightSidebarOpen: boolean = true;
     viewMode: 'calendar' | 'tasks' = 'tasks';
+    calendarViewType: 'day' | 'week' | 'month' = 'week';
     viewDate: Date = new Date();
     timeboxDate: Date = new Date();
 
@@ -83,6 +84,15 @@ class ProjectStore {
                 if (id) localStorage.setItem('activeGroupId', id);
                 else localStorage.removeItem('activeGroupId');
             }
+        );
+
+        // Calendar View Type Persistence
+        const savedCalendarView = localStorage.getItem('calendarViewType') as 'day' | 'week' | 'month';
+        if (savedCalendarView) this.calendarViewType = savedCalendarView;
+
+        reaction(
+            () => this.calendarViewType,
+            (type) => localStorage.setItem('calendarViewType', type)
         );
 
         // React to viewDate changes to re-fetch if needed (Optimization for later: check if date is within loaded range)
@@ -226,6 +236,10 @@ class ProjectStore {
 
     setViewMode(mode: 'calendar' | 'tasks') {
         this.viewMode = mode;
+    }
+
+    setCalendarViewType(type: 'day' | 'week' | 'month') {
+        this.calendarViewType = type;
     }
 
     toggleFilterLabel(labelId: string) {

@@ -6,6 +6,7 @@ import { store } from '../../models/store';
 interface LabelPickerMenuProps {
     onSelect: (labelId: string) => void;
     onClose: () => void;
+    selectedLabelIds?: string[];
 }
 
 const PRESET_COLORS = [
@@ -13,7 +14,7 @@ const PRESET_COLORS = [
     '#0A84FF', '#BF5AF2', '#FF375F', '#AC8E68', '#8E8E93',
 ];
 
-export const LabelPickerContent = observer(({ onSelect, onClose }: LabelPickerMenuProps) => {
+export const LabelPickerContent = observer(({ onSelect, onClose, selectedLabelIds = [] }: LabelPickerMenuProps) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isCreating, setIsCreating] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
@@ -123,6 +124,7 @@ export const LabelPickerContent = observer(({ onSelect, onClose }: LabelPickerMe
                             colorDot={label.color}
                             label={label.name}
                             onClick={() => onSelect(label.id)}
+                            checkmark={selectedLabelIds.includes(label.id)}
                         />
                     ))}
                 </>
@@ -135,6 +137,7 @@ export const LabelPickerContent = observer(({ onSelect, onClose }: LabelPickerMe
                     colorDot={label.color}
                     label={label.name}
                     onClick={() => onSelect(label.id)}
+                    checkmark={selectedLabelIds.includes(label.id)}
                 />
             ))}
 

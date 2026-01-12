@@ -16,6 +16,7 @@ export class DragDropManager {
 
     constructor() {
         this.strategies.set('calendar-cell', new CalendarDropStrategy());
+        this.strategies.set('month-cell', new CalendarDropStrategy()); // Use same strategy
         this.strategies.set('timebox-slot', new TimeboxDropStrategy());
         this.strategies.set('kanban-column', new KanbanDropStrategy());
         this.strategies.set('sidebar-list', new SidebarDropStrategy());

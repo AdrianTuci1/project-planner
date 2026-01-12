@@ -194,6 +194,8 @@ export const Timebox = observer(() => {
                                                     position: 'absolute',
                                                     zIndex: 10,
                                                     width: '95%',
+                                                    left: '2.5%',
+                                                    boxSizing: 'border-box',
                                                     fontSize: duration <= 15 ? '10px' : '12px'
                                                 }}
                                             />

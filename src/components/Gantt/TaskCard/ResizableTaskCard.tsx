@@ -4,7 +4,8 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Task } from '../../../models/core';
 import { store } from '../../../models/store';
-import { format } from 'date-fns';
+import { format, addMinutes } from 'date-fns';
+import { Check } from 'lucide-react';
 import './TaskCard.css';
 import { TaskContextMenu } from './TaskContextMenu';
 
@@ -168,11 +169,21 @@ export const ResizableTaskCard = observer(({
         store.deleteTask(task.id);
     };
 
+    const completedStyle: React.CSSProperties = task.status === 'done' ? {
+        // "Decolorize a little" without losing opacity. 
+        // Desaturate and slightly brighten to look "washed out" but solid.
+        filter: 'saturate(0.7) brightness(0.7)',
+    } : {};
+
+    const startTime = task.scheduledDate ? format(task.scheduledDate, 'h:mm') : '';
+    const endTime = task.scheduledDate ? format(addMinutes(task.scheduledDate, task.duration || 15), 'h:mm') : '';
+
     return (
         <div
             ref={setRefs}
-            style={combinedStyle}
-            className={`calendar-event ${task.status === 'done' ? 'completed' : ''} ${className || ''}`}
+            style={{ ...combinedStyle, ...completedStyle, color: '#000' }}
+            // Critical: 'calendar-event' is required for resize logic in parent views.
+            className={`task-card calendar-event ${className || ''}`}
             onClick={(e) => {
                 onTaskClick?.(task);
             }}
@@ -180,22 +191,51 @@ export const ResizableTaskCard = observer(({
             {...listeners}
             {...attributes}
         >
-            <div className="event-content-wrapper">
-                <input
-                    type="checkbox"
-                    checked={task.status === 'done'}
-                    onClick={(e) => e.stopPropagation()} // dependent on mouse events
-                    onChange={(e) => {
-                        task.toggleStatus();
-                    }}
-                    onPointerDown={(e) => e.stopPropagation()} // Prevent drag start on checkbox
-                    className="task-checkbox"
-                />
-                <div className="event-details">
-                    <div className="event-title" style={{ fontSize: style?.fontSize }}>{task.title}</div>
-                    {(task.duration || 0) > 20 && task.scheduledDate && (
-                        <div className="event-time" style={{ fontSize: `calc(${style?.fontSize || '12px'} - 1px)` }}>
-                            {format(task.scheduledDate, 'h:mm')}
+            <div className="tc-header" style={{ gap: '6px', alignItems: 'flex-start', height: '100%', overflow: 'hidden' }}>
+                <div className="tc-checkbox-wrapper" style={{ paddingTop: '2px', flexShrink: 0 }}>
+                    <div
+                        className={`tc-checkbox ${task.status === 'done' ? 'checked' : ''}`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            task.toggleStatus();
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        style={{
+                            width: (task.duration || 15) <= 15 ? '12px' : '14px',
+                            height: (task.duration || 15) <= 15 ? '12px' : '14px',
+                            borderColor: '#000' // Ensure checkmark border is visible/black
+                        }}
+                    >
+                        {task.status === 'done' && <Check size={(task.duration || 15) <= 15 ? 8 : 10} style={{ color: '#fff' }} />}
+                    </div>
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+                    <div
+                        className="tc-title"
+                        style={{
+                            // Dynamic font size based on duration passed via style prop, or calculate locally
+                            fontSize: (task.duration || 15) <= 15 ? '10px' : '11px',
+                            marginBottom: 0,
+                            color: '#000',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            fontWeight: 600,
+                            lineHeight: 1.1
+                        }}
+                    >
+                        {task.title}
+                    </div>
+
+                    {(task.duration || 0) >= 30 && task.scheduledDate && (
+                        <div style={{
+                            fontSize: '9px',
+                            color: 'rgba(0,0,0,0.7)',
+                            marginTop: '2px',
+                            lineHeight: 1
+                        }}>
+                            {startTime} - {endTime}
                         </div>
                     )}
                 </div>
