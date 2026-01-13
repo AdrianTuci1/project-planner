@@ -35,11 +35,58 @@
     display: flex;
 }
 
+
 .app-name {
     font-weight: 600;
     font-size: var(--text-lg);
     color: var(--text-main);
     flex: 1;
+    /* Allow it to take available space */
+}
+
+/* Compact Toggle Logic */
+.sidebar-nav-toggle {
+    display: flex;
+    background-color: var(--bg-input);
+    border-radius: var(--radius-md);
+    padding: 2px;
+    align-items: center;
+}
+
+.sidebar-nav-toggle.compact {
+    margin-left: auto;
+    /* Push to right */
+    flex: 0 0 auto;
+    /* Do not grow */
+    gap: 2px;
+}
+
+.nav-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 4px;
+    /* Smaller padding */
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    width: 26px;
+    /* Fixed width for compact buttons */
+    height: 26px;
+}
+
+.nav-toggle-btn:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-toggle-btn.active {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .settings-icon {

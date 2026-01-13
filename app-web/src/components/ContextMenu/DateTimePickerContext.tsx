@@ -31,15 +31,21 @@ export const DateTimePickerContext = observer(({
     ui,
     task
 }: DateTimePickerContextProps) => {
-    // Derived state from task
+    // Derived state from task based on target
+    const target = ui.dateTimePickerContext.target; // 'scheduled' or 'due'
+
     const selectedDate = (() => {
-        if (!task.scheduledDate) return undefined;
-        const d = new Date(task.scheduledDate);
-        if (task.scheduledTime) {
-            const [h, m] = task.scheduledTime.split(':').map(Number);
-            d.setHours(h, m);
+        if (target === 'due') {
+            return task.dueDate ? new Date(task.dueDate) : undefined;
+        } else {
+            if (!task.scheduledDate) return undefined;
+            const d = new Date(task.scheduledDate);
+            if (task.scheduledTime) {
+                const [h, m] = task.scheduledTime.split(':').map(Number);
+                d.setHours(h, m);
+            }
+            return d;
         }
-        return d;
     })();
 
     const [viewDate, setViewDate] = useState(selectedDate || new Date());
@@ -58,14 +64,25 @@ export const DateTimePickerContext = observer(({
         const newDate = new Date(date);
         newDate.setHours(0, 0, 0, 0);
 
-        if (h !== 0 || m !== 0) {
-            const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-            task.setScheduling(newDate, timeStr);
+        if (target === 'due') {
+            // Due date usually doesn't have time, or maybe it does? 
+            // "Due Dates" feature often implies just a date.
+            // If we want time, we'd need a dueTime field. 
+            // Core model has `dueDate`.
+            // For now, let's assume date only for due date.
+            // If user picks time for due date, we ignore it or just store date.
+            // Let's set date.
+            task.dueDate = newDate;
         } else {
-            if (task.scheduledTime) {
-                task.setScheduling(newDate, "00:00");
+            if (h !== 0 || m !== 0) {
+                const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                task.setScheduling(newDate, timeStr);
             } else {
-                task.setScheduling(newDate, undefined);
+                if (task.scheduledTime) {
+                    task.setScheduling(newDate, "00:00");
+                } else {
+                    task.setScheduling(newDate, undefined);
+                }
             }
         }
     };
@@ -104,8 +121,8 @@ export const DateTimePickerContext = observer(({
 
     return (
         <ContextMenu
-            isOpen={ui.isContextMenuOpen}
-            onClose={() => ui.setContextMenuOpen(false)}
+            isOpen={ui.dateTimePickerContext.isOpen}
+            onClose={() => ui.closeDatePicker()}
             position={ui.contextPosition}
         >
             <div className="dtp-container" onClick={e => e.stopPropagation()}>
@@ -140,61 +157,74 @@ export const DateTimePickerContext = observer(({
                 </div>
 
                 <div className="dtp-time-section">
-                    {!isTimePickerVisible ? (
-                        <button
-                            className="dtp-add-time-btn"
-                            onClick={() => {
-                                setIsTimePickerVisible(true);
-                                let baseDate = selectedDate ? new Date(selectedDate) : new Date(viewDate);
-                                // Default to 9:00 AM
-                                const newDate = setHours(setMinutes(baseDate, 0), 9);
-                                handleSelect(newDate);
-                            }}
-                        >
-                            Add to Timebox
-                        </button>
-                    ) : (
-                        <>
-                            <div className="dtp-time-inputs">
-                                <input
-                                    className="dtp-time-input"
-                                    value={hours.toString().padStart(2, '0')}
-                                    onChange={e => {
-                                        let val = parseInt(e.target.value);
-                                        if (e.target.value === '') return;
-                                        if (isNaN(val)) return;
-                                        val = Math.max(0, Math.min(23, val)); // 0-23
-                                        handleTimeChange('hours', val);
-                                    }}
-                                />
-                                <span className="dtp-time-separator">:</span>
-                                <input
-                                    className="dtp-time-input"
-                                    value={minutes.toString().padStart(2, '0')}
-                                    onChange={e => {
-                                        let val = parseInt(e.target.value);
-                                        if (e.target.value === '') return;
-                                        if (isNaN(val)) return;
-                                        val = Math.max(0, Math.min(59, val));
-                                        handleTimeChange('minutes', val);
-                                    }}
-                                />
-                            </div>
+                    {target === 'scheduled' && (
+                        !isTimePickerVisible ? (
                             <button
-                                className="dtp-remove-btn"
+                                className="dtp-add-time-btn"
                                 onClick={() => {
-                                    setIsTimePickerVisible(false);
-                                    if (task.scheduledDate) {
-                                        task.setScheduling(task.scheduledDate, undefined);
-                                    }
+                                    setIsTimePickerVisible(true);
+                                    let baseDate = selectedDate ? new Date(selectedDate) : new Date(viewDate);
+                                    // Default to 9:00 AM
+                                    const newDate = setHours(setMinutes(baseDate, 0), 9);
+                                    handleSelect(newDate);
                                 }}
                             >
-                                Remove from Timebox
+                                Add to Timebox
                             </button>
-                        </>
+                        ) : (
+                            <>
+                                <div className="dtp-time-inputs">
+                                    <input
+                                        className="dtp-time-input"
+                                        value={hours.toString().padStart(2, '0')}
+                                        onChange={e => {
+                                            let val = parseInt(e.target.value);
+                                            if (e.target.value === '') return;
+                                            if (isNaN(val)) return;
+                                            val = Math.max(0, Math.min(23, val)); // 0-23
+                                            handleTimeChange('hours', val);
+                                        }}
+                                    />
+                                    <span className="dtp-time-separator">:</span>
+                                    <input
+                                        className="dtp-time-input"
+                                        value={minutes.toString().padStart(2, '0')}
+                                        onChange={e => {
+                                            let val = parseInt(e.target.value);
+                                            if (e.target.value === '') return;
+                                            if (isNaN(val)) return;
+                                            val = Math.max(0, Math.min(59, val));
+                                            handleTimeChange('minutes', val);
+                                        }}
+                                    />
+                                </div>
+                                <button
+                                    className="dtp-remove-btn"
+                                    onClick={() => {
+                                        setIsTimePickerVisible(false);
+                                        if (task.scheduledDate) {
+                                            task.setScheduling(task.scheduledDate, undefined);
+                                        }
+                                    }}
+                                >
+                                    Remove from Timebox
+                                </button>
+                            </>
+                        )
+                    )}
+                    {target === 'due' && (
+                        <button
+                            className="dtp-remove-btn"
+                            onClick={() => {
+                                task.dueDate = undefined;
+                            }}
+                        >
+                            Clear Due Date
+                        </button>
                     )}
                 </div>
             </div>
-        </ContextMenu>
+        </ContextMenu >
     );
 });
+

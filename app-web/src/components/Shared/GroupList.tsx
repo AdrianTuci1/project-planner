@@ -61,7 +61,7 @@ export const GroupList = observer(({ activeGroupId, onSelectGroup, className }: 
                 onClick={handleListClick}
             >
                 <div className="active-list-icon">
-                    {activeGroupId === null ? '🧠' : '🐙'}
+                    {activeGroupId === null ? '🧠' : activeGroup?.icon}
                 </div>
                 <div className="active-list-info">
                     <span className="active-list-name">

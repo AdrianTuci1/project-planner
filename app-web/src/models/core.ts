@@ -36,6 +36,7 @@ export interface ITask {
     createdAt: Date;
     scheduledDate?: Date; // For Gantt/Calendar
     scheduledTime?: string; // Format "HH:mm"
+    dueDate?: Date;
     labels: string[];
     recurrence?: RecurrenceType;
     priority: PriorityType;
@@ -93,6 +94,7 @@ export class Task implements ITask {
     subtasks: ISubtask[] = [];
     createdAt: Date;
     scheduledDate?: Date = undefined;
+    dueDate?: Date = undefined; // New field
     labels: string[] = [];
     recurrence: RecurrenceType = 'none';
     priority: PriorityType = 'none';

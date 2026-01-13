@@ -9,7 +9,9 @@ interface PriorityContextProps {
     task: Task;
 }
 
-export const PriorityContext: React.FC<PriorityContextProps> = ({ ui, task }) => {
+import { observer } from 'mobx-react-lite';
+
+export const PriorityContext: React.FC<PriorityContextProps> = observer(({ ui, task }) => {
     const handleSelectPriority = (priority: 'high' | 'medium' | 'low' | 'none') => {
         task.priority = priority;
         ui.closePriorityContext();
@@ -48,4 +50,4 @@ export const PriorityContext: React.FC<PriorityContextProps> = ({ ui, task }) =>
             />
         </ContextMenu>
     );
-};
+});

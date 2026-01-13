@@ -4,6 +4,7 @@ class SidebarUIModel {
     isMenuOpen: boolean = false;
     menuPosition: { x: number; y: number } = { x: 0, y: 0 };
     isAddingTask: boolean = false;
+    sidebarView: 'main' | 'due' | 'templates' = 'main';
 
     constructor() {
         makeAutoObservable(this);
@@ -19,6 +20,10 @@ class SidebarUIModel {
 
     setAddingTask(adding: boolean) {
         this.isAddingTask = adding;
+    }
+
+    setSidebarView(view: 'main' | 'due' | 'templates') {
+        this.sidebarView = view;
     }
 
     handleListClick(e: React.MouseEvent) {

@@ -37,6 +37,12 @@ export class TaskUIModel {
         position: { x: 0, y: 0 }
     };
 
+    dateTimePickerContext = {
+        isOpen: false,
+        target: 'scheduled' as 'scheduled' | 'due',
+        position: { x: 0, y: 0 }
+    };
+
     isContextMenuOpen: boolean = false;
     contextPosition = { x: 0, y: 0 };
 
@@ -143,6 +149,30 @@ export class TaskUIModel {
 
     closeActionContext() {
         this.actionContext.isOpen = false;
+    }
+
+    openDatePicker(e: React.MouseEvent, target: 'scheduled' | 'due' = 'scheduled', pos?: { x: number; y: number }) {
+        e.stopPropagation();
+        this.dateTimePickerContext = {
+            isOpen: true,
+            target,
+            position: pos || { x: e.clientX, y: e.clientY }
+        };
+        // Also ensure generic context is open if needed, but we seem to use specific context now?
+        // Wait, DateTimePickerContext in TaskModal uses `ui.isContextMenuOpen`.
+        // We should transition to using `ui.dateTimePickerContext.isOpen` for better separation.
+        // But for backward compatibility with current implementation:
+        // Current impl uses `ui.isContextMenuOpen`.
+        // Let's stick to the current pattern of generic `isContextMenuOpen` BUT storing the TARGET is crucial.
+        // So `dateTimePickerContext` stores the target.
+        // And we set `isContextMenuOpen = true`.
+        this.isContextMenuOpen = true;
+        this.contextPosition = pos || { x: e.clientX, y: e.clientY };
+    }
+
+    closeDatePicker() {
+        this.dateTimePickerContext.isOpen = false;
+        this.isContextMenuOpen = false;
     }
 
     setContextMenuOpen(value: boolean) {

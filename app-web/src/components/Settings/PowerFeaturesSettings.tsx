@@ -1,4 +1,6 @@
 import React from 'react';
+import { observer } from 'mobx-react-lite';
+import { store } from '../../models/store';
 import {
     Paperclip,
     Copy,
@@ -18,11 +20,10 @@ interface FeatureCardProps {
     icon: React.ReactNode;
     gradientClass: string;
     isEnabled?: boolean;
+    onToggle?: (enabled: boolean) => void;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, gradientClass, isEnabled = false }) => {
-    const [checked, setChecked] = React.useState(isEnabled);
-
+const FeatureCard: React.FC<FeatureCardProps> = observer(({ title, description, icon, gradientClass, isEnabled = false, onToggle }) => {
     return (
         <div className="power-feature-card">
             <div className={`feature-preview ${gradientClass}`}>
@@ -45,8 +46,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, gra
                     <label className="feature-switch">
                         <input
                             type="checkbox"
-                            checked={checked}
-                            onChange={(e) => setChecked(e.target.checked)}
+                            checked={isEnabled}
+                            onChange={(e) => onToggle && onToggle(e.target.checked)}
                         />
                         <span className="slider" />
                     </label>
@@ -57,10 +58,13 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, gra
             </div>
         </div>
     );
-};
+});
 
-export const PowerFeaturesSettings = () => {
+export const PowerFeaturesSettings = observer(() => {
+    const { settings } = store;
+
     const features = [
+        // ... (other features remain similar but static for now, or we can migrate them later)
         {
             title: "Attachments",
             description: "Attach files (PDF, images, etc...) to your tasks.",
@@ -94,7 +98,8 @@ export const PowerFeaturesSettings = () => {
             description: "Add due dates to your tasks (and even reminder notifications).",
             icon: <CalendarClock size={18} />,
             gradientClass: "gradient-5",
-            isEnabled: true
+            isEnabled: settings.powerFeatures.dueDatesEnabled,
+            onToggle: () => settings.powerFeatures.toggleDueDates()
         },
         {
             title: "Task Priority",
@@ -136,4 +141,4 @@ export const PowerFeaturesSettings = () => {
             </div>
         </div>
     );
-};
+});

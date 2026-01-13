@@ -1,10 +1,12 @@
 import { makeAutoObservable } from "mobx";
 
-export type SettingsTab = 'account' | 'team' | 'general' | 'labels' | 'power' | 'calendar';
+export type SettingsTab = 'account' | 'team' | 'general' | 'labels' | 'power' | 'calendar' | 'due_dates';
 export type AccountView = 'main' | 'email' | 'password';
 import { GeneralSettingsModel } from "./GeneralSettingsModel";
 import { AccountSettingsModel } from "./AccountSettingsModel";
 import { CalendarSettingsModel } from "./CalendarSettingsModel";
+import { PowerFeaturesSettingsModel } from "./PowerFeaturesSettingsModel";
+import { DueDatesSettingsModel } from "./DueDatesSettingsModel";
 
 export class SettingsModel {
     activeTab: SettingsTab = 'account';
@@ -13,6 +15,8 @@ export class SettingsModel {
     account = new AccountSettingsModel();
     calendar = new CalendarSettingsModel();
     general = new GeneralSettingsModel();
+    powerFeatures = new PowerFeaturesSettingsModel();
+    dueDates = new DueDatesSettingsModel();
 
     // UI state for invite success message could also live here if needed, 
     // but often alerts are transient. We'll handle logic here.

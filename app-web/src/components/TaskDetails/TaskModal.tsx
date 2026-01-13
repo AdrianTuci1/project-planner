@@ -73,13 +73,8 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                             // The original code opened date picker on row click.
                             onClick={(e) => {
                                 const valueEl = e.currentTarget.querySelector('.meta-row-value');
-                                if (valueEl) {
-                                    const rect = valueEl.getBoundingClientRect();
-                                    ui.setContextPosition({ x: rect.left, y: rect.bottom + 4 });
-                                } else {
-                                    ui.setContextPosition({ x: e.clientX, y: e.clientY });
-                                }
-                                ui.setContextMenuOpen(true);
+                                const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
+                                ui.openDatePicker(e, 'scheduled', pos);
                             }}
                         >
                             <div className="meta-row-label">
@@ -117,6 +112,28 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                                 </span>
                             </div>
                         </div>
+
+                        {/* Due Date - Conditional */}
+                        {store.settings.powerFeatures.dueDatesEnabled && (
+                            <div
+                                className="meta-row"
+                                onClick={(e) => {
+                                    const valueEl = e.currentTarget.querySelector('.meta-row-value');
+                                    const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
+                                    ui.openDatePicker(e, 'due', pos);
+                                }}
+                            >
+                                <div className="meta-row-label">
+                                    <Calendar size={18} className="text-red-500" /> {/* Distinguish with color? */}
+                                    <span>Due Date</span>
+                                </div>
+                                <div className="meta-row-value chip-style">
+                                    <span className="value-main">
+                                        {task.dueDate ? format(task.dueDate, 'd MMM yyyy') : 'Set due date'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Estimated Time */}
                         <div

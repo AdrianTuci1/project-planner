@@ -24,6 +24,7 @@ import { GeneralSettings } from './GeneralSettings';
 import { LabelsSettings } from './LabelsSettings';
 import { PowerFeaturesSettings } from './PowerFeaturesSettings';
 import { CalendarSettings } from './CalendarSettings';
+import { DueDatesSettings } from './DueDatesSettings';
 
 interface SettingsModalProps {
     onClose: () => void;
@@ -82,8 +83,16 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                     <div className={`settings-nav-item ${settings.activeTab === 'power' ? 'active' : ''}`} onClick={() => settings.setActiveTab('power')}>
                         <Zap size={16} /> Toggle power features
                     </div>
+                    {/* Dynamic Power Features Menu */}
+                    {settings.powerFeatures.dueDatesEnabled && (
+                        <div className={`settings-nav-item ${settings.activeTab === 'due_dates' ? 'active' : ''}`} onClick={() => settings.setActiveTab('due_dates')}>
+                            <div style={{ width: 16 }} /> {/* Indent */}
+                            <Calendar size={16} />Due dates
+                        </div>
+                    )}
 
                     <div className="settings-separator" />
+
 
                     <div className="settings-nav-item"><Download size={16} /> Download apps</div>
                     <div className="settings-nav-item"><Cloud size={16} /> Account data</div>
@@ -104,6 +113,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                             {settings.activeTab === 'general' && 'General Settings'}
                             {settings.activeTab === 'labels' && 'Label Settings'}
                             {settings.activeTab === 'power' && 'Power Features'}
+                            {settings.activeTab === 'due_dates' && 'Due Dates Settings'}
                             {settings.activeTab === 'calendar' && 'Calendar Integration'}
                         </span>
                         <button className="icon-btn" onClick={onClose}>
@@ -306,6 +316,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                         {settings.activeTab === 'general' && <GeneralSettings />}
                         {settings.activeTab === 'labels' && <LabelsSettings />}
                         {settings.activeTab === 'power' && <PowerFeaturesSettings />}
+                        {settings.activeTab === 'due_dates' && <DueDatesSettings />}
                         {settings.activeTab === 'calendar' && <CalendarSettings />}
                     </div>
                 </div>
