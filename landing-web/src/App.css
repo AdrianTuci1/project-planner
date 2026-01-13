@@ -1,0 +1,7 @@
+/* App specific styles if needed */
+.app {
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  /* For lenis compatibility sometimes */
+}

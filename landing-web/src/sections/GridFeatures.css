@@ -1,0 +1,95 @@
+.grid-features {
+    padding: 80px 0 120px;
+}
+
+.grid-features__header {
+    font-size: 3.5rem;
+    line-height: 1.15;
+    text-align: center;
+    color: #999;
+    font-weight: 400;
+    margin-bottom: 80px;
+    letter-spacing: -0.02em;
+}
+
+.grid-features__header br {
+    display: block;
+}
+
+.grid-features__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+.grid-feature-card {
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    /* Removed box-shadow and transition for hover effects */
+}
+
+/* Removed hover effect */
+
+.grid-feature-card__content {
+    padding: 32px 24px 24px;
+    flex-grow: 1;
+    /* Ensure content takes available space if needed */
+}
+
+.grid-feature-card__subtitle {
+    display: block;
+    font-size: 1.125rem;
+    color: #999;
+    margin-bottom: 8px;
+    font-weight: 400;
+}
+
+.grid-feature-card__title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #111;
+    line-height: 1.2;
+}
+
+.grid-feature-card__description {
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.6;
+}
+
+.grid-feature-card__image {
+    width: 100%;
+    aspect-ratio: 1/1.2;
+    /* Updated to 1/1.2 aspect ratio */
+    padding: 14px;
+    /* Updated gradient to match FeatureCard.css */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-feature-card__image img {
+    width: 100%;
+    /* aspect-ratio removed here as parent controls shape, but keeping fit */
+    height: 100%;
+    object-fit: cover;
+    /* Changed to contain to ensure full image visibility within the 1:1 frame */
+    display: block;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 1024px) {
+    .grid-features__grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .grid-features__header {
+        font-size: 2.5rem;
+    }
+}

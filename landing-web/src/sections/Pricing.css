@@ -1,0 +1,192 @@
+.pricing {
+    padding: var(--spacing-xl) 0;
+    text-align: center;
+}
+
+.pricing__header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.pricing__header h2 {
+    font-size: 3rem;
+    color: var(--color-secondary);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.pricing__header h3 {
+    font-size: 3rem;
+    color: var(--color-primary);
+    font-weight: 500;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Toggle wrapper replaces old pricing__toggle */
+.pricing__toggle-wrapper {
+    margin-top: var(--spacing-md);
+    display: inline-block;
+}
+
+.pricing__toggle-inner {
+    display: flex;
+    position: relative;
+    background-color: #f1f5f9;
+    padding: 4px;
+    border-radius: 99px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.pricing__toggle-option {
+    position: relative;
+    z-index: 2;
+    padding: 8px 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-secondary);
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pricing__toggle-option.active {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* The sliding white background */
+.pricing__toggle-slider {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    /* Rough approximation, refined by JS or fixed widths usually, but simple layout works with width auto usually or explicit. Here we assume roughly equal width segments or we can rely on padding. */
+    /* To make it robust without specific widths, let's use a fixed width or percentage if options are even. 
+       Let's assume "Monthly" and "Yearly -20%" are different sizes. 
+       However, a simple sliding pill usually assumes fixed grid or equal tracks. 
+       For simplicity in this CSS-only approach, let's try a Transform based on active class if we knew widths. 
+       Actually, a common trick is using a background on the options themselves or just rendering the slider under the active one.
+       Wait, let's try to make it fit the content. 
+       Since I can't measure DOM elements easily in CSS, I will use a simple approach: 
+       I will set a fixed width for options or just let the slider be a visual indicator under the active one?
+       The user asked for a specific "switch" look (segmented control).
+       Let's try 50% width and hope text fits, or 
+       Better: Use a background on the .active option and transition it? 
+       No, sliding effect requires a separate element. 
+       Let's try to fit closely. 
+    */
+    /* simplified approach for 50/50 split if we want simple CSS slider */
+    width: 50%;
+    height: calc(100% - 8px);
+    background-color: white;
+    border-radius: 99px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+/* 
+   Problem: "Yearly -20%" is wider than "Monthly". 
+   Let's fix widths effectively to make slider work. 
+   We will set min-width on options. 
+*/
+.pricing__toggle-option {
+    flex: 1;
+    min-width: 140px;
+    /* Ensure equal space */
+    text-align: center;
+}
+
+.pricing__toggle-slider {
+    width: calc(50% - 4px);
+    /* Takes half the inner container width */
+}
+
+.pricing__toggle-slider.year-active {
+    transform: translateX(100%);
+}
+
+.save-badge {
+    background: #e0f2fe;
+    color: #0284c7;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.pricing__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    align-items: start;
+}
+
+.pricing-card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    text-align: left;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    position: relative;
+}
+
+.pricing-card.popular {
+    border: 2px solid rgba(0, 0, 0, 0.05);
+    /* or some highlight */
+}
+
+.popular-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #e0f2fe;
+    color: #0284c7;
+    padding: 4px 8px;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.pricing-card__header {
+    margin-bottom: var(--spacing-lg);
+}
+
+.pricing-card__header h4 {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.price {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+}
+
+.price span {
+    font-size: 1rem;
+    color: var(--color-secondary);
+    font-weight: 400;
+}
+
+.pricing-card__features {
+    list-style: none;
+    margin-top: var(--spacing-lg);
+    padding: 0;
+    color: var(--color-secondary);
+    font-size: 0.9rem;
+}
+
+.pricing-card__features li {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.pricing-card__features li::before {
+    content: "✓";
+    margin-right: 8px;
+    color: green;
+    /* or generic check color */
+}

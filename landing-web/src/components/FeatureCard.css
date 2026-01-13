@@ -1,0 +1,160 @@
+.feature-card {
+    display: flex;
+    align-items: center;
+    gap: 80px;
+    /* Increased gap for better spacing */
+    margin-bottom: 120px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    background: white;
+    padding: 14px;
+    border-radius: var(--radius-lg);
+}
+
+.feature-card--reversed {
+    flex-direction: row-reverse;
+}
+
+.feature-card__content {
+    flex: 1;
+    text-align: left;
+    max-width: 360px;
+}
+
+.feature-card__label {
+    display: block;
+    font-size: 1.5rem;
+    color: #666;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 500;
+}
+
+.feature-card__title {
+    font-size: 3rem;
+    line-height: 1.1;
+    margin-bottom: var(--spacing-md);
+    color: #111;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.feature-card__description {
+    font-size: 1.125rem;
+    color: #444;
+    line-height: 1.6;
+}
+
+.feature-card__visual {
+    flex: 1.2;
+    /* visual takes slightly more space */
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* .feature-card__visual img selector removed as it's now inside .feature-card__image-container */
+
+/* The outer frame/container (macOS window style) */
+.feature-card__frame {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, #7d9ec7 0%, #c4a9a0 50%, #d4c4b8 100%);
+    border-radius: 20px;
+    padding: 28px;
+    /* Padding to create the "frame" effect */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+    overflow: hidden;
+}
+
+/* Blur effect behind window */
+.feature-card__frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+            rgba(125, 158, 199, 0.8) 0%,
+            rgba(196, 169, 160, 0.8) 50%,
+            rgba(212, 196, 184, 0.8) 100%);
+    backdrop-filter: blur(40px);
+    z-index: 0;
+}
+
+
+
+.feature-card__image-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #ffffff;
+    position: relative;
+    z-index: 1;
+}
+
+.feature-card__image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.feature-card__video-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.feature-card__play-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.feature-card__frame:hover .feature-card__play-icon {
+    background: #007AFF;
+    color: white;
+    transform: scale(1.1);
+}
+
+@media (max-width: 900px) {
+
+    .feature-card,
+    .feature-card--reversed {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-xl);
+    }
+
+    .feature-card__content {
+        max-width: 100%;
+        text-align: center;
+    }
+}
