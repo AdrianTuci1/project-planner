@@ -1,0 +1,130 @@
+.shortcuts-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+    overflow-y: auto;
+}
+
+.shortcuts-modal-content {
+    background-color: #1e1e1e;
+    width: 600px;
+    max-width: 90vw;
+    min-height: 600px;
+    margin: 100px 0;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #e5e5e5;
+    border: 1px solid #333;
+}
+
+.shortcuts-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 0 24px;
+}
+
+.shortcuts-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.shortcuts-close-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.shortcuts-close-btn:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.shortcuts-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.shortcuts-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.shortcuts-section h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 400;
+    color: #e5e5e5;
+}
+
+.shortcuts-section-desc {
+    font-size: 14px;
+    color: #a0a0a0;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.shortcut-keys {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 120px;
+    /* Aligns the text */
+}
+
+/* Specific adjustment for "Task Actions" where keys might be longer */
+.shortcuts-section:nth-child(2) .shortcut-keys {
+    min-width: 160px;
+}
+
+.kbd {
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #e5e5e5;
+    font-family: inherit;
+    font-size: 13px;
+    padding: 6px 10px;
+    min-width: 24px;
+    text-align: center;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.shortcut-desc {
+    font-size: 14px;
+    color: #d4d4d4;
+    font-weight: 400;
+}

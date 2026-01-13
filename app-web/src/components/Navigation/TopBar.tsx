@@ -21,6 +21,7 @@ import { SettingsModal } from '../Settings/SettingsModal';
 import { SearchSpotlight } from './SearchSpotlight';
 
 import { CalendarViewMenu } from '../Gantt/CalendarViewMenu';
+import { ShortcutsModal } from '../KeyboardShortcuts/ShortcutsModal';
 
 const topbarStyles = `
   .trial-button {
@@ -46,6 +47,7 @@ export const TopBar = observer(() => {
     const [viewMenuOpen, setViewMenuOpen] = useState(false);
     // const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Moved to store
     const [isSearchOpen, setIsSearchOpen] = useState(false); // New state for search
+    const [showShortcuts, setShowShortcuts] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
     const handleUserClick = (e: React.MouseEvent) => {
@@ -203,8 +205,16 @@ export const TopBar = observer(() => {
                     setUserMenuOpen(false);
                     store.toggleDailyShutdown();
                 }}
+                onKeyboardShortcuts={() => {
+                    setUserMenuOpen(false);
+                    setShowShortcuts(true);
+                }}
                 onLogout={() => console.log('Logout')}
             />
+
+            {showShortcuts && (
+                <ShortcutsModal onClose={() => setShowShortcuts(false)} />
+            )}
 
             {
                 store.isSettingsOpen && (

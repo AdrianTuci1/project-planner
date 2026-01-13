@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import { Group, Task, IParticipant } from "./core";
+import { Task } from "./core";
 import { TaskStore } from "./stores/TaskStore";
 import { UIStore } from "./stores/UIStore";
 import { RecurrenceStore } from "./stores/RecurrenceStore";
