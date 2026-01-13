@@ -1,0 +1,76 @@
+.focus-mode-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-focus);
+    z-index: 9999;
+    /* Very high z-index to cover everything including sidebar */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 40px;
+    align-items: center;
+}
+
+.exit-focus-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.exit-focus-btn:hover {
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+    border-color: var(--border-strong);
+}
+
+.focus-content {
+    display: flex;
+    flex: 1;
+    gap: 40px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 1000px;
+    /* Slightly tighter for focus */
+    margin: 0 auto;
+    justify-content: center;
+    align-items: stretch;
+    height: 100%;
+}
+
+.focus-list-section {
+    flex: 1;
+    width: 100%;
+    max-width: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.focus-calendar-section {
+    flex: 1;
+    width: 100%;
+    max-width: 300px;
+    background-color: var(--bg-secondary);
+    /* Darker bg for calendar? */
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.focus-calendar-section .timebox-container {
+    height: 100%;
+    border: none;
+    background: transparent;
+}

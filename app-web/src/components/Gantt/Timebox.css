@@ -2,10 +2,14 @@
 .timebox-container {
     width: 300px;
     border-left: 1px solid var(--border-subtle);
-    background-color: var(--bg-sidebar);
     display: flex;
     flex-direction: column;
     height: 100%;
+    /* Ensure it takes full height of parent */
+    background-color: var(--bg-card);
+    border-left: 1px solid var(--border-subtle);
+    overflow: hidden;
+    /* Prevent overall scroll, grid handles scrolling */
 }
 
 .timebox-header {

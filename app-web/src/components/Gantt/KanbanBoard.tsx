@@ -15,7 +15,7 @@ interface KanbanBoardProps {
     groupId?: string | null;
 }
 
-const KanbanColumn = observer(({
+export const KanbanColumn = observer(({
     date,
     tasks,
     isToday,
@@ -47,6 +47,13 @@ const KanbanColumn = observer(({
                 <span className="day-name">{format(date, 'EEE')}</span>
                 <span>{format(date, 'MMM d')}</span>
                 {isToday && <span className="today-badge">Today</span>}
+                {isToday && (
+                    <button
+                        onClick={() => store.toggleFocusMode()}
+                        className="focus-button">
+                        Focus
+                    </button>
+                )}
             </div>
 
             {/* Calculate totals for Ghost Card */}
@@ -201,7 +208,7 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
 
     const handleDeleteTask = (task: Task) => {
         if (groupId === null) {
-            store.dumpAreaTasks = store.dumpAreaTasks.filter(t => t.id !== task.id);
+            store.deleteTask(task.id);
             return;
         }
 

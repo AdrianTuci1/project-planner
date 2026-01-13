@@ -13,6 +13,7 @@
 
 .daily-shutdown-sidebar {
     width: 300px;
+    min-width: 300px;
     background-color: #000;
     border-right: 1px solid #333;
     padding: 40px 20px;
@@ -87,16 +88,27 @@
     max-width: 300px;
 }
 
+.column-header {
+    flex: 0 0 120px;
+    height: 120px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 0;
+    box-sizing: border-box;
+}
+
 .column-header h2 {
     font-size: 20px;
     font-weight: 600;
-    margin-bottom: 4px;
+    margin: 0 0 4px 0;
 }
 
 .column-header p {
     font-size: 14px;
     color: #666;
-    margin-bottom: 20px;
+    margin: 0;
 }
 
 /* Updated List Styling to match Kanban */
@@ -197,10 +209,14 @@
 
 /* Step 2 Specific */
 .brain-dump-header {
+    flex: 0 0 120px;
+    height: 120px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     margin-bottom: 12px;
+    padding-bottom: 0;
+    box-sizing: border-box;
 }
 
 .brain-dump-title {
@@ -221,19 +237,26 @@
     width: 100%;
     height: 100%;
     background-color: #0d0d0d;
+    gap: 20px;
 }
 
 .left-panel {
     width: 320px;
-    padding: 20px;
-    border-right: 1px solid #333;
-    background-color: #0f0f0f;
+    padding-left: 40px;
     display: flex;
     flex-direction: column;
 }
 
 .right-panel {
     flex: 1;
-    padding: 40px;
-    overflow-y: auto;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    /* overflow-y: auto;  <-- Removed panel scrolling to match left side */
+    overflow: hidden;
+}
+
+.shutdown-group-selector {
+    width: 275px;
+    margin: 0 !important;
 }

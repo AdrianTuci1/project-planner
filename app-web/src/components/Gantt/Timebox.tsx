@@ -51,7 +51,11 @@ const TimeboxSlot = observer(({ date, hour, minute, tasks }: TimeboxSlotProps) =
     );
 });
 
-export const Timebox = observer(() => {
+interface TimeboxProps {
+    hideHeader?: boolean;
+}
+
+export const Timebox = observer(({ hideHeader }: TimeboxProps) => {
     const hours = Array.from({ length: 24 }).map((_, i) => i);
     // Mock current time line (e.g. at 9:30 AM = 9 * 60 + 30 mins)
     const now = new Date();
@@ -67,34 +71,36 @@ export const Timebox = observer(() => {
 
     return (
         <div className="timebox-container">
-            <div className="timebox-header">
-                <div className="timebox-title">
-                    <Clock size={14} />
-                    <span>Timebox</span>
+            {!hideHeader && (
+                <div className="timebox-header">
+                    <div className="timebox-title">
+                        <Clock size={14} />
+                        <span>Timebox</span>
+                    </div>
+                    <div className="timebox-nav">
+                        <button
+                            className="nav-btn"
+                            onClick={() => store.setTimeboxDate(subDays(store.timeboxDate, 1))}
+                            title="Previous Day"
+                        >
+                            <ChevronLeft size={16} />
+                        </button>
+                        <button
+                            className={`today-btn ${isToday ? 'active' : ''}`}
+                            onClick={() => store.setTimeboxDate(new Date())}
+                        >
+                            Today
+                        </button>
+                        <button
+                            className="nav-btn"
+                            onClick={() => store.setTimeboxDate(addDays(store.timeboxDate, 1))}
+                            title="Next Day"
+                        >
+                            <ChevronRight size={16} />
+                        </button>
+                    </div>
                 </div>
-                <div className="timebox-nav">
-                    <button
-                        className="nav-btn"
-                        onClick={() => store.setTimeboxDate(subDays(store.timeboxDate, 1))}
-                        title="Previous Day"
-                    >
-                        <ChevronLeft size={16} />
-                    </button>
-                    <button
-                        className={`today-btn ${isToday ? 'active' : ''}`}
-                        onClick={() => store.setTimeboxDate(new Date())}
-                    >
-                        Today
-                    </button>
-                    <button
-                        className="nav-btn"
-                        onClick={() => store.setTimeboxDate(addDays(store.timeboxDate, 1))}
-                        title="Next Day"
-                    >
-                        <ChevronRight size={16} />
-                    </button>
-                </div>
-            </div>
+            )}
 
             <div className="timebox-date-row">
                 <span className="date-text">

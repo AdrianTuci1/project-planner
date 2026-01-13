@@ -62,6 +62,8 @@ export class ProjectStore {
     set isSidebarOpen(val) { this.uiStore.isSidebarOpen = val; }
     get isRightSidebarOpen() { return this.uiStore.isRightSidebarOpen; }
     set isRightSidebarOpen(val) { this.uiStore.isRightSidebarOpen = val; }
+    get isFocusMode() { return this.uiStore.isFocusMode; }
+    set isFocusMode(val) { this.uiStore.isFocusMode = val; }
     get viewMode() { return this.uiStore.viewMode; }
     set viewMode(val) { this.uiStore.viewMode = val; }
     get calendarViewType() { return this.uiStore.calendarViewType; }
@@ -78,6 +80,10 @@ export class ProjectStore {
     set showCompletedTasks(val) { this.uiStore.showCompletedTasks = val; }
     get showTimeboxedTasks() { return this.uiStore.showTimeboxedTasks; }
     set showTimeboxedTasks(val) { this.uiStore.showTimeboxedTasks = val; }
+    get daysToShow() { return this.uiStore.daysToShow; }
+    set daysToShow(val) { this.uiStore.daysToShow = val; }
+    get showDeclinedEvents() { return this.uiStore.showDeclinedEvents; }
+    set showDeclinedEvents(val) { this.uiStore.showDeclinedEvents = val; }
 
     // Analytics
     get isAnalyticsOpen() { return this.uiStore.isAnalyticsOpen; }
@@ -106,11 +112,14 @@ export class ProjectStore {
     setDate(date: Date) { this.uiStore.setDate(date); }
     setTimeboxDate(date: Date) { this.uiStore.setTimeboxDate(date); }
     toggleRightSidebar() { this.uiStore.toggleRightSidebar(); }
+    toggleFocusMode() { this.uiStore.toggleFocusMode(); }
     setViewMode(mode: 'calendar' | 'tasks') { this.uiStore.setViewMode(mode); }
     setCalendarViewType(type: 'day' | 'week' | 'month') { this.uiStore.setCalendarViewType(type); }
     toggleFilterLabel(labelId: string) { this.uiStore.toggleFilterLabel(labelId); }
     toggleShowCompleted(show: boolean) { this.uiStore.toggleShowCompleted(show); }
     toggleShowTimeboxed(show: boolean) { this.uiStore.toggleShowTimeboxed(show); }
+    toggleShowDeclinedEvents() { this.uiStore.toggleShowDeclinedEvents(); }
+    setDaysToShow(days: number) { this.uiStore.setDaysToShow(days); }
     toggleAnalytics() { this.uiStore.toggleAnalytics(); }
     openUpgradeModal() { this.uiStore.openUpgradeModal(); }
     closeUpgradeModal() { this.uiStore.closeUpgradeModal(); }

@@ -7,12 +7,14 @@ import './AppLayout.css';
 
 import { Analytics } from '../Analytics/Analytics';
 import { DailyShutdown } from '../DailyShutdown/DailyShutdown';
+import { FocusModeOverlay } from '../FocusMode/FocusModeOverlay';
 
 export const AppLayout = observer(({ children }: { children: React.ReactNode }) => {
     return (
         <div className="app-layout">
             <Analytics />
             <DailyShutdown />
+            {store.isFocusMode && <FocusModeOverlay />}
             {!store.isAnalyticsOpen && (
                 <>
                     {store.isSidebarOpen && <Sidebar />}

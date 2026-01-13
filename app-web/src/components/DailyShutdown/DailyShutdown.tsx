@@ -4,7 +4,7 @@ import { store } from '../../models/store';
 import { dailyShutdownModel } from '../../models/DailyShutdownModel';
 import { Task } from '../../models/core';
 import { format, addDays, isSameDay } from 'date-fns';
-import { X, ArrowRight, Brain, Circle } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -23,12 +23,14 @@ import {
 } from '@dnd-kit/sortable';
 import './DailyShutdown.css';
 import { TaskCard, SortableTaskCard } from '../Gantt/TaskCard/index';
+import { GroupList } from '../Shared/GroupList';
 
 export const DailyShutdown = observer(() => {
     const [step, setStep] = useState(1);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [addingColumn, setAddingColumn] = useState<string | null>(null);
+    const [shutdownSourceGroupId, setShutdownSourceGroupId] = useState<string | null>(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -51,7 +53,20 @@ export const DailyShutdown = observer(() => {
     );
     const completedTasks = todaysTasks.filter(t => t.status === 'done');
     const missedTasks = todaysTasks.filter(t => t.status !== 'done');
-    const brainDumpTasks = store.dumpAreaTasks;
+
+    // Calculate source tasks based on selected group
+    const sourceTasks = (() => {
+        if (shutdownSourceGroupId === null) {
+            return store.dumpAreaTasks;
+        }
+        const group = store.groups.find(g => g.id === shutdownSourceGroupId);
+        if (group) {
+            // Show unscheduled tasks from the group
+            return group.tasks.filter(t => !t.scheduledDate);
+        }
+        return [];
+    })();
+
     const tomorrowTasks = store.allTasks.filter(t =>
         t.scheduledDate && isSameDay(t.scheduledDate, tomorrow)
     );
@@ -77,31 +92,55 @@ export const DailyShutdown = observer(() => {
         const overContainer = over.data.current?.sortable?.containerId || over.id;
 
         if (overContainer === 'tomorrow-list') {
+            // Dragging to Tomorrow
             if (!activeTask.scheduledDate || !isSameDay(activeTask.scheduledDate, tomorrow)) {
+
+                // If currently in dump
                 const inDumpIndex = store.dumpAreaTasks.findIndex(t => t.id === activeTask.id);
                 if (inDumpIndex > -1) {
                     store.dumpAreaTasks.splice(inDumpIndex, 1);
-                    if (store.groups.length > 0) {
+                    // Add to selected group if one is selected, else first group
+                    if (shutdownSourceGroupId) {
+                        const group = store.groups.find(g => g.id === shutdownSourceGroupId);
+                        if (group) group.addTask(activeTask);
+                    } else if (store.groups.length > 0) {
                         store.groups[0].addTask(activeTask);
                     }
                 }
+
                 activeTask.scheduledDate = tomorrow;
                 activeTask.scheduledTime = undefined;
             }
-        } else if (overContainer === 'brain-dump-list') {
+        } else if (overContainer === 'source-list') {
+            // Dragging back to Source (Brain Dump or Group)
             activeTask.scheduledDate = undefined;
             activeTask.scheduledTime = undefined;
 
-            let foundInGroup = false;
-            store.groups.forEach(g => {
-                if (g.tasks.find(t => t.id === activeTask.id)) {
-                    g.removeTask(activeTask.id);
-                    foundInGroup = true;
-                }
-            });
+            // Remove from dump if it was there (shouldn't happen if it had date, but for safety)
+            const dumpIndex = store.dumpAreaTasks.findIndex(t => t.id === activeTask.id);
+            if (dumpIndex > -1) store.dumpAreaTasks.splice(dumpIndex, 1);
 
-            if (foundInGroup) {
-                store.dumpAreaTasks.push(activeTask);
+            // Remove from any group it might be in (if moving to a different group)
+            let currentGroup = store.groups.find(g => g.tasks.some(t => t.id === activeTask.id));
+            if (currentGroup && currentGroup.id !== shutdownSourceGroupId) {
+                currentGroup.removeTask(activeTask.id);
+                currentGroup = undefined; // effectively removed
+            }
+
+            if (shutdownSourceGroupId === null) {
+                // Move to Brain Dump
+                // Ensure not in dump already
+                if (!store.dumpAreaTasks.find(t => t.id === activeTask.id)) {
+                    store.dumpAreaTasks.push(activeTask);
+                }
+            } else {
+                // Move to Selected Group
+                const targetGroup = store.groups.find(g => g.id === shutdownSourceGroupId);
+                if (targetGroup) {
+                    if (!targetGroup.tasks.find(t => t.id === activeTask.id)) {
+                        targetGroup.addTask(activeTask);
+                    }
+                }
             }
         }
     };
@@ -123,12 +162,22 @@ export const DailyShutdown = observer(() => {
                 if (store.activeGroup) store.activeGroup.addTask(newTask);
                 else store.dumpAreaTasks.push(newTask);
                 break;
-            case 'brain-dump':
-                store.dumpAreaTasks.push(newTask);
+            case 'source-list':
+                if (shutdownSourceGroupId === null) {
+                    store.dumpAreaTasks.push(newTask);
+                } else {
+                    const group = store.groups.find(g => g.id === shutdownSourceGroupId);
+                    if (group) group.addTask(newTask);
+                    else store.dumpAreaTasks.push(newTask);
+                }
                 break;
             case 'tomorrow':
                 newTask.scheduledDate = tomorrow;
-                if (store.activeGroup) {
+                if (shutdownSourceGroupId) {
+                    const group = store.groups.find(g => g.id === shutdownSourceGroupId);
+                    if (group) group.addTask(newTask);
+                    else if (store.groups.length > 0) store.groups[0].addTask(newTask);
+                } else if (store.activeGroup) {
                     store.activeGroup.addTask(newTask);
                 } else if (store.groups.length > 0) {
                     store.groups[0].addTask(newTask);
@@ -138,8 +187,6 @@ export const DailyShutdown = observer(() => {
                 break;
         }
     };
-
-    // Logic for Task Status switching is handled in core.ts Task model
 
     const renderProgressBar = () => {
         if (totalDuration === 0) return (
@@ -308,37 +355,39 @@ export const DailyShutdown = observer(() => {
                     </div>
                 ) : (
                     <div className="shutdown-step-2-content">
-                        {/* Left Panel: Brain Dump */}
+                        {/* Left Panel: Source List (Brain Dump or Group) */}
                         <div className="left-panel">
                             <div className="brain-dump-header">
-                                <div className="brain-dump-title">
-                                    <Brain size={16} color="#ec4899" /> Brain Dump
-                                </div>
+                                <GroupList
+                                    activeGroupId={shutdownSourceGroupId}
+                                    onSelectGroup={setShutdownSourceGroupId}
+                                    className="shutdown-group-selector"
+                                />
                             </div>
-                            <div className="shutdown-task-list kanban-sortable-area">
+                            <div className="shutdown-task-list kanban-sortable-area" style={{ flex: 1, overflowY: 'auto' }}>
                                 <TaskCard
                                     isGhost
-                                    onAddClick={() => setAddingColumn('brain-dump')}
-                                    actualTime={brainDumpTasks.reduce((acc, t) => acc + (t.actualDuration || 0), 0)}
-                                    estimatedTime={brainDumpTasks.reduce((acc, t) => acc + (t.duration || 0), 0)}
+                                    onAddClick={() => setAddingColumn('source-list')}
+                                    actualTime={sourceTasks.reduce((acc, t) => acc + (t.actualDuration || 0), 0)}
+                                    estimatedTime={sourceTasks.reduce((acc, t) => acc + (t.duration || 0), 0)}
                                 />
-                                {addingColumn === 'brain-dump' && (
+                                {addingColumn === 'source-list' && (
                                     <TaskCard
                                         isCreating
-                                        onCreate={(title) => handleCreateTask('brain-dump', title)}
+                                        onCreate={(title) => handleCreateTask('source-list', title)}
                                         onCancel={() => setAddingColumn(null)}
                                     />
                                 )}
                                 <SortableContext
-                                    id="brain-dump-list"
-                                    items={brainDumpTasks}
+                                    id="source-list"
+                                    items={sourceTasks.map(t => t.id)}
                                     strategy={verticalListSortingStrategy}
                                 >
-                                    {brainDumpTasks.map(task => (
+                                    {sourceTasks.map(task => (
                                         <SortableTaskCard
                                             key={task.id}
                                             task={task}
-                                            containerData={{ type: 'shutdown-list', id: 'brain-dump' }}
+                                            containerData={{ type: 'shutdown-list', id: 'source-list' }}
                                         />
                                     ))}
                                 </SortableContext>
@@ -368,7 +417,7 @@ export const DailyShutdown = observer(() => {
                                 )}
                                 <SortableContext
                                     id="tomorrow-list"
-                                    items={tomorrowTasks}
+                                    items={tomorrowTasks.map(t => t.id)}
                                     strategy={verticalListSortingStrategy}
                                 >
                                     {tomorrowTasks.map(task => (

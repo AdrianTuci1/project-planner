@@ -291,3 +291,22 @@
     /* outline: 1px dashed red; */
     overflow-y: auto;
 }
+
+
+.focus-button {
+    color: white;
+    border-radius: var(--radius-sm);
+    background-color: var(--accent-blue-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    margin-left: auto;
+}
+
+.focus-button:hover {
+    background-color: var(--accent-pink);
+}

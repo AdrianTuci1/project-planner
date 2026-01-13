@@ -10,6 +10,7 @@ export class UIStore {
     activeGroupId: string | null = null;
     isSidebarOpen: boolean = true;
     isRightSidebarOpen: boolean = true;
+    isFocusMode: boolean = false;
     viewMode: 'calendar' | 'tasks' = 'tasks';
     calendarViewType: 'day' | 'week' | 'month' = 'week';
     viewDate: Date = new Date();
@@ -19,6 +20,8 @@ export class UIStore {
     filterLabelIds: string[] = [];
     showCompletedTasks: boolean = true;
     showTimeboxedTasks: boolean = true;
+    showDeclinedEvents: boolean = false;
+    daysToShow: number = 7;
 
     // Analytics State
     isAnalyticsOpen: boolean = false;
@@ -59,6 +62,12 @@ export class UIStore {
 
         const savedCalendarView = localStorage.getItem('calendarViewType') as 'day' | 'week' | 'month';
         if (savedCalendarView) this.calendarViewType = savedCalendarView;
+
+        const savedDaysToShow = localStorage.getItem('daysToShow');
+        if (savedDaysToShow) this.daysToShow = parseInt(savedDaysToShow, 10);
+
+        const savedShowDeclined = localStorage.getItem('showDeclinedEvents');
+        if (savedShowDeclined) this.showDeclinedEvents = savedShowDeclined === 'true';
     }
 
     setupReactions() {
@@ -78,6 +87,16 @@ export class UIStore {
         reaction(
             () => this.calendarViewType,
             (type) => localStorage.setItem('calendarViewType', type)
+        );
+
+        reaction(
+            () => this.daysToShow,
+            (days) => localStorage.setItem('daysToShow', days.toString())
+        );
+
+        reaction(
+            () => this.showDeclinedEvents,
+            (show) => localStorage.setItem('showDeclinedEvents', show.toString())
         );
 
         reaction(
@@ -134,12 +153,25 @@ export class UIStore {
         this.isRightSidebarOpen = !this.isRightSidebarOpen;
     }
 
+    toggleFocusMode() {
+        this.isFocusMode = !this.isFocusMode;
+    }
+
+
     setViewMode(mode: 'calendar' | 'tasks') {
         this.viewMode = mode;
     }
 
     setCalendarViewType(type: 'day' | 'week' | 'month') {
         this.calendarViewType = type;
+    }
+
+    setDaysToShow(days: number) {
+        this.daysToShow = days;
+    }
+
+    toggleShowDeclinedEvents() {
+        this.showDeclinedEvents = !this.showDeclinedEvents;
     }
 
     toggleFilterLabel(labelId: string) {
