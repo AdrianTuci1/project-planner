@@ -33,4 +33,21 @@ export interface IApiService {
     getInitialData(startDate: Date, endDate: Date): Promise<InitialDataResponse>;
     getGeneralSettings(): Promise<GeneralSettings>;
     updateGeneralSettings(settings: Partial<GeneralSettings>): Promise<void>;
+    getCalendars(): Promise<CalendarData>;
+    addCalendar(account: CalendarAccount): Promise<CalendarData>;
+    updateCalendar(id: string, data: Partial<CalendarAccount>): Promise<CalendarData>;
+    deleteCalendar(id: string): Promise<CalendarData>;
+}
+
+export interface CalendarAccount {
+    id: string;
+    email: string;
+    name: string;
+    provider: 'google' | 'outlook' | 'apple' | 'other';
+    color: string;
+    isVisible: boolean;
+}
+
+export interface CalendarData {
+    accounts: CalendarAccount[];
 }

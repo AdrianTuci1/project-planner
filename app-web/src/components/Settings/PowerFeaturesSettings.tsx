@@ -77,7 +77,8 @@ export const PowerFeaturesSettings = observer(() => {
             description: "Create reusable task templates for common workflows and quickly turn them into tasks.",
             icon: <Copy size={18} />,
             gradientClass: "gradient-2",
-            isEnabled: false
+            isEnabled: settings.powerFeatures.templatesEnabled,
+            onToggle: () => settings.powerFeatures.toggleTemplates()
         },
         {
             title: "Analytics",

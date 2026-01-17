@@ -1,4 +1,4 @@
-import { IApiService, InitialDataResponse, GeneralSettings } from './types';
+import { IApiService, InitialDataResponse, GeneralSettings, CalendarData, CalendarAccount } from './types';
 
 export class RealApiService implements IApiService {
     private baseUrl: string;
@@ -26,7 +26,7 @@ export class RealApiService implements IApiService {
             const dumpTasks = await dumpRes.json();
             const availableLabels = await labelsRes.json();
 
-            return { groups, dumpTasks, availableLabels };
+            return { groups, dumpTasks, availableLabels, templates: [] };
 
         } catch (error) {
             console.error("API Error:", error);
@@ -53,6 +53,60 @@ export class RealApiService implements IApiService {
                 body: JSON.stringify(settings)
             });
             if (!res.ok) throw new Error(`Update settings failed: ${res.statusText}`);
+        } catch (error) {
+            console.error("API Error:", error);
+            throw error;
+        }
+    }
+
+    async getCalendars(): Promise<CalendarData> {
+        try {
+            const res = await fetch(`${this.baseUrl}/calendars`);
+            if (!res.ok) throw new Error(`Fetch calendars failed: ${res.statusText}`);
+            return await res.json();
+        } catch (error) {
+            console.error("API Error:", error);
+            throw error;
+        }
+    }
+
+    async addCalendar(account: CalendarAccount): Promise<CalendarData> {
+        try {
+            const res = await fetch(`${this.baseUrl}/calendars`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(account)
+            });
+            if (!res.ok) throw new Error(`Add calendar failed: ${res.statusText}`);
+            return await res.json();
+        } catch (error) {
+            console.error("API Error:", error);
+            throw error;
+        }
+    }
+
+    async updateCalendar(id: string, data: Partial<CalendarAccount>): Promise<CalendarData> {
+        try {
+            const res = await fetch(`${this.baseUrl}/calendars/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw new Error(`Update calendar failed: ${res.statusText}`);
+            return await res.json();
+        } catch (error) {
+            console.error("API Error:", error);
+            throw error;
+        }
+    }
+
+    async deleteCalendar(id: string): Promise<CalendarData> {
+        try {
+            const res = await fetch(`${this.baseUrl}/calendars/${id}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) throw new Error(`Delete calendar failed: ${res.statusText}`);
+            return await res.json();
         } catch (error) {
             console.error("API Error:", error);
             throw error;

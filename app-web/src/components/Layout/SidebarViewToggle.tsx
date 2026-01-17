@@ -7,6 +7,12 @@ import './Sidebar.css';
 export const SidebarViewToggle = observer(() => {
     const { settings } = store;
 
+    const hasAdditionalViews = settings.powerFeatures.dueDatesEnabled || settings.powerFeatures.templatesEnabled;
+
+    if (!hasAdditionalViews) {
+        return null;
+    }
+
     return (
         <div className="sidebar-nav-toggle compact">
             <button
@@ -40,15 +46,17 @@ export const SidebarViewToggle = observer(() => {
                     </svg>
                 </button>
             )}
-            <button
-                className={`nav-toggle-btn ${sidebarUI.sidebarView === 'templates' ? 'active' : ''}`}
-                onClick={() => sidebarUI.setSidebarView('templates')}
-                title="Templates"
-            >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-            </button>
+            {settings.powerFeatures.templatesEnabled && (
+                <button
+                    className={`nav-toggle-btn ${sidebarUI.sidebarView === 'templates' ? 'active' : ''}`}
+                    onClick={() => sidebarUI.setSidebarView('templates')}
+                    title="Templates"
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </button>
+            )}
         </div>
     );
 });

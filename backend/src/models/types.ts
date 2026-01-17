@@ -47,3 +47,16 @@ export interface Label {
     color: string;
     [key: string]: any;
 }
+
+export interface CalendarAccount {
+    id: string;
+    email: string;
+    name: string;
+    provider: 'google' | 'outlook' | 'apple' | 'other';
+    color: string;
+    isVisible: boolean;
+}
+
+export interface CalendarData {
+    accounts: CalendarAccount[];
+}

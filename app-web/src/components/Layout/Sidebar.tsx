@@ -1,20 +1,11 @@
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { Task } from '../../models/core';
-import {
-    Plus,
-} from 'lucide-react';
-import { useState } from 'react';
-import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-
-import { CreateListModal } from '../Sidebar/CreateListModal';
 import { SidebarTaskList } from '../Sidebar/SidebarTaskList';
 import { GroupList } from '../Shared/GroupList';
 import { TemplatesView } from '../Sidebar/TemplatesView';
-import { ContextMenu, MenuItem, MenuSeparator } from '../ContextMenu/ContextMenu';
 import { sidebarUI } from '../../models/SidebarUIModel';
-import { TaskCard, SortableTaskCard } from '../Gantt/TaskCard/index';
+import { TaskCard } from '../Gantt/TaskCard/index';
 import './Sidebar.css';
 import { SidebarViewToggle } from './SidebarViewToggle';
 

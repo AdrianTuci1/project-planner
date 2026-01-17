@@ -1,7 +1,7 @@
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 import { format, isSameDay, startOfDay, addDays, subDays, getHours, getMinutes } from 'date-fns';
-import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Calendar, RefreshCw } from 'lucide-react';
 import { Task } from '../../models/core';
 import { store } from '../../models/store';
 import { CalendarCell } from './CalendarView/CalendarCell';
@@ -24,6 +24,12 @@ export const Timebox = observer(({ hideHeader }: TimeboxProps) => {
     const tasks = store.allTasks.filter(t =>
         t.scheduledDate && t.scheduledTime && isSameDay(t.scheduledDate, store.timeboxDate)
     );
+
+    React.useEffect(() => {
+        if (store.settings.calendar.calendars.length === 0) {
+            store.settings.calendar.fetchCalendars();
+        }
+    }, []);
 
     // Resize Logic (Copied from CalendarView to ensure parity)
     const handleResizeStart = (e: React.MouseEvent | React.TouchEvent, task: Task) => {
@@ -141,6 +147,93 @@ export const Timebox = observer(({ hideHeader }: TimeboxProps) => {
                 {/* Current Time Line - Overlayed */}
                 <div className="current-time-line" style={{ top: `${topPosition}px` }} />
             </div>
+
+            <TimeboxFooter />
         </div >
+    );
+});
+
+const TimeboxFooter = observer(() => {
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+    const menuRef = React.useRef<HTMLDivElement>(null);
+    const triggerRef = React.useRef<HTMLButtonElement>(null);
+
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                menuRef.current &&
+                !menuRef.current.contains(event.target as Node) &&
+                triggerRef.current &&
+                !triggerRef.current.contains(event.target as Node)
+            ) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        if (isMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isMenuOpen]);
+
+    // Format last sync time (mocked)
+    const lastSynced = "a few seconds ago";
+    const hasCalendars = store.settings.calendar.calendars.length > 0;
+
+    return (
+        <div className="timebox-footer">
+            <div className="sync-status">
+                <RefreshCw size={12} className={`sync-icon-lucide ${!hasCalendars ? 'disabled' : ''}`} />
+                <span className="sync-text">
+                    {hasCalendars ? `Last synced ${lastSynced}` : 'Not connected'}
+                </span>
+            </div>
+
+            <button
+                ref={triggerRef}
+                className={`calendar-menu-trigger ${isMenuOpen ? 'active' : ''}`}
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                title="Manage Calendars"
+            >
+                <Calendar size={16} />
+                {store.settings.calendar.isLoading && <div className="menu-loading-dot"></div>}
+            </button>
+
+            {isMenuOpen && (
+                <div className="calendar-context-menu" ref={menuRef}>
+                    <h3 className="menu-title">Active calendars</h3>
+                    <div className="menu-calendars-list">
+                        {store.settings.calendar.calendars.map(cal => (
+                            <div key={cal.id} className="menu-calendar-item">
+                                <label className="menu-calendar-label">
+                                    <input
+                                        type="checkbox"
+                                        checked={cal.isVisible}
+                                        onChange={() => store.settings.calendar.toggleCalendarVisibility(cal.id)}
+                                        style={{ accentColor: cal.color }}
+                                    />
+                                    <span className="menu-calendar-name" style={{ color: cal.isVisible ? 'inherit' : '#888' }}>
+                                        {cal.email || cal.name}
+                                    </span>
+                                </label>
+                            </div>
+                        ))}
+                    </div>
+
+                    <button
+                        className="menu-add-btn"
+                        onClick={() => {
+                            store.openSettings('calendar');
+                            setIsMenuOpen(false);
+                        }}
+                    >
+                        + Add calendar account
+                    </button>
+
+                </div>
+            )}
+        </div>
     );
 });
