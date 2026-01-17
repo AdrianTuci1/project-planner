@@ -38,6 +38,7 @@ export class UIStore {
 
     // Task Modal State
     activeTask: Task | null = null;
+    isTemplateCreationMode: boolean = false;
 
     // Timer State
     activeTimerTaskId: string | null = null;
@@ -215,12 +216,14 @@ export class UIStore {
         this.isSettingsOpen = false;
     }
 
-    openTaskModal(task: Task) {
+    openTaskModal(task: Task, isCreationMode: boolean = false) {
         this.activeTask = task;
+        this.isTemplateCreationMode = isCreationMode;
     }
 
     closeTaskModal() {
         this.activeTask = null;
+        this.isTemplateCreationMode = false;
     }
 
     // Timer Actions

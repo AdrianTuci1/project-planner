@@ -84,6 +84,7 @@ export interface TaskCardBaseProps {
     listeners?: any;
     isDragging?: boolean;
     isOverlay?: boolean;
+    containerData?: any; // Add containerData prop
 }
 
 export const TaskCardBase = observer(({
@@ -97,9 +98,13 @@ export const TaskCardBase = observer(({
     attributes,
     listeners,
     isDragging,
-    isOverlay
+    isOverlay,
+    containerData
 }: TaskCardBaseProps) => {
     const ui = useMemo(() => new TaskUIModel(), []);
+
+    // Check if it's a template
+    const isTemplate = store.templates.some(t => t.id === task.id);
 
     const formatTime = (minutes: number = 0) => {
         const h = Math.floor(minutes / 60);
@@ -145,7 +150,7 @@ export const TaskCardBase = observer(({
                 {...attributes}
                 tabIndex={0}
                 className={`task-card ${ui.isHovered || isAnyContextOpen ? 'hovered' : ''} ${isDragging ? 'ghost' : ''} ${className || ''}`}
-                style={combinedStyle}
+                style={{ ...combinedStyle, paddingBottom: isTemplate ? '0' : undefined, overflow: 'hidden' }} // Adjust padding/overflow for badge
                 onMouseEnter={() => ui.setHovered(true)}
                 onMouseLeave={() => ui.setHovered(false)}
                 onClick={() => onTaskClick?.(task)}
@@ -314,6 +319,26 @@ export const TaskCardBase = observer(({
                         )}
                     </div>
                 )}
+                {isTemplate && (
+                    <div style={{
+                        background: 'repeating-linear-gradient(45deg, #1f2937, #1f2937 10px, #374151 10px, #374151 20px)',
+                        color: '#A78BFA',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        padding: '4px',
+                        letterSpacing: '0.5px',
+                        borderTop: '1px solid #374151',
+                        borderBottomLeftRadius: '6px',
+                        borderBottomRightRadius: '6px',
+                        marginTop: 'auto', // Push to bottom
+                        width: 'calc(100% + 12px)', // Stretch full width: 100% + left + right padding (6+6)
+                        marginLeft: '-6px', // Counteract left padding
+                        marginBottom: '-2px' // Counteract bottom padding (if not removed) or 0
+                    }}>
+                        TASK TEMPLATE
+                    </div>
+                )}
             </div>
 
             <TimeEntryContext
@@ -362,6 +387,7 @@ export const TaskCardBase = observer(({
                     }}
                 />
             </ContextMenu>
+
         </>
     );
 });

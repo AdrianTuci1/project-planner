@@ -1,6 +1,7 @@
 export interface InitialDataResponse {
     groups: any[];
     dumpTasks: any[];
+    templates: any[];
     availableLabels: any[];
 }
 

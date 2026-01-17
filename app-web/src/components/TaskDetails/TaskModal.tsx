@@ -34,13 +34,37 @@ interface TaskModalProps {
 }
 
 export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
-    const [ui] = useState(() => new TaskUIModel());
+    const [ui] = useState(() => new TaskUIModel()); // Local UI model for the modal? 
+    // Actually main UIStore has the state. 
+    // But this 'ui' variable seems to be a local TaskUIModel instance based on line 37.
+    // Let's check imports.
+    // Access global 'store.ui' for isTemplateCreationMode.
+
+    // We need to check if it's a template OR if we are in template creation mode.
+    const isTemplate = store.templates.some(t => t.id === task.id) || store.isTemplateCreationMode;
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="task-card-modal" onClick={e => e.stopPropagation()}>
+                {/* Template Banner */}
+                {isTemplate && (
+                    <div style={{
+                        background: 'repeating-linear-gradient(45deg, #1f2937, #1f2937 10px, #374151 10px, #374151 20px)',
+                        color: '#A78BFA',
+                        padding: '8px',
+                        textAlign: 'center',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        borderBottom: '1px solid #374151',
+                        borderTopLeftRadius: '12px',
+                        borderTopRightRadius: '12px'
+                    }}>
+                        You are editing a task template
+                    </div>
+                )}
+
                 {/* Header Section */}
-                <div className="tc-header-new">
+                <div className="tc-header-new" style={isTemplate ? { borderTopLeftRadius: 0, borderTopRightRadius: 0 } : undefined}>
                     <button
                         className={`task-check-circle ${task.status === 'done' ? 'checked' : ''}`}
                         onClick={() => task.toggleStatus()}
@@ -293,6 +317,51 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         <div className="tc-section-label">Subtasks</div>
                         <SubtaskList task={task} autoFocusNew={ui.isSubtaskMode} />
                     </div>
+
+                    {isTemplate && (
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            gap: '12px',
+                            marginTop: '24px',
+                            paddingTop: '16px',
+                            borderTop: '1px solid var(--border)'
+                        }}>
+                            <button
+                                onClick={onClose}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'var(--text-secondary)',
+                                    cursor: 'pointer',
+                                    fontSize: '13px',
+                                    fontWeight: 500
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (store.isTemplateCreationMode) {
+                                        store.taskStore.addTemplate(task);
+                                    }
+                                    onClose();
+                                }}
+                                style={{
+                                    backgroundColor: '#A78BFA',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    color: '#1F2937',
+                                    padding: '6px 16px',
+                                    cursor: 'pointer',
+                                    fontSize: '13px',
+                                    fontWeight: 600
+                                }}
+                            >
+                                {store.isTemplateCreationMode ? 'Create Template' : 'Update Template'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 

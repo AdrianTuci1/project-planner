@@ -7,6 +7,7 @@ const MOCK_DELAY = 600; // ms
 const createSeedData = () => {
     const groups: any[] = [];
     const dumpTasks: any[] = [];
+    const templates: any[] = []; // Templates
 
     // Marketing Group
     const marketingGroup = {
@@ -102,6 +103,19 @@ const createSeedData = () => {
         subtasks: []
     });
 
+    // Templates
+    templates.push({
+        id: uuidv4(),
+        title: "Weekly Review Template",
+        labels: [],
+        status: 'todo',
+        participants: [],
+        subtasks: [
+            { id: uuidv4(), title: 'Review last week goals', isCompleted: false },
+            { id: uuidv4(), title: 'Plan next week goals', isCompleted: false },
+        ]
+    });
+
     // Labels
     const availableLabels = [
         { id: 'l1', name: 'Design', color: '#8B5CF6' },
@@ -111,8 +125,10 @@ const createSeedData = () => {
         { id: 'l5', name: 'Lam', color: '#FFD60A' },
     ];
 
-    return { groups, dumpTasks, availableLabels };
+    return { groups, dumpTasks, templates, availableLabels };
 };
+
+
 
 export class MockApiService implements IApiService {
     private db: ReturnType<typeof createSeedData>;
@@ -144,6 +160,7 @@ export class MockApiService implements IApiService {
                 resolve({
                     groups: groupsResponse,
                     dumpTasks: dumpResponse,
+                    templates: this.db.templates,
                     availableLabels: this.db.availableLabels
                 });
             }, MOCK_DELAY);

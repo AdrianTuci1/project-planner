@@ -11,6 +11,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CreateListModal } from '../Sidebar/CreateListModal';
 import { SidebarTaskList } from '../Sidebar/SidebarTaskList';
 import { GroupList } from '../Shared/GroupList';
+import { TemplatesView } from '../Sidebar/TemplatesView';
 import { ContextMenu, MenuItem, MenuSeparator } from '../ContextMenu/ContextMenu';
 import { sidebarUI } from '../../models/SidebarUIModel';
 import { TaskCard, SortableTaskCard } from '../Gantt/TaskCard/index';
@@ -103,11 +104,9 @@ export const Sidebar = observer(() => {
                 </div>
             )}
 
-            {/* Templates Content Placeholder */}
+            {/* Templates Content */}
             {sidebarUI.sidebarView === 'templates' && (
-                <div style={{ padding: '20px', color: 'var(--text-muted)', textAlign: 'center' }}>
-                    Coming Soon: Templates View
-                </div>
+                <TemplatesView />
             )}
 
         </aside>

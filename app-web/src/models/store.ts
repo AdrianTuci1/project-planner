@@ -23,6 +23,7 @@ export class ProjectStore {
     // --- Delegation to TaskStore ---
     get groups() { return this.taskStore.groups; }
     get dumpAreaTasks() { return this.taskStore.dumpAreaTasks; }
+    get templates() { return this.taskStore.templates; }
     get currentUser() { return this.taskStore.currentUser; }
     get isLoading() { return this.taskStore.isLoading; }
     get error() { return this.taskStore.error; }
@@ -98,6 +99,7 @@ export class ProjectStore {
     set isSettingsOpen(val) { this.uiStore.isSettingsOpen = val; }
 
     get settings() { return this.uiStore.settings; }
+    get isTemplateCreationMode() { return this.uiStore.isTemplateCreationMode; }
     get activeTask() { return this.uiStore.activeTask; }
     get activeGroup() { return this.uiStore.activeGroup; }
     get filteredTasks() { return this.uiStore.filteredTasks; }
@@ -126,7 +128,7 @@ export class ProjectStore {
     toggleDailyShutdown() { this.uiStore.toggleDailyShutdown(); }
     openSettings(tab?: string) { this.uiStore.openSettings(tab); }
     closeSettings() { this.uiStore.closeSettings(); }
-    openTaskModal(task: Task) { this.uiStore.openTaskModal(task); }
+    openTaskModal(task: Task, isCreationMode: boolean = false) { this.uiStore.openTaskModal(task, isCreationMode); }
     closeTaskModal() { this.uiStore.closeTaskModal(); }
     startTimer(taskId: string) { this.uiStore.startTimer(taskId); }
     pauseTimer() { this.uiStore.pauseTimer(); }

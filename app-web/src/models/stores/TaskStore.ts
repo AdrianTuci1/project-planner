@@ -16,6 +16,7 @@ export class TaskStore {
 
     groups: Group[] = [];
     dumpAreaTasks: Task[] = [];
+    templates: Task[] = [];
     currentUser: IParticipant = MOCK_USER;
 
     // API State - Loading state usually belongs to data fetching
@@ -54,6 +55,9 @@ export class TaskStore {
 
                 // Hydrate Dump Tasks
                 this.dumpAreaTasks = data.dumpTasks.map((t: any) => this.hydrateTask(t));
+
+                // Hydrate Templates (Mock for now or if API supports it)
+                this.templates = data.templates ? data.templates.map((t: any) => this.hydrateTask(t)) : [];
 
                 // Hydrate Labels
                 this.availableLabels = data.availableLabels;
@@ -152,6 +156,24 @@ export class TaskStore {
         // Removing from filters is UI concern, handled in UIStore or RootStore wrapper.
     }
 
+    // Template Methods
+    createTemplate(title: string) {
+        const task = new Task(title);
+        this.templates.push(task);
+        return task;
+    }
+
+    addTemplate(task: Task) {
+        this.templates.push(task);
+    }
+
+    deleteTemplate(id: string) {
+        const index = this.templates.findIndex(t => t.id === id);
+        if (index > -1) {
+            this.templates.splice(index, 1);
+        }
+    }
+
     addTaskToDump(title: string) {
         const task = new Task(title);
         this.dumpAreaTasks.push(task);
@@ -207,6 +229,9 @@ export class TaskStore {
             if (task) return task;
         }
         const dumpTask = this.dumpAreaTasks.find(t => t.id === taskId);
-        return dumpTask;
+        if (dumpTask) return dumpTask;
+
+        const template = this.templates.find(t => t.id === taskId);
+        return template;
     }
 }
