@@ -28,13 +28,16 @@ export class TimeboxDropStrategy implements DragStrategy {
         // Check for required data points
         if (date && hour !== undefined && minute !== undefined) {
             runInAction(() => {
-                // Confirm valid date object
-                task.scheduledDate = startOfDay(new Date(date));
-
-                // Format time string securely
+                // Confirm valid date object and set time
                 const h = Math.max(0, Math.min(23, Number(hour)));
                 const m = Math.max(0, Math.min(59, Number(minute)));
 
+                const newDate = new Date(date);
+                newDate.setHours(h, m, 0, 0);
+
+                task.scheduledDate = newDate;
+
+                // Format time string securely
                 task.scheduledTime = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 
                 console.log('[TimeboxDropStrategy] Updated task time:', task.scheduledTime);

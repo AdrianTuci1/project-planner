@@ -8,10 +8,13 @@ import './animations.css';
 import { observer } from 'mobx-react-lite';
 import { store } from './models/store';
 import { TaskCardBase } from './components/Gantt/TaskCard/TaskCardBase';
+import { ResizableTaskCardView } from './components/Gantt/TaskCard/ResizableTaskCard';
+import { topCornerCollision } from './utils/dndUtils';
 
 export const MainApp = observer(() => {
     const { handleDragEnd, handleDragOver } = useAppDragEnd();
     const [activeId, setActiveId] = React.useState<string | null>(null);
+    const [overId, setOverId] = React.useState<string | null>(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -25,20 +28,29 @@ export const MainApp = observer(() => {
         setActiveId(event.active.id);
     };
 
+    const handleDragOverWrapper = (event: any) => {
+        handleDragOver(event);
+        setOverId(event.over?.id || null);
+    };
+
     const handleDragEndWrapper = (event: any) => {
         handleDragEnd(event);
         setActiveId(null);
+        setOverId(null);
     };
 
     const activeTask = activeId ? store.allTasks.find(t => t.id === (activeId.startsWith('calendar-') ? activeId.replace('calendar-', '') : activeId)) : null;
 
+    // Determine if we are dragging over a calendar-like area
+    const isOverCalendar = overId?.startsWith('calendar-') || overId?.startsWith('timebox-');
+
     return (
         <DndContext
             sensors={sensors}
-            collisionDetection={pointerWithin}
+            collisionDetection={topCornerCollision}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEndWrapper}
-            onDragOver={handleDragOver}
+            onDragOver={handleDragOverWrapper}
             autoScroll={false}
         >
             <AppLayout>
@@ -46,13 +58,15 @@ export const MainApp = observer(() => {
             </AppLayout>
             <DragOverlay dropAnimation={null}>
                 {activeTask && activeId && !activeId.startsWith('calendar-') && !activeId.startsWith('timebox-') ? (
-                    <div style={{ cursor: 'grabbing' }}>
-                        <TaskCardBase
-                            task={activeTask}
-                            isDragging={false} /* Overlay looks solid */
-                            className="drag-overlay-card"
-                        />
-                    </div>
+                    isOverCalendar ? null : (
+                        <div style={{ cursor: 'grabbing' }}>
+                            <TaskCardBase
+                                task={activeTask}
+                                isDragging={false}
+                                className="drag-overlay-card"
+                            />
+                        </div>
+                    )
                 ) : null}
             </DragOverlay>
         </DndContext>

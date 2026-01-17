@@ -100,7 +100,7 @@ export const CalendarView = observer(({ tasks, onTaskClick }: CalendarViewProps)
             ) : (
                 <table className="calendar-table">
                     <thead className="calendar-header">
-                        <tr>
+                        <tr style={{ height: '44px' }}>
                             <th className="time-column-header"></th>
                             {days.map(date => {
                                 const isToday = isSameDay(date, today);

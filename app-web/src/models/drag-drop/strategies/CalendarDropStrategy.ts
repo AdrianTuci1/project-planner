@@ -122,7 +122,10 @@ export class CalendarDropStrategy implements DragStrategy {
             console.log('[CalendarDropStrategy] Calculated minute:', minute);
 
             runInAction(() => {
-                task.scheduledDate = setHours(startOfDay(date), 0);
+                const newDate = setHours(startOfDay(date), hour);
+                newDate.setMinutes(minute);
+
+                task.scheduledDate = newDate;
                 task.scheduledTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
             });
         }

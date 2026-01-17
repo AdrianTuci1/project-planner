@@ -6,12 +6,14 @@ import { calculateOverlappingLayout } from '../layoutUtils';
 import { ResizableTaskCard } from '../TaskCard/ResizableTaskCard';
 import { CalendarSlot } from './CalendarSlot';
 
-export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart }: {
+export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart, className, slotPrefix }: {
     date: Date,
     hour: number,
     tasks: Task[],
     onTaskClick: (task: Task) => void,
-    onResizeStart: (e: React.MouseEvent | React.TouchEvent, task: Task) => void
+    onResizeStart: (e: React.MouseEvent | React.TouchEvent, task: Task) => void,
+    className?: string,
+    slotPrefix?: string
 }) => {
     const today = startOfDay(new Date());
     const isToday = isSameDay(date, today);
@@ -40,11 +42,11 @@ export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResize
     const layoutData = calculateOverlappingLayout(cellTasks);
 
     return (
-        <td className={`hour-cell ${isToday ? 'today-cell' : ''}`}>
+        <td className={`hour-cell ${isToday ? 'today-cell' : ''} ${className || ''}`}>
             {/* Background Slots Layer */}
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', zIndex: 0 }}>
                 {[0, 15, 30, 45].map(m => (
-                    <CalendarSlot key={m} date={date} hour={hour} minute={m} />
+                    <CalendarSlot key={m} date={date} hour={hour} minute={m} prefix={slotPrefix} />
                 ))}
             </div>
 

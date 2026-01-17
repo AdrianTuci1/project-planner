@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
-import { useDraggable } from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Task } from '../../../models/core';
 import { store } from '../../../models/store';
@@ -18,6 +18,118 @@ interface ResizableTaskCardProps {
     onResizeStart?: (e: React.MouseEvent | React.TouchEvent) => void;
     containerData?: any;
 }
+
+// Separated View Component for use in DragOverlay
+export const ResizableTaskCardView = observer(({
+    task,
+    onTaskClick,
+    style,
+    className,
+    onResizeStart,
+    setNodeRef,
+    attributes,
+    listeners,
+    isDragging,
+    completedStyle,
+    measureRef,
+    contextMenu,
+    handleContextMenu,
+    handleCloseContextMenu,
+    handleMarkAsComplete,
+    handleDuplicate,
+    handleRemoveFromTimebox,
+    handleDelete,
+    startTime,
+    endTime
+}: any) => {
+    return (
+        <div
+            ref={setNodeRef}
+            style={{ ...style, ...completedStyle, color: '#000' }}
+            // Critical: 'calendar-event' is required for resize logic in parent views.
+            className={`task-card calendar-event ${className || ''}`}
+            onClick={(e) => {
+                onTaskClick?.(task);
+            }}
+            onContextMenu={handleContextMenu}
+            {...listeners}
+            {...attributes}
+        >
+            <div className="tc-header" style={{ gap: '6px', alignItems: 'flex-start', height: '100%', overflow: 'hidden' }}>
+                <div className="tc-checkbox-wrapper" style={{ paddingTop: '2px', flexShrink: 0 }}>
+                    <div
+                        className={`tc-checkbox ${task.status === 'done' ? 'checked' : ''}`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            task.toggleStatus();
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        style={{
+                            width: (task.duration || 15) <= 15 ? '12px' : '14px',
+                            height: (task.duration || 15) <= 15 ? '12px' : '14px',
+                            borderColor: '#000' // Ensure checkmark border is visible/black
+                        }}
+                    >
+                        {task.status === 'done' && <Check size={(task.duration || 15) <= 15 ? 8 : 10} style={{ color: '#fff' }} />}
+                    </div>
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+                    <div
+                        className="tc-title"
+                        style={{
+                            // Dynamic font size based on duration passed via style prop, or calculate locally
+                            fontSize: (task.duration || 15) <= 15 ? '10px' : '11px',
+                            marginBottom: 0,
+                            color: '#000',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            fontWeight: 600,
+                            lineHeight: 1.1
+                        }}
+                    >
+                        {task.title}
+                    </div>
+
+                    {(task.duration || 0) >= 30 && task.scheduledDate && (
+                        <div style={{
+                            fontSize: '9px',
+                            color: 'rgba(0,0,0,0.7)',
+                            marginTop: '2px',
+                            lineHeight: 1
+                        }}>
+                            {startTime} - {endTime}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Resize Handle */}
+            <div
+                className="resize-handle"
+                onPointerDown={(e) => {
+                    e.stopPropagation(); // Prevent drag
+                    onResizeStart?.(e);
+                }}
+            />
+
+            {/* Hidden Measure Ref */}
+            <div ref={measureRef} style={{ display: 'none' }} />
+
+            <TaskContextMenu
+                isOpen={!!contextMenu}
+                onClose={handleCloseContextMenu}
+                position={contextMenu || { x: 0, y: 0 }}
+                task={task}
+                onMarkAsComplete={handleMarkAsComplete}
+                onDuplicate={handleDuplicate}
+                onRemoveFromTimebox={handleRemoveFromTimebox}
+                onDelete={handleDelete}
+            />
+        </div>
+    );
+});
 
 export const ResizableTaskCard = observer(({
     task,
@@ -121,11 +233,20 @@ export const ResizableTaskCard = observer(({
         combinedStyle.zIndex = 100;
     }
 
+    const { isOver: isOverDroppable, setNodeRef: setDroppableRef } = useDroppable({
+        id: draggableId,
+        data: {
+            ...containerData,
+            isTaskProxy: true
+        }
+    });
+
     // Attach ref to listeners or element? 
     // attributes & listeners go to the div. We also need our measureRef.
     // We can merge refs.
     const setRefs = (node: HTMLDivElement | null) => {
         setNodeRef(node);
+        setDroppableRef(node);
         // @ts-ignore
         measureRef.current = node;
     };
@@ -179,87 +300,27 @@ export const ResizableTaskCard = observer(({
     const endTime = task.scheduledDate ? format(addMinutes(task.scheduledDate, task.duration || 15), 'h:mm') : '';
 
     return (
-        <div
-            ref={setRefs}
-            style={{ ...combinedStyle, ...completedStyle, color: '#000' }}
-            // Critical: 'calendar-event' is required for resize logic in parent views.
-            className={`task-card calendar-event ${className || ''}`}
-            onClick={(e) => {
-                onTaskClick?.(task);
-            }}
-            onContextMenu={handleContextMenu}
-            {...listeners}
-            {...attributes}
-        >
-            <div className="tc-header" style={{ gap: '6px', alignItems: 'flex-start', height: '100%', overflow: 'hidden' }}>
-                <div className="tc-checkbox-wrapper" style={{ paddingTop: '2px', flexShrink: 0 }}>
-                    <div
-                        className={`tc-checkbox ${task.status === 'done' ? 'checked' : ''}`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            task.toggleStatus();
-                        }}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        style={{
-                            width: (task.duration || 15) <= 15 ? '12px' : '14px',
-                            height: (task.duration || 15) <= 15 ? '12px' : '14px',
-                            borderColor: '#000' // Ensure checkmark border is visible/black
-                        }}
-                    >
-                        {task.status === 'done' && <Check size={(task.duration || 15) <= 15 ? 8 : 10} style={{ color: '#fff' }} />}
-                    </div>
-                </div>
-
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-                    <div
-                        className="tc-title"
-                        style={{
-                            // Dynamic font size based on duration passed via style prop, or calculate locally
-                            fontSize: (task.duration || 15) <= 15 ? '10px' : '11px',
-                            marginBottom: 0,
-                            color: '#000',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            fontWeight: 600,
-                            lineHeight: 1.1
-                        }}
-                    >
-                        {task.title}
-                    </div>
-
-                    {(task.duration || 0) >= 30 && task.scheduledDate && (
-                        <div style={{
-                            fontSize: '9px',
-                            color: 'rgba(0,0,0,0.7)',
-                            marginTop: '2px',
-                            lineHeight: 1
-                        }}>
-                            {startTime} - {endTime}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Resize Handle */}
-            <div
-                className="resize-handle"
-                onPointerDown={(e) => {
-                    e.stopPropagation(); // Prevent drag
-                    onResizeStart?.(e);
-                }}
-            />
-
-            <TaskContextMenu
-                isOpen={!!contextMenu}
-                onClose={handleCloseContextMenu}
-                position={contextMenu || { x: 0, y: 0 }}
-                task={task}
-                onMarkAsComplete={handleMarkAsComplete}
-                onDuplicate={handleDuplicate}
-                onRemoveFromTimebox={handleRemoveFromTimebox}
-                onDelete={handleDelete}
-            />
-        </div>
+        <ResizableTaskCardView
+            task={task}
+            onTaskClick={onTaskClick}
+            style={combinedStyle}
+            className={className}
+            onResizeStart={onResizeStart}
+            setNodeRef={setRefs}
+            attributes={attributes}
+            listeners={listeners}
+            isDragging={isDragging}
+            completedStyle={completedStyle}
+            measureRef={measureRef}
+            contextMenu={contextMenu}
+            handleContextMenu={handleContextMenu}
+            handleCloseContextMenu={handleCloseContextMenu}
+            handleMarkAsComplete={handleMarkAsComplete}
+            handleDuplicate={handleDuplicate}
+            handleRemoveFromTimebox={handleRemoveFromTimebox}
+            handleDelete={handleDelete}
+            startTime={startTime}
+            endTime={endTime}
+        />
     );
 });

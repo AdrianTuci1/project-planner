@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { AuthLayout } from './AuthLayout';
+import { Link } from 'react-router-dom';
 
 interface LoginProps {
     onLogin: () => void;
@@ -37,6 +37,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 >
                     Sign in
                 </button>
+
+                <div className="auth-footer" style={{ marginTop: 'var(--space-6)', textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+                    Don't have an account? <Link to="/signup" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 500 }}>Sign up</Link>
+                </div>
             </form>
         </AuthLayout>
     );

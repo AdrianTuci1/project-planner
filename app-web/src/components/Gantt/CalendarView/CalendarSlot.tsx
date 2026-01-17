@@ -2,8 +2,8 @@ import React from 'react';
 import { observer } from 'mobx-react-lite';
 import { useDroppable } from '@dnd-kit/core';
 
-export const CalendarSlot = observer(({ date, hour, minute }: { date: Date, hour: number, minute: number }) => {
-    const cellId = `calendar-slot-${date.toISOString()}-${hour}-${minute}`;
+export const CalendarSlot = observer(({ date, hour, minute, prefix = 'calendar' }: { date: Date, hour: number, minute: number, prefix?: string }) => {
+    const cellId = `${prefix}-slot-${date.toISOString()}-${hour}-${minute}`;
     const { isOver, setNodeRef } = useDroppable({
         id: cellId,
         data: {

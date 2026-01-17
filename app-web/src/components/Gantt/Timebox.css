@@ -143,13 +143,13 @@
     position: absolute;
     top: 4px;
     /* Move inside the cell, top corner */
-    right: 4px;
+    right: 0px;
     font-size: 10px;
     color: var(--text-muted);
     background-color: transparent;
     padding: 0;
     text-align: right;
-    width: auto;
+
     /* Allow auto width */
 }
 
