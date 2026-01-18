@@ -1,0 +1,56 @@
+.bottom-dock {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 12px 0 24px;
+    /* Extra bottom padding for safe area */
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    transform: none;
+    border-radius: 0;
+}
+
+.dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    border: none;
+    background: none;
+    min-width: 60px;
+}
+
+.dock-item:hover {
+    background-color: var(--bg-card-hover);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+}
+
+.dock-item.active {
+    color: var(--primary);
+    background-color: var(--bg-card-hover);
+}
+
+.dock-item span {
+    font-size: 10px;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* Dark mode adjustments (generic) */
+@media (prefers-color-scheme: dark) {
+    .bottom-dock {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+}

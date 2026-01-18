@@ -7,6 +7,7 @@
     flex-direction: column;
     padding: var(--space-4);
     height: 100vh;
+    width: 290px;
 }
 
 .sidebar-header {
@@ -311,4 +312,26 @@
 
 .card-container-create .subtask-button-container:hover {
     color: var(--text-main);
+}
+
+@media (max-width: 800px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        min-height: 100%;
+        border-right: none;
+        padding: 16px;
+        /* Ensure padding is reasonable */
+        background-color: transparent;
+        gap: var(--space-4);
+        /* Blend with background */
+    }
+
+    .active-list-container,
+    .sidebar-tasks-container {
+        width: 100%;
+        max-width: 500px;
+        /* Restrict width for better centering appearance */
+        margin: 0 auto;
+    }
 }

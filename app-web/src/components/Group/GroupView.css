@@ -28,3 +28,16 @@
     color: var(--text-muted);
     font-size: 14px;
 }
+
+/* Mobile Layout */
+.group-view-wrapper.mobile {
+    flex-direction: column;
+    background-color: var(--bg-base);
+}
+
+.group-content.mobile-content {
+    padding-bottom: 80px;
+    /* Space for Bottom Dock */
+    overflow-y: auto;
+    width: 100%;
+}

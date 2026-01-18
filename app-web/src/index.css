@@ -85,6 +85,10 @@ body {
   /* App-like feel */
 }
 
+* {
+  box-sizing: border-box;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;

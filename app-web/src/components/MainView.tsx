@@ -9,10 +9,8 @@ export const MainView = observer(() => {
 
     return (
         <div className="main-view-container">
-            {mainGroupId ? (
+            {mainGroupId && (
                 <GroupView groupId={mainGroupId} />
-            ) : (
-                <div style={{ padding: 20 }}>No groups available. Create a group to get started.</div>
             )}
         </div>
     );

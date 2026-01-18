@@ -10,7 +10,11 @@ import './Sidebar.css';
 import { SidebarViewToggle } from './SidebarViewToggle';
 
 
-export const Sidebar = observer(() => {
+interface SidebarProps {
+    hideHeader?: boolean;
+}
+
+export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
     const activeGroup = store.activeGroup;
 
     const handleCreateTask = (title: string) => {
@@ -28,15 +32,17 @@ export const Sidebar = observer(() => {
     return (
         <aside className="sidebar">
             {/* App Header / User */}
-            <div className="sidebar-header">
-                <div className="avatar-wrapper">
-                    <img className="user-avatar" src="/logo.png" alt="" />
+            {!hideHeader && (
+                <div className="sidebar-header">
+                    <div className="avatar-wrapper">
+                        <img className="user-avatar" src="/logo.png" alt="" />
+                    </div>
+                    <span className="app-name">
+                        simplu
+                    </span>
+                    <SidebarViewToggle />
                 </div>
-                <span className="app-name">
-                    simplu
-                </span>
-                <SidebarViewToggle />
-            </div>
+            )}
 
             {/* Main Menu Content */}
             {sidebarUI.sidebarView === 'main' && (

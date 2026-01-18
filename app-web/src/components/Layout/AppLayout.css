@@ -15,3 +15,9 @@
     position: relative;
     /* TopBar is now inside children, so main-content is just the wrapper */
 }
+
+@media (max-width: 800px) {
+    .app-layout>.sidebar {
+        display: none !important;
+    }
+}

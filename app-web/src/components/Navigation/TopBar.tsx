@@ -104,12 +104,12 @@ export const TopBar = observer(() => {
 
                 <div className="week-navigation-buttons">
                     <ChevronLeft
-                        size={18}
+                        size={24}
                         className="nav-button"
                         onClick={goToPreviousDay}
                     />
                     <ChevronRight
-                        size={18}
+                        size={24}
                         className="nav-button"
                         onClick={goToNextDay}
                     />

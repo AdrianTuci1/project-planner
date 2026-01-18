@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { KanbanBoard } from '../Gantt/KanbanBoard';
@@ -10,6 +10,9 @@ import { TaskModal } from '../TaskDetails/TaskModal';
 import { UpgradeModal } from '../Upgrade/UpgradeModal';
 import { TaskTimer } from '../Timer/TaskTimer';
 import { Task } from '../../models/core';
+import { Sidebar } from '../Layout/Sidebar';
+import { AccountSettings } from '../Settings/AccountSettings';
+import { BottomDock, DockTab } from '../Navigation/BottomDock';
 import './GroupView.css';
 
 interface GroupViewProps {
@@ -18,6 +21,18 @@ interface GroupViewProps {
 
 export const GroupView = observer(({ groupId }: GroupViewProps) => {
     const group = store.groups.find(g => g.id === groupId);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 800);
+    const [activeDockTab, setActiveDockTab] = useState<DockTab>('tasks');
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 800);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     if (!group) return <div>Group not found</div>;
 
     const globalTasks = store.filteredTasks;
@@ -27,6 +42,41 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
         store.openTaskModal(task);
     };
 
+    if (isMobile) {
+        return (
+            <div className="group-view-wrapper mobile">
+                <div className="group-content mobile-content">
+                    {activeDockTab === 'tasks' && (
+                        <TasksView
+                            tasks={globalTasks}
+                            onTaskClick={handleTaskClick}
+                            groupId={groupId}
+                        />
+                    )}
+                    {activeDockTab === 'inbox' && (
+                        <Sidebar hideHeader />
+                    )}
+                    {activeDockTab === 'timebox' && (
+                        <Timebox />
+                    )}
+                    {activeDockTab === 'settings' && (
+                        <AccountSettings />
+                    )}
+                </div>
+
+                <BottomDock
+                    activeTab={activeDockTab}
+                    onTabChange={setActiveDockTab}
+                />
+
+                {/* Task Details Modal */}
+                {store.activeTask && (
+                    <TaskModal task={store.activeTask} onClose={() => store.closeTaskModal()} />
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="group-view-wrapper">
             {/* Main Content Area (TopBar + Content) */}
@@ -34,17 +84,11 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                 <TopBar />
                 <div className="group-content">
                     {store.viewMode === 'tasks' ? (
-                        hasTasks ? (
-                            <KanbanBoard
-                                tasks={globalTasks}
-                                onTaskClick={handleTaskClick}
-                                groupId={store.activeGroupId}
-                            />
-                        ) : (
-                            <div className="empty-gantt">
-                                No tasks found (Global View).
-                            </div>
-                        )
+                        <KanbanBoard
+                            tasks={globalTasks}
+                            onTaskClick={handleTaskClick}
+                            groupId={store.activeGroupId}
+                        />
                     ) : (
                         <CalendarView
                             tasks={globalTasks}
