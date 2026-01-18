@@ -4,6 +4,7 @@ import { DragStrategy } from '../DragStrategy';
 import { Task } from '../../core';
 import { DragData } from '../types';
 import { startOfDay } from 'date-fns';
+import { store } from '../../store';
 
 export class TimeboxDropStrategy implements DragStrategy {
     handle(
@@ -37,8 +38,9 @@ export class TimeboxDropStrategy implements DragStrategy {
 
                 task.scheduledDate = newDate;
 
-                // Format time string securely
                 task.scheduledTime = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+                store.setDragOverLocation({ date: newDate, hour: h, minute: m });
 
                 console.log('[TimeboxDropStrategy] Updated task time:', task.scheduledTime);
             });

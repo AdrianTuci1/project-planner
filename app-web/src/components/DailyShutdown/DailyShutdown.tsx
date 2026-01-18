@@ -15,6 +15,8 @@ import {
     DragOverlay,
     DragStartEvent,
     DragEndEvent,
+    DragOverEvent,
+    useDroppable,
 } from '@dnd-kit/core';
 import {
     SortableContext,
@@ -24,6 +26,23 @@ import {
 import './DailyShutdown.css';
 import { TaskCard, SortableTaskCard } from '../Gantt/TaskCard/index';
 import { GroupList } from '../Shared/GroupList';
+import { runInAction } from 'mobx';
+
+const DroppableList = ({ id, children, className, style }: any) => {
+    const { setNodeRef } = useDroppable({
+        id,
+        data: {
+            type: 'shutdown-list',
+            listId: id
+        }
+    });
+
+    return (
+        <div ref={setNodeRef} className={className} style={style}>
+            {children}
+        </div>
+    );
+};
 
 export const DailyShutdown = observer(() => {
     const [step, setStep] = useState(1);
@@ -79,6 +98,139 @@ export const DailyShutdown = observer(() => {
         const { active } = event;
         setActiveId(active.id as string);
         setActiveTask(active.data.current?.task);
+    };
+
+    const handleDragOver = (event: DragOverEvent) => {
+        const { active, over } = event;
+        if (!over) return;
+        if (active.id === over.id) return;
+
+        const activeTask = active.data.current?.task as Task;
+        if (!activeTask) return;
+
+        const overContainer = over.data.current?.sortable?.containerId
+            || over.data.current?.listId
+            || over.id;
+
+        const activeContainer = active.data.current?.sortable?.containerId
+            || active.data.current?.containerData?.id;
+
+        // Handling Item Movement Between Lists (Optimistic UI)
+        if (overContainer === 'tomorrow-list' && activeContainer !== 'tomorrow-list') {
+            // Move to Tomorrow
+            if (!activeTask.scheduledDate || !isSameDay(activeTask.scheduledDate, tomorrow)) {
+                runInAction(() => {
+                    // Logic: Remove from source (implicit by setting date) and set date
+                    if (shutdownSourceGroupId) {
+                        // Ensure it belongs to specific group if we want? 
+                        // Usually moving to tomorrow preserves group, unless it was a dump task.
+                        // If it was in dump (no group), and we have a selected source group, maybe add to it?
+                        // Matches logic in handleDragEnd
+                        const inDumpIndex = store.dumpAreaTasks.findIndex(t => t.id === activeTask.id);
+                        if (inDumpIndex > -1) {
+                            store.dumpAreaTasks.splice(inDumpIndex, 1);
+                            const group = store.groups.find(g => g.id === shutdownSourceGroupId);
+                            if (group) group.addTask(activeTask);
+                            // If no group found (unlikely if id set), it stays in limbo? No, addTask handles generic?
+                            // Actually store.groups[0] fallback is used in dragEnd
+                        }
+                    } else {
+                        // Brain Dump mode. If it's in a group, it stays in group but gets date.
+                        const inDumpIndex = store.dumpAreaTasks.findIndex(t => t.id === activeTask.id);
+                        if (inDumpIndex > -1) {
+                            store.dumpAreaTasks.splice(inDumpIndex, 1);
+                            // Ideally add to a default group if Tomorrow needs group?
+                            // But tasks can be scheduled without group? (in dumpAreaTasks?)
+                            // store.dumpAreaTasks CAN contain scheduled tasks? 
+                            // Usually kanbanModel etc filters groups. 
+                            // If task is in dump, scheduledDate might move it out of dump view in sidebar...
+                            if (store.groups.length > 0) {
+                                store.groups[0].addTask(activeTask);
+                            }
+                        }
+                    }
+
+                    activeTask.scheduledDate = tomorrow;
+                    activeTask.scheduledTime = undefined;
+                });
+            }
+        } else if (overContainer === 'source-list' && activeContainer !== 'source-list') {
+            // Move to Source
+            if (activeTask.scheduledDate) {
+                runInAction(() => {
+                    activeTask.scheduledDate = undefined;
+                    activeTask.scheduledTime = undefined;
+
+                    // Ensure it ends up in the "Source List" view (Dump or Group)
+                    // If we are viewing Brain Dump:
+                    if (shutdownSourceGroupId === null) {
+                        // Check if it's in a group. If so, remove from group?
+                        // "Source List" = Brain Dump tasks.
+                        // If I drag a Group Task to "Source" (which looks like Dump), should it become Dump task?
+                        // Likely yes, user intention is "Put it here".
+                        const currentGroup = store.groups.find(g => g.tasks.find(t => t.id === activeTask.id));
+                        if (currentGroup) {
+                            currentGroup.removeTask(activeTask.id);
+                            store.dumpAreaTasks.push(activeTask);
+                        } else {
+                            // Already in dump (or limbo), make sure it is in dump
+                            if (!store.dumpAreaTasks.find(t => t.id === activeTask.id)) {
+                                store.dumpAreaTasks.push(activeTask);
+                            }
+                        }
+                    } else {
+                        // Viewing specific group
+                        // Ensure task belongs to this group
+                        const currentGroup = store.groups.find(g => g.tasks.find(t => t.id === activeTask.id));
+                        const targetGroup = store.groups.find(g => g.id === shutdownSourceGroupId);
+
+                        if (targetGroup && currentGroup !== targetGroup) {
+                            if (currentGroup) currentGroup.removeTask(activeTask.id);
+                            // Remove from dump if there
+                            const dumpIdx = store.dumpAreaTasks.findIndex(t => t.id === activeTask.id);
+                            if (dumpIdx > -1) store.dumpAreaTasks.splice(dumpIdx, 1);
+
+                            targetGroup.addTask(activeTask);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Reordering Logic
+        if ((overContainer === 'source-list' || overContainer === 'tomorrow-list') && activeContainer === overContainer) {
+            const overId = over.id as string;
+            // Don't reorder if over container itself
+            if (overId === overContainer) return;
+
+            // Find list to splice
+            let list: Task[] | undefined;
+            if (overContainer === 'source-list') {
+                if (shutdownSourceGroupId === null) list = store.dumpAreaTasks;
+                else list = store.groups.find(g => g.id === shutdownSourceGroupId)?.tasks;
+            } else {
+                // Tomorrow list. Derived from `tomorrowTasks`.
+                // But we need to modify the underlying source.
+                // `tomorrowTasks` gathers from ALL groups.
+                // Reordering across groups is hard.
+                // If we assume single group flow for DailyShutdown:
+                // Or checking if both tasks belong to same parent.
+            }
+
+            if (list) {
+                const oldIndex = list.findIndex((t) => t.id === active.id);
+                const newIndex = list.findIndex((t) => t.id === over.id);
+
+                if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+                    runInAction(() => {
+                        // @ts-ignore
+                        const [moved] = list.splice(oldIndex, 1);
+                        // @ts-ignore
+                        list.splice(newIndex, 0, moved);
+                    });
+                }
+            }
+        }
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -223,6 +375,7 @@ export const DailyShutdown = observer(() => {
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
             <div className="daily-shutdown-overlay">
@@ -364,7 +517,7 @@ export const DailyShutdown = observer(() => {
                                     className="shutdown-group-selector"
                                 />
                             </div>
-                            <div className="shutdown-task-list kanban-sortable-area" style={{ flex: 1, overflowY: 'auto' }}>
+                            <DroppableList id="source-list" className="shutdown-task-list kanban-sortable-area" style={{ flex: 1, overflowY: 'auto' }}>
                                 <TaskCard
                                     isGhost
                                     onAddClick={() => setAddingColumn('source-list')}
@@ -391,7 +544,7 @@ export const DailyShutdown = observer(() => {
                                         />
                                     ))}
                                 </SortableContext>
-                            </div>
+                            </DroppableList>
                         </div>
 
                         {/* Right Panel: Tomorrow */}
@@ -401,7 +554,7 @@ export const DailyShutdown = observer(() => {
                                 <p>Add some tasks</p>
                             </div>
 
-                            <div className="shutdown-task-list kanban-sortable-area">
+                            <DroppableList id="tomorrow-list" className="shutdown-task-list kanban-sortable-area">
                                 <TaskCard
                                     isGhost
                                     onAddClick={() => setAddingColumn('tomorrow')}
@@ -424,11 +577,11 @@ export const DailyShutdown = observer(() => {
                                         <SortableTaskCard
                                             key={task.id}
                                             task={task}
-                                            containerData={{ type: 'shutdown-list', id: 'tomorrow' }}
+                                            containerData={{ type: 'shutdown-list', id: 'tomorrow-list' }}
                                         />
                                     ))}
                                 </SortableContext>
-                            </div>
+                            </DroppableList>
                         </div>
                     </div>
                 )}
@@ -438,6 +591,6 @@ export const DailyShutdown = observer(() => {
                     <TaskCard task={activeTask} isGhost />
                 ) : null}
             </DragOverlay>
-        </DndContext>
+        </DndContext >
     );
 });

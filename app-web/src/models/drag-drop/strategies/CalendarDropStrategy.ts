@@ -4,6 +4,7 @@ import { DragStrategy } from '../DragStrategy';
 import { Task } from '../../core';
 import { DragData } from '../types';
 import { DragEndEvent } from '@dnd-kit/core';
+import { store } from '../../store';
 
 export class CalendarDropStrategy implements DragStrategy {
     handle(
@@ -124,6 +125,9 @@ export class CalendarDropStrategy implements DragStrategy {
             runInAction(() => {
                 const newDate = setHours(startOfDay(date), hour);
                 newDate.setMinutes(minute);
+
+                // Update Global Drag Over Location for Live Preview
+                store.setDragOverLocation({ date: startOfDay(date), hour, minute });
 
                 task.scheduledDate = newDate;
                 task.scheduledTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;

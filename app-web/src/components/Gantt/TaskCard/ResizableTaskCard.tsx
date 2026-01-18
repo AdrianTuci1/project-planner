@@ -214,24 +214,27 @@ export const ResizableTaskCard = observer(({
         y
     } : null;
 
+    // Check if this task is the one being dragged globally (ignoring prefix mismatch)
+    const isGlobalDragging = store.draggingTaskId === task.id;
+    const effectiveIsDragging = isDragging || isGlobalDragging;
+
     // Merge styles
     const combinedStyle: React.CSSProperties = {
         ...style,
         backgroundColor,
         transform: CSS.Translate.toString(snappedTransform),
-        opacity: 1, // Always solid as requested
-        zIndex: isDragging ? 100 : (style?.zIndex ?? 1), // Boost Z when dragging
-        boxShadow: isDragging ? '0 5px 15px rgba(0,0,0,0.25)' : undefined, // "Snappy" lift effect
-        touchAction: 'none', // Recommended for dnd-kit
-        cursor: isDragging ? 'grabbing' : 'grab',
-        pointerEvents: isDragging ? 'none' : 'auto', // Allow dropping "through" the card onto the slot
+        opacity: 1,
+        // Remove "Lift" styles to match "Already There" request
+        zIndex: (style?.zIndex ?? 1),
+        boxShadow: undefined,
+        touchAction: 'none',
+        cursor: effectiveIsDragging ? 'grabbing' : 'grab',
+        pointerEvents: effectiveIsDragging ? 'none' : 'auto', // Still need this for drop detection!
         ...style,
     };
 
-    // Ensure override doesn't kill the drag visuals
-    if (isDragging) {
-        combinedStyle.zIndex = 100;
-    }
+    // No Z-index boost, let it sit in the grid
+
 
     const { isOver: isOverDroppable, setNodeRef: setDroppableRef } = useDroppable({
         id: draggableId,

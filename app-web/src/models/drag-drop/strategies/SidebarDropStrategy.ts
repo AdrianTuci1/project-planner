@@ -69,6 +69,7 @@ export class SidebarDropStrategy implements DragStrategy {
         // Sidebar filters out tasks that have a scheduledDate
         runInAction(() => {
             task.scheduledDate = undefined;
+            task.scheduledTime = undefined;
         });
     }
 }

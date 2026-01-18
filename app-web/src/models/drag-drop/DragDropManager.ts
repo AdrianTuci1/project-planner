@@ -1,5 +1,5 @@
 import { DragEndEvent } from '@dnd-kit/core';
-import { isSameDay } from 'date-fns';
+import { isSameDay, startOfDay } from 'date-fns';
 import { runInAction } from 'mobx';
 import { store } from '../store';
 import { Task } from '../core';
@@ -30,8 +30,9 @@ export class DragDropManager {
         const activeId = active.id as string;
         // Sidebar/Lists use raw IDs, Calendar uses 'calendar-' prefix.
         // We only want to handle List-to-List optimistic updates here.
-        // If activeId starts with 'calendar-', we ignore it (Isolation).
-        if (activeId.startsWith('calendar-')) return;
+        // If activeId starts with 'calendar-' or 'timebox-', we ignore it (Isolation).
+        // This prevents Scheduler items from reacting to Sidebar/List targets (Optimistic moves).
+        if (activeId.startsWith('calendar-') || activeId.startsWith('timebox-')) return;
 
         const taskId = activeId;
         const task = store.allTasks.find(t => t.id === taskId);
@@ -215,6 +216,22 @@ export class DragDropManager {
                 }
             }
         }
+
+        // Handle Calendar/Timebox Live Preview Tracking
+        if (overData.type === 'calendar-cell' || overData.type === 'timebox-slot') {
+            const { date, hour, minute: slotMinute } = overData;
+
+            if (date && hour !== undefined) {
+                const minute = slotMinute || 0;
+                runInAction(() => {
+                    store.setDragOverLocation({
+                        date: startOfDay(date),
+                        hour: Number(hour),
+                        minute: Number(minute)
+                    });
+                });
+            }
+        }
     }
 
     public handleDragEnd(event: DragEndEvent) {
@@ -264,13 +281,21 @@ export class DragDropManager {
         const isReordering = activeContainerId === overContainerId;
 
         // ISOLATION RULE: Calendar/Timebox items can ONLY interact with calendar cells OR Timebox slots
+        // BUT we must allow Sidebar/Kanban items to interact with Calendar/Timebox.
+        // So the restriction is: origin=calendar/timebox MUST drop on calendar/timebox
+        // AND origin=sidebar/kanban CAN drop ANYWHERE (except maybe restricted areas?)
+
         const origin = active.data.current?.origin;
         if (origin === 'calendar' || origin === 'timebox') {
+            // If starting from Calendar/Timebox, can ONLY go to Calendar/Timebox
             if (dropType !== 'calendar-cell' && dropType !== 'timebox-slot') {
                 console.warn('[DragDropManager] Isolation rule blocked drop:', { origin, dropType });
                 return;
             }
         }
+
+        // No restriction for Sidebar/Kanban/TasksView dropping on Calendar/Timebox
+
 
         const strategy = this.strategies.get(dropType);
         if (strategy) {

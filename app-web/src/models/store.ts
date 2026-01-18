@@ -110,6 +110,13 @@ export class ProjectStore {
     get timerStartTime() { return this.uiStore.timerStartTime; }
     get timerAccumulatedTime() { return this.uiStore.timerAccumulatedTime; }
 
+    // Drag & Drop State
+    draggingTaskId: string | null = null;
+    dragOverLocation: { date: Date, hour: number, minute: number } | null = null;
+
+    setDraggingTaskId(id: string | null) { this.draggingTaskId = id; }
+    setDragOverLocation(loc: { date: Date, hour: number, minute: number } | null) { this.dragOverLocation = loc; }
+
     applyGlobalFilters(tasks: Task[]) { return this.uiStore.applyGlobalFilters(tasks); }
     setDate(date: Date) { this.uiStore.setDate(date); }
     setTimeboxDate(date: Date) { this.uiStore.setTimeboxDate(date); }

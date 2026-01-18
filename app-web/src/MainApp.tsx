@@ -26,6 +26,7 @@ export const MainApp = observer(() => {
 
     const handleDragStart = (event: any) => {
         setActiveId(event.active.id);
+        store.setDraggingTaskId(event.active.id);
     };
 
     const handleDragOverWrapper = (event: any) => {
@@ -37,6 +38,8 @@ export const MainApp = observer(() => {
         handleDragEnd(event);
         setActiveId(null);
         setOverId(null);
+        store.setDraggingTaskId(null);
+        store.setDragOverLocation(null);
     };
 
     const activeTask = activeId ? store.allTasks.find(t => t.id === (activeId.startsWith('calendar-') ? activeId.replace('calendar-', '') : activeId)) : null;
@@ -47,7 +50,7 @@ export const MainApp = observer(() => {
     return (
         <DndContext
             sensors={sensors}
-            collisionDetection={topCornerCollision}
+            collisionDetection={pointerWithin}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEndWrapper}
             onDragOver={handleDragOverWrapper}
@@ -58,8 +61,8 @@ export const MainApp = observer(() => {
             </AppLayout>
             <DragOverlay dropAnimation={null}>
                 {activeTask && activeId && !activeId.startsWith('calendar-') && !activeId.startsWith('timebox-') ? (
-                    isOverCalendar ? null : (
-                        <div style={{ cursor: 'grabbing' }}>
+                    isOverCalendar || overId?.startsWith('month-cell') || overId?.startsWith('calendar-cell') ? null : (
+                        <div style={{ cursor: 'grabbing', pointerEvents: 'none' }}>
                             <TaskCardBase
                                 task={activeTask}
                                 isDragging={false}
