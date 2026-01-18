@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { ContextMenu, MenuHeader } from './ContextMenu';
+import './TimeInputContext.css';
 import { Task } from '../../models/core';
 import { TaskUIModel } from '../../models/TaskUIModel';
 
@@ -46,16 +47,10 @@ export const TimeInputContext = observer(({
             position={ui.timeContext.position}
         >
             <MenuHeader title={title} onClose={() => ui.closeTimeContext()} />
-            <div style={{ padding: 'var(--space-3)' }}>
-                <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
-                    <div style={{ flex: 1 }}>
-                        <label style={{
-                            display: 'block',
-                            fontSize: 'var(--text-xs)',
-                            color: 'var(--text-secondary)',
-                            fontWeight: 600,
-                            marginBottom: '4px'
-                        }}>Hours</label>
+            <div className="time-input-content">
+                <div className="time-inputs-row">
+                    <div className="time-input-field">
+                        <label className="time-input-label">Hours</label>
                         <input
                             type="number"
                             min="0"
@@ -64,14 +59,8 @@ export const TimeInputContext = observer(({
                             onChange={(e) => setHours(Math.max(0, parseInt(e.target.value) || 0))}
                         />
                     </div>
-                    <div style={{ flex: 1 }}>
-                        <label style={{
-                            display: 'block',
-                            fontSize: 'var(--text-xs)',
-                            color: 'var(--text-secondary)',
-                            fontWeight: 600,
-                            marginBottom: '4px'
-                        }}>Minutes</label>
+                    <div className="time-input-field">
+                        <label className="time-input-label">Minutes</label>
                         <input
                             type="number"
                             min="0"

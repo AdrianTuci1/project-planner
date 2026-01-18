@@ -40,6 +40,16 @@ export interface ITask {
     labels: string[];
     recurrence?: RecurrenceType;
     priority: PriorityType;
+    attachments: IAttachment[];
+}
+
+export interface IAttachment {
+    id: string;
+    name: string;
+    size: number;
+    type: string;
+    url: string;
+    createdAt: Date;
 }
 
 export type PriorityType = 'high' | 'medium' | 'low' | 'none';
@@ -98,6 +108,7 @@ export class Task implements ITask {
     labels: string[] = [];
     recurrence: RecurrenceType = 'none';
     priority: PriorityType = 'none';
+    attachments: IAttachment[] = [];
 
     scheduledTime?: string = undefined; // Format "HH:mm"
 
@@ -164,7 +175,25 @@ export class Task implements ITask {
         newTask.labels = [...this.labels];
         newTask.recurrence = this.recurrence;
         newTask.priority = this.priority;
+        newTask.attachments = this.attachments.map(a => ({ ...a }));
         return newTask;
+    }
+
+    addAttachment(file: File) {
+        // Mock upload - in real app this would upload to server
+        const attachment: IAttachment = {
+            id: uuidv4(),
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: URL.createObjectURL(file), // Local preview URL
+            createdAt: new Date()
+        };
+        this.attachments.push(attachment);
+    }
+
+    removeAttachment(id: string) {
+        this.attachments = this.attachments.filter(a => a.id !== id);
     }
 }
 

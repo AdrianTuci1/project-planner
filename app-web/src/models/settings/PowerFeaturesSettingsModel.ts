@@ -24,4 +24,16 @@ export class PowerFeaturesSettingsModel {
             sidebarUI.setSidebarView('main');
         }
     }
+
+    taskPriorityEnabled: boolean = false;
+
+    toggleTaskPriority() {
+        this.taskPriorityEnabled = !this.taskPriorityEnabled;
+    }
+
+    attachmentsEnabled: boolean = false;
+
+    toggleAttachments() {
+        this.attachmentsEnabled = !this.attachmentsEnabled;
+    }
 }

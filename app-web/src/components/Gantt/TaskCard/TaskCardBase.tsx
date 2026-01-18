@@ -204,24 +204,26 @@ export const TaskCardBase = observer(({
                                     )}
                                 </div>
                                 <div className="tc-actions">
-                                    <div
-                                        className="tc-action-icon"
-                                        style={{ cursor: 'pointer' }}
-                                        onClick={(e) => ui.openPriorityContext(e)}
-                                    >
-                                        <Flag
-                                            size={14}
-                                            className={task.priority !== 'none' ? 'active' : ''}
-                                            style={{
-                                                color: task.priority === 'high' ? '#EF4444' :
-                                                    task.priority === 'medium' ? '#F97316' :
-                                                        task.priority === 'low' ? '#3B82F6' : undefined,
-                                                fill: task.priority === 'high' ? '#EF4444' :
-                                                    task.priority === 'medium' ? '#F97316' :
-                                                        task.priority === 'low' ? '#3B82F6' : 'none'
-                                            }}
-                                        />
-                                    </div>
+                                    {store.settings.powerFeatures.taskPriorityEnabled && (
+                                        <div
+                                            className="tc-action-icon"
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={(e) => ui.openPriorityContext(e)}
+                                        >
+                                            <Flag
+                                                size={14}
+                                                className={task.priority !== 'none' ? 'active' : ''}
+                                                style={{
+                                                    color: task.priority === 'high' ? '#EF4444' :
+                                                        task.priority === 'medium' ? '#F97316' :
+                                                            task.priority === 'low' ? '#3B82F6' : undefined,
+                                                    fill: task.priority === 'high' ? '#EF4444' :
+                                                        task.priority === 'medium' ? '#F97316' :
+                                                            task.priority === 'low' ? '#3B82F6' : 'none'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
                                     <div
                                         style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer' }}
                                         onClick={(e) => { e.stopPropagation(); ui.setSubtaskMode(!ui.isSubtaskMode); }}

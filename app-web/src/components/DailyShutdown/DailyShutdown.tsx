@@ -122,28 +122,17 @@ export const DailyShutdown = observer(() => {
                 runInAction(() => {
                     // Logic: Remove from source (implicit by setting date) and set date
                     if (shutdownSourceGroupId) {
-                        // Ensure it belongs to specific group if we want? 
-                        // Usually moving to tomorrow preserves group, unless it was a dump task.
-                        // If it was in dump (no group), and we have a selected source group, maybe add to it?
-                        // Matches logic in handleDragEnd
                         const inDumpIndex = store.dumpAreaTasks.findIndex(t => t.id === activeTask.id);
                         if (inDumpIndex > -1) {
                             store.dumpAreaTasks.splice(inDumpIndex, 1);
                             const group = store.groups.find(g => g.id === shutdownSourceGroupId);
                             if (group) group.addTask(activeTask);
-                            // If no group found (unlikely if id set), it stays in limbo? No, addTask handles generic?
-                            // Actually store.groups[0] fallback is used in dragEnd
                         }
                     } else {
                         // Brain Dump mode. If it's in a group, it stays in group but gets date.
                         const inDumpIndex = store.dumpAreaTasks.findIndex(t => t.id === activeTask.id);
                         if (inDumpIndex > -1) {
                             store.dumpAreaTasks.splice(inDumpIndex, 1);
-                            // Ideally add to a default group if Tomorrow needs group?
-                            // But tasks can be scheduled without group? (in dumpAreaTasks?)
-                            // store.dumpAreaTasks CAN contain scheduled tasks? 
-                            // Usually kanbanModel etc filters groups. 
-                            // If task is in dump, scheduledDate might move it out of dump view in sidebar...
                             if (store.groups.length > 0) {
                                 store.groups[0].addTask(activeTask);
                             }
@@ -161,13 +150,8 @@ export const DailyShutdown = observer(() => {
                     activeTask.scheduledDate = undefined;
                     activeTask.scheduledTime = undefined;
 
-                    // Ensure it ends up in the "Source List" view (Dump or Group)
-                    // If we are viewing Brain Dump:
                     if (shutdownSourceGroupId === null) {
                         // Check if it's in a group. If so, remove from group?
-                        // "Source List" = Brain Dump tasks.
-                        // If I drag a Group Task to "Source" (which looks like Dump), should it become Dump task?
-                        // Likely yes, user intention is "Put it here".
                         const currentGroup = store.groups.find(g => g.tasks.find(t => t.id === activeTask.id));
                         if (currentGroup) {
                             currentGroup.removeTask(activeTask.id);

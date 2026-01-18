@@ -70,7 +70,8 @@ export const PowerFeaturesSettings = observer(() => {
             description: "Attach files (PDF, images, etc...) to your tasks.",
             icon: <Paperclip size={18} />,
             gradientClass: "gradient-1",
-            isEnabled: false
+            isEnabled: settings.powerFeatures.attachmentsEnabled,
+            onToggle: () => settings.powerFeatures.toggleAttachments()
         },
         {
             title: "Task Templates",
@@ -107,7 +108,8 @@ export const PowerFeaturesSettings = observer(() => {
             description: "Add priority flags directly on your task to easily see what's important.",
             icon: <Flag size={18} />,
             gradientClass: "gradient-6",
-            isEnabled: false
+            isEnabled: settings.powerFeatures.taskPriorityEnabled,
+            onToggle: () => settings.powerFeatures.toggleTaskPriority()
         },
         {
             title: "Email forwarding",

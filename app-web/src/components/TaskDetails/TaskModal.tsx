@@ -27,6 +27,7 @@ import { PriorityContext } from '../ContextMenu/PriorityContext';
 import { SubtaskList } from '../Shared/SubtaskList';
 import { GroupList } from '../Shared/GroupList';
 import './TaskModal.css';
+import { AttachmentsSection } from './Attachments/AttachmentsSection';
 
 interface TaskModalProps {
     task: Task;
@@ -205,29 +206,31 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         </div>
 
                         {/* Priority */}
-                        <div
-                            className="meta-row"
-                            onClick={(e) => {
-                                const valueEl = e.currentTarget.querySelector('.meta-row-value');
-                                const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
-                                ui.openPriorityContext(e, pos);
-                            }}
-                        >
-                            <div className="meta-row-label">
-                                {(() => {
-                                    const color = task.priority === 'high' ? '#EF4444' :
-                                        task.priority === 'medium' ? '#F97316' :
-                                            task.priority === 'low' ? '#3B82F6' : undefined;
-                                    return <Flag size={18} color={color} fill={color || 'none'} />;
-                                })()}
-                                <span>Priority</span>
+                        {store.settings.powerFeatures.taskPriorityEnabled && (
+                            <div
+                                className="meta-row"
+                                onClick={(e) => {
+                                    const valueEl = e.currentTarget.querySelector('.meta-row-value');
+                                    const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
+                                    ui.openPriorityContext(e, pos);
+                                }}
+                            >
+                                <div className="meta-row-label">
+                                    {(() => {
+                                        const color = task.priority === 'high' ? '#EF4444' :
+                                            task.priority === 'medium' ? '#F97316' :
+                                                task.priority === 'low' ? '#3B82F6' : undefined;
+                                        return <Flag size={18} color={color} fill={color || 'none'} />;
+                                    })()}
+                                    <span>Priority</span>
+                                </div>
+                                <div className="meta-row-value">
+                                    <span className="value-main" style={{ textTransform: 'capitalize' }}>
+                                        {task.priority || 'None'}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="meta-row-value">
-                                <span className="value-main" style={{ textTransform: 'capitalize' }}>
-                                    {task.priority || 'None'}
-                                </span>
-                            </div>
-                        </div>
+                        )}
 
                         {/* Label */}
                         <div
@@ -317,6 +320,10 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         <div className="tc-section-label">Subtasks</div>
                         <SubtaskList task={task} autoFocusNew={ui.isSubtaskMode} />
                     </div>
+
+                    {store.settings.powerFeatures.attachmentsEnabled && (
+                        <AttachmentsSection task={task} />
+                    )}
 
                     {isTemplate && (
                         <div style={{
