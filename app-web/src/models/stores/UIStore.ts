@@ -40,6 +40,21 @@ export class UIStore {
     activeTask: Task | null = null;
     isTemplateCreationMode: boolean = false;
 
+    // Guest Update Modal State
+    isGuestUpdateModalOpen: boolean = false;
+    pendingCalendarUpdate: { taskId: string, newDate: Date, newTime: string } | null = null;
+
+    openGuestUpdateModal(updateData: { taskId: string, newDate: Date, newTime: string }) {
+        this.pendingCalendarUpdate = updateData;
+        this.isGuestUpdateModalOpen = true;
+    }
+
+    closeGuestUpdateModal() {
+        this.isGuestUpdateModalOpen = false;
+        this.pendingCalendarUpdate = null;
+    }
+
+
     // Timer State
     activeTimerTaskId: string | null = null;
     timerStatus: 'idle' | 'running' | 'paused' = 'idle';

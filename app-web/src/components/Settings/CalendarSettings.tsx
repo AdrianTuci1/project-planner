@@ -61,6 +61,58 @@ export const CalendarSettings = observer(() => {
                     </label>
                 </div>
 
+                <div className="manage-divider" />
+
+                <div style={{ marginBottom: 40 }}>
+                    <div className="manage-section-title">Synced Calendars</div>
+                    <p className="manage-section-desc" style={{ marginBottom: 16 }}>
+                        Select which calendars you want to see in Simplu. Check the box to enable two-way sync.
+                    </p>
+
+                    <div className="sub-calendars-list" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {calendar.calendars[0]?.subCalendars?.map(sub => (
+                            <label key={sub.id} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '8px 12px', borderRadius: 8, backgroundColor: 'var(--bg-elevated)' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={sub.isVisible}
+                                    onChange={() => calendar.toggleSubCalendarVisibility(calendar.calendars[0].id, sub.id)}
+                                    style={{ width: 16, height: 16, marginRight: 12 }}
+                                />
+                                <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: sub.color, marginRight: 8 }}></div>
+                                <span style={{ color: 'var(--text-primary)', fontSize: 14 }}>{sub.name}</span>
+                            </label>
+                        )) || <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Loading calendars...</div>}
+                    </div>
+                </div>
+
+                <div className="manage-divider" />
+
+                <div style={{ marginBottom: 40 }}>
+                    <div className="manage-section-title">Event Updates</div>
+                    <p className="manage-section-desc" style={{ marginBottom: 12 }}>
+                        Would you like to send update emails to existing Google Calendar guests when you change an event in Simplu?
+                    </p>
+
+                    <select
+                        value={calendar.calendars[0]?.guestUpdateStrategy || 'none'}
+                        onChange={(e) => calendar.setGuestUpdateStrategy(calendar.calendars[0].id, e.target.value as any)}
+                        style={{
+                            padding: '10px 16px',
+                            borderRadius: 8,
+                            border: '1px solid var(--border-subtle)',
+                            backgroundColor: 'var(--bg-elevated)',
+                            color: 'var(--text-primary)',
+                            fontSize: 14,
+                            width: '100%',
+                            maxWidth: 300,
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <option value="none">Update but don't send emails</option>
+                        <option value="all">Send update emails</option>
+                    </select>
+                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 100 }}>
                     <button className="disconnect-btn" onClick={handleDisconnect}>
                         Disconnect

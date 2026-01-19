@@ -12,7 +12,7 @@ import {
     PanelRight,
     Search
 } from 'lucide-react';
-import { addDays } from 'date-fns';
+import { addDays, addWeeks, addMonths } from 'date-fns';
 import '../Layout/KanbanLayout.css';
 
 import { UserContext } from '../ContextMenu/UserContext';
@@ -79,11 +79,41 @@ export const TopBar = observer(() => {
     };
 
     const goToPreviousDay = () => {
-        store.setDate(addDays(store.viewDate, -1));
+        if (store.viewMode === 'calendar') {
+            switch (store.calendarViewType) {
+                case 'week':
+                    store.setDate(addWeeks(store.viewDate, -1));
+                    break;
+                case 'month':
+                    store.setDate(addMonths(store.viewDate, -1));
+                    break;
+                case 'day':
+                default:
+                    store.setDate(addDays(store.viewDate, -1));
+                    break;
+            }
+        } else {
+            store.setDate(addDays(store.viewDate, -1));
+        }
     };
 
     const goToNextDay = () => {
-        store.setDate(addDays(store.viewDate, 1));
+        if (store.viewMode === 'calendar') {
+            switch (store.calendarViewType) {
+                case 'week':
+                    store.setDate(addWeeks(store.viewDate, 1));
+                    break;
+                case 'month':
+                    store.setDate(addMonths(store.viewDate, 1));
+                    break;
+                case 'day':
+                default:
+                    store.setDate(addDays(store.viewDate, 1));
+                    break;
+            }
+        } else {
+            store.setDate(addDays(store.viewDate, 1));
+        }
     };
 
     return (
@@ -120,7 +150,7 @@ export const TopBar = observer(() => {
             <div className="topbar-right">
                 <div className="topbar-actions">
                     <div className="topbar-button trial-button" onClick={() => store.openUpgradeModal()}>
-                        Free Trial (14 days left)
+                        Free Trial
                     </div>
 
                     <div

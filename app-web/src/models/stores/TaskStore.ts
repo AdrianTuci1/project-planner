@@ -1,5 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { Group, Task, IParticipant } from "../core";
+import { Group, Task, IParticipant, GroupType, Workspace } from "../core";
 import { v4 as uuidv4 } from 'uuid';
 import { api } from "../../services/api";
 import { addMonths, subMonths, startOfDay, endOfDay } from "date-fns";
@@ -14,12 +14,15 @@ const MOCK_USER: IParticipant = {
 export class TaskStore {
     rootStore: ProjectStore;
 
-    groups: Group[] = [];
-    dumpAreaTasks: Task[] = [];
+    workspaces: Workspace[] = [];
+    activeWorkspaceId: string | null = null;
+
+    // Legacy support / Shortcuts? No, we should force usage of activeWorkspace to be safe.
+    // templates: Task[] = []; // Templates might be global or per workspace? Let's assume Global for now or personal.
     templates: Task[] = [];
     currentUser: IParticipant = MOCK_USER;
 
-    // API State - Loading state usually belongs to data fetching
+    // API State
     isLoading: boolean = false;
     error: string | null = null;
     lastFetchRange: { start: Date, end: Date } | null = null;
@@ -31,43 +34,78 @@ export class TaskStore {
         makeAutoObservable(this);
     }
 
+    get activeWorkspace() {
+        return this.workspaces.find(w => w.id === this.activeWorkspaceId) || this.workspaces[0];
+    }
+
+    // Accessors for UI compatibility (Proxies to Active Workspace)
+    get groups() { return this.activeWorkspace?.groups || []; }
+    get dumpAreaTasks() { return this.activeWorkspace?.dumpAreaTasks || []; }
+
     async initializeData() {
         this.isLoading = true;
         this.error = null;
         try {
-            // Determine range: Today +/- 1 Month
             const today = new Date();
             const start = startOfDay(subMonths(today, 1));
             const end = endOfDay(addMonths(today, 1));
-
             this.lastFetchRange = { start, end };
 
+            // Mock Data or API call
             const data = await api.getInitialData(start, end);
+            // const data: any = {}; // Placeholder for actual API data
 
             runInAction(() => {
-                // Hydrate Groups
-                this.groups = data.groups.map((g: any) => {
-                    const group = new Group(g.name, g.icon, g.defaultLabelId, g.autoAddLabelEnabled);
-                    group.id = g.id;
-                    group.tasks = g.tasks.map((t: any) => this.hydrateTask(t));
-                    return group;
-                });
+                // Initialize default workspaces if empty
+                if (this.workspaces.length === 0) {
+                    const personal = new Workspace("Personal", 'personal');
+                    const team = new Workspace("Team", 'team');
 
-                // Hydrate Dump Tasks
-                this.dumpAreaTasks = data.dumpTasks.map((t: any) => this.hydrateTask(t));
+                    this.workspaces = [personal, team];
+                    this.activeWorkspaceId = personal.id;
 
-                // Hydrate Templates (Mock for now or if API supports it)
-                this.templates = data.templates ? data.templates.map((t: any) => this.hydrateTask(t)) : [];
+                    // Hydrate legacy/mock data into Personal workspace
+                    if (data.groups && data.groups.length > 0) {
+                        personal.groups = data.groups.map((g: any) => {
+                            // Ensure type is 'personal' for these legacy groups
+                            const group = new Group(g.name, g.icon, 'personal', g.defaultLabelId, g.autoAddLabelEnabled);
+                            group.id = g.id;
+                            group.tasks = g.tasks.map((t: any) => this.hydrateTask(t));
+                            return group;
+                        });
+                    } else {
+                        // Seed default if no data
+                        personal.createGroup("My Tasks");
+                    }
 
-                // Hydrate Labels
-                this.availableLabels = data.availableLabels;
+                    // Hydrate Dump Tasks into Personal
+                    if (data.dumpTasks) {
+                        personal.dumpAreaTasks = data.dumpTasks.map((t: any) => this.hydrateTask(t));
+                    }
 
-                // Run recurrence check
-                // We access the recurrence store through the root store wrapper if needed, 
-                // or we just call the method on rootStore which delegates.
-                // But RecurrenceStore might not be ready if we call it here?
-                // Actually `initializeData` is called in RootStore constructor.
-                // We will move the call to RootStore after initializing all stores.
+                    // Seed Team Workspace
+                    team.createGroup("General", "📢", 'team');
+                }
+
+                // Load Labels
+                if (this.availableLabels.length === 0 && data.availableLabels) {
+                    this.availableLabels = data.availableLabels;
+                } else if (this.availableLabels.length === 0) {
+                    this.availableLabels = [
+                        { id: 'l1', name: 'Urgent', color: '#EF4444' },
+                        { id: 'l2', name: 'Work', color: '#3B82F6' }
+                    ];
+                }
+
+                // Ensure activeGroupId is valid for the current workspace
+                const currentGroups = this.groups; // Accessed via proxy getter
+                if (currentGroups.length > 0) {
+                    // If activeGroupId is null or not found in current groups, reset it
+                    const uiStore = this.rootStore.uiStore;
+                    if (!uiStore.activeGroupId || !currentGroups.some(g => g.id === uiStore.activeGroupId)) {
+                        uiStore.activeGroupId = currentGroups[0].id;
+                    }
+                }
             });
         } catch (err) {
             runInAction(() => {
@@ -93,34 +131,40 @@ export class TaskStore {
     }
 
     get allTasks() {
-        const groupTasks = this.groups.flatMap(g => g.tasks);
-        return [...this.dumpAreaTasks, ...groupTasks];
+        // Return tasks from active workspace only? Or all? 
+        // User feedback implies we want to switch context completely.
+        if (!this.activeWorkspace) return [];
+        return [...this.activeWorkspace.dumpAreaTasks, ...this.activeWorkspace.groups.flatMap(g => g.tasks)];
     }
 
-    // CRUD Methods
-    createGroup(name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
-        const group = new Group(name, icon || '📝', defaultLabelId, autoAddLabelEnabled);
-        this.groups.push(group);
-        return group;
+    // CRUD Methods - Delegated to Active Workspace
+    createGroup(name: string, icon?: string, type: GroupType = 'personal', defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
+        // Ignore passed 'type' argument and use activeWorkspace type to ensure consistency?
+        // Yes, groups created in a workspace should match that workspace.
+        return this.activeWorkspace?.createGroup(name, icon, defaultLabelId, autoAddLabelEnabled);
     }
 
     deleteGroup(groupId: string) {
-        const index = this.groups.findIndex(g => g.id === groupId);
-        if (index > -1) {
-            this.groups.splice(index, 1);
-            // Handling activeGroupId update is UI concern. 
-            // We should ideally let UIStore react to this or handle it in RootStore/UIStore.
-            // But for now, we leave it. The RootStore wrapper can handle the side effect.
+        const workspace = this.workspaces.find(w => w.groups.some(g => g.id === groupId));
+        if (workspace) {
+            const index = workspace.groups.findIndex(g => g.id === groupId);
+            if (index > -1) workspace.groups.splice(index, 1);
         }
     }
 
-    updateGroup(groupId: string, name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled?: boolean) {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            group.name = name;
-            if (icon) group.icon = icon;
-            if (defaultLabelId !== undefined) group.defaultLabelId = defaultLabelId;
-            if (autoAddLabelEnabled !== undefined) group.autoAddLabelEnabled = autoAddLabelEnabled;
+    updateGroup(groupId: string, name: string, icon?: string, type?: GroupType, defaultLabelId?: string, autoAddLabelEnabled?: boolean) {
+        // Find group across all workspaces? Or just active?
+        // Better to search all to be safe.
+        for (const w of this.workspaces) {
+            const group = w.groups.find(g => g.id === groupId);
+            if (group) {
+                group.name = name;
+                if (icon) group.icon = icon;
+                if (type) group.type = type; // Allow moving groups? Maybe not needed yet.
+                if (defaultLabelId !== undefined) group.defaultLabelId = defaultLabelId;
+                if (autoAddLabelEnabled !== undefined) group.autoAddLabelEnabled = autoAddLabelEnabled;
+                return;
+            }
         }
     }
 
@@ -130,7 +174,7 @@ export class TaskStore {
 
     getLabelColor(labelId: string): string {
         const label = this.getLabel(labelId);
-        return label ? label.color : '#60A5FA'; // Default blue if not found
+        return label ? label.color : '#60A5FA';
     }
 
     addLabel(name: string, color: string) {
@@ -153,7 +197,6 @@ export class TaskStore {
 
     deleteLabel(id: string) {
         this.availableLabels = this.availableLabels.filter(l => l.id !== id);
-        // Removing from filters is UI concern, handled in UIStore or RootStore wrapper.
     }
 
     // Template Methods
@@ -175,30 +218,34 @@ export class TaskStore {
     }
 
     addTaskToDump(title: string) {
-        const task = new Task(title);
-        this.dumpAreaTasks.push(task);
+        this.activeWorkspace?.addTaskToDump(title);
     }
 
     moveTaskToGroup(taskId: string, groupId: string) {
-        const dumpTaskIndex = this.dumpAreaTasks.findIndex(t => t.id === taskId);
+        // Assuming move within active workspace
+        if (!this.activeWorkspace) return;
+
+        const dumpTaskIndex = this.activeWorkspace.dumpAreaTasks.findIndex(t => t.id === taskId);
         if (dumpTaskIndex > -1) {
-            const task = this.dumpAreaTasks[dumpTaskIndex];
-            const group = this.groups.find(g => g.id === groupId);
+            const task = this.activeWorkspace.dumpAreaTasks[dumpTaskIndex];
+            const group = this.activeWorkspace.groups.find(g => g.id === groupId);
             if (group) {
                 group.addTask(task);
-                this.dumpAreaTasks.splice(dumpTaskIndex, 1);
+                this.activeWorkspace.dumpAreaTasks.splice(dumpTaskIndex, 1);
             }
         }
     }
 
     deleteTask(taskId: string) {
-        const dumpIndex = this.dumpAreaTasks.findIndex(t => t.id === taskId);
+        if (!this.activeWorkspace) return;
+
+        const dumpIndex = this.activeWorkspace.dumpAreaTasks.findIndex(t => t.id === taskId);
         if (dumpIndex > -1) {
-            this.dumpAreaTasks.splice(dumpIndex, 1);
+            this.activeWorkspace.dumpAreaTasks.splice(dumpIndex, 1);
             return;
         }
 
-        for (const group of this.groups) {
+        for (const group of this.activeWorkspace.groups) {
             const taskIndex = group.tasks.findIndex(t => t.id === taskId);
             if (taskIndex > -1) {
                 group.removeTask(taskId);
@@ -208,14 +255,16 @@ export class TaskStore {
     }
 
     duplicateTask(task: Task) {
-        const dumpIndex = this.dumpAreaTasks.findIndex(t => t.id === task.id);
+        if (!this.activeWorkspace) return;
+
+        const dumpIndex = this.activeWorkspace.dumpAreaTasks.findIndex(t => t.id === task.id);
         if (dumpIndex > -1) {
             const clone = task.clone();
-            this.dumpAreaTasks.splice(dumpIndex + 1, 0, clone);
+            this.activeWorkspace.dumpAreaTasks.splice(dumpIndex + 1, 0, clone);
             return clone;
         }
 
-        for (const group of this.groups) {
+        for (const group of this.activeWorkspace.groups) {
             const groupTask = group.tasks.find(t => t.id === task.id);
             if (groupTask) {
                 return group.duplicateTask(task.id);
@@ -224,11 +273,15 @@ export class TaskStore {
     }
 
     getTaskById(taskId: string): Task | undefined {
-        for (const group of this.groups) {
+        // Search in active workspace first? Or all?
+        // If we are strictly separated, search current.
+        if (!this.activeWorkspace) return undefined;
+
+        for (const group of this.activeWorkspace.groups) {
             const task = group.tasks.find(t => t.id === taskId);
             if (task) return task;
         }
-        const dumpTask = this.dumpAreaTasks.find(t => t.id === taskId);
+        const dumpTask = this.activeWorkspace.dumpAreaTasks.find(t => t.id === taskId);
         if (dumpTask) return dumpTask;
 
         const template = this.templates.find(t => t.id === taskId);

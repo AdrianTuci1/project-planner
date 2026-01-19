@@ -15,12 +15,12 @@ interface TasksViewProps {
     groupId?: string | null;
 }
 
-const TasksList = observer(({ tasks, isAddingTask, setIsAddingTask, handleCreateTask, onTaskClick, handleDuplicateTask, handleDeleteTask }: any) => {
+const TasksList = observer(({ tasks, isAddingTask, setIsAddingTask, handleCreateTask, onTaskClick, handleDuplicateTask, handleDeleteTask, currentDate }: any) => {
     const { isOver, setNodeRef } = useDroppable({
         id: 'tasks-list',
         data: {
             type: 'tasks-list',
-            date: store.viewDate
+            date: currentDate
         }
     });
 
@@ -56,7 +56,7 @@ const TasksList = observer(({ tasks, isAddingTask, setIsAddingTask, handleCreate
                             onTaskClick={onTaskClick}
                             onDuplicate={handleDuplicateTask}
                             onDelete={handleDeleteTask}
-                            containerData={{ type: 'tasks-list', date: store.viewDate }}
+                            containerData={{ type: 'tasks-list', date: currentDate }}
                         />
                     ))}
                 </SortableContext>
@@ -73,7 +73,7 @@ const TasksList = observer(({ tasks, isAddingTask, setIsAddingTask, handleCreate
 
 export const TasksView = observer(({ tasks, onTaskClick, groupId }: TasksViewProps) => {
     const [isAddingTask, setIsAddingTask] = useState(false);
-    const currentDate = store.viewDate;
+    const [currentDate, setCurrentDate] = useState(store.viewDate);
     const today = startOfDay(new Date());
     const isToday = isSameDay(currentDate, today);
 
@@ -96,15 +96,15 @@ export const TasksView = observer(({ tasks, onTaskClick, groupId }: TasksViewPro
     };
 
     const goToPreviousDay = () => {
-        store.setDate(addDays(currentDate, -1));
+        setCurrentDate(addDays(currentDate, -1));
     };
 
     const goToToday = () => {
-        store.setDate(new Date());
+        setCurrentDate(new Date());
     };
 
     const goToNextDay = () => {
-        store.setDate(addDays(currentDate, 1));
+        setCurrentDate(addDays(currentDate, 1));
     };
 
     const getTargetGroup = () => {
@@ -147,10 +147,6 @@ export const TasksView = observer(({ tasks, onTaskClick, groupId }: TasksViewPro
     };
 
     const handleDeleteTask = (task: Task) => {
-        if (groupId === null) {
-            store.dumpAreaTasks = store.dumpAreaTasks.filter(t => t.id !== task.id);
-            return;
-        }
 
         const targetGroup = getTargetGroup();
         if (targetGroup) {
@@ -201,6 +197,7 @@ export const TasksView = observer(({ tasks, onTaskClick, groupId }: TasksViewPro
                 onTaskClick={onTaskClick}
                 handleDuplicateTask={handleDuplicateTask}
                 handleDeleteTask={handleDeleteTask}
+                currentDate={currentDate}
             />
         </div>
     );

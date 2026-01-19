@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Clock, Calendar, RefreshCw } from 'lucide-re
 import { Task } from '../../models/core';
 import { store } from '../../models/store';
 import { CalendarCell } from './CalendarView/CalendarCell';
+import { ActiveCalendarsContext } from './ActiveCalendarsContext';
 import './Timebox.css';
 
 interface TimeboxProps {
@@ -184,55 +185,31 @@ const TimeboxFooter = observer(() => {
 
     return (
         <div className="timebox-footer">
-            <div className="sync-status">
-                <RefreshCw size={12} className={`sync-icon-lucide ${!hasCalendars ? 'disabled' : ''}`} />
-                <span className="sync-text">
-                    {hasCalendars ? `Last synced ${lastSynced}` : 'Not connected'}
-                </span>
-            </div>
-
-            <button
-                ref={triggerRef}
-                className={`calendar-menu-trigger ${isMenuOpen ? 'active' : ''}`}
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                title="Manage Calendars"
-            >
-                <Calendar size={16} />
-                {store.settings.calendar.isLoading && <div className="menu-loading-dot"></div>}
-            </button>
-
-            {isMenuOpen && (
-                <div className="calendar-context-menu" ref={menuRef}>
-                    <h3 className="menu-title">Active calendars</h3>
-                    <div className="menu-calendars-list">
-                        {store.settings.calendar.calendars.map(cal => (
-                            <div key={cal.id} className="menu-calendar-item">
-                                <label className="menu-calendar-label">
-                                    <input
-                                        type="checkbox"
-                                        checked={cal.isVisible}
-                                        onChange={() => store.settings.calendar.toggleCalendarVisibility(cal.id)}
-                                        style={{ accentColor: cal.color }}
-                                    />
-                                    <span className="menu-calendar-name" style={{ color: cal.isVisible ? 'inherit' : '#888' }}>
-                                        {cal.email || cal.name}
-                                    </span>
-                                </label>
-                            </div>
-                        ))}
+            {store.activeWorkspace?.type !== 'team' && (
+                <>
+                    <div className="sync-status">
+                        <RefreshCw size={12} className={`sync-icon-lucide ${!hasCalendars ? 'disabled' : ''}`} />
+                        <span className="sync-text">
+                            {hasCalendars ? `Last synced ${lastSynced}` : 'Not connected'}
+                        </span>
                     </div>
 
                     <button
-                        className="menu-add-btn"
-                        onClick={() => {
-                            store.openSettings('calendar');
-                            setIsMenuOpen(false);
-                        }}
+                        ref={triggerRef}
+                        className={`calendar-menu-trigger ${isMenuOpen ? 'active' : ''}`}
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        title="Manage Calendars"
                     >
-                        + Add calendar account
+                        <Calendar size={16} />
+                        {store.settings.calendar.isLoading && <div className="menu-loading-dot"></div>}
                     </button>
 
-                </div>
+                    {isMenuOpen && (
+                        <div ref={menuRef}>
+                            <ActiveCalendarsContext />
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

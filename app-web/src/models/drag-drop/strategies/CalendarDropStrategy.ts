@@ -125,12 +125,27 @@ export class CalendarDropStrategy implements DragStrategy {
             runInAction(() => {
                 const newDate = setHours(startOfDay(date), hour);
                 newDate.setMinutes(minute);
+                const newTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+
+                // Check for Calendar Event with Guests Interception
+                const isCalendarEvent = task.id.startsWith('evt_') || (task as any).isCalendarEvent;
+                // Check participants/attendees. Assuming task.participants represents attendees.
+                const hasGuests = task.participants && task.participants.length > 0;
+
+                if (isCalendarEvent && hasGuests) {
+                    store.uiStore.openGuestUpdateModal({
+                        taskId: task.id,
+                        newDate: newDate,
+                        newTime: newTime
+                    });
+                    return; // Intercept: Do not update task yet.
+                }
 
                 // Update Global Drag Over Location for Live Preview
                 store.setDragOverLocation({ date: startOfDay(date), hour, minute });
 
                 task.scheduledDate = newDate;
-                task.scheduledTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                task.scheduledTime = newTime;
             });
         }
     }

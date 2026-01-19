@@ -8,8 +8,7 @@ import './animations.css';
 import { observer } from 'mobx-react-lite';
 import { store } from './models/store';
 import { TaskCardBase } from './components/Gantt/TaskCard/TaskCardBase';
-import { ResizableTaskCardView } from './components/Gantt/TaskCard/ResizableTaskCard';
-import { topCornerCollision } from './utils/dndUtils';
+
 
 export const MainApp = observer(() => {
     const { handleDragEnd, handleDragOver } = useAppDragEnd();

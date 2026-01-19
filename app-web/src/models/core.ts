@@ -64,10 +64,13 @@ export type RecurrenceType =
     | 'yearly'
     | 'custom';
 
+export type GroupType = 'personal' | 'team';
+
 export interface IGroup {
     id: string;
     name: string;
     icon: string;
+    type: GroupType;
     defaultLabelId?: string;
     autoAddLabelEnabled: boolean;
     tasks: ITask[];
@@ -201,15 +204,17 @@ export class Group implements IGroup {
     id: string;
     name: string;
     icon: string;
+    type: GroupType;
     defaultLabelId?: string;
     autoAddLabelEnabled: boolean = false;
     tasks: Task[] = [];
     participants: IParticipant[] = [];
 
-    constructor(name: string, icon: string = '📝', defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
+    constructor(name: string, icon: string = '📝', type: GroupType = 'personal', defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
         this.id = uuidv4();
         this.name = name;
         this.icon = icon;
+        this.type = type;
         this.defaultLabelId = defaultLabelId;
         this.autoAddLabelEnabled = autoAddLabelEnabled;
         makeAutoObservable(this);
@@ -243,5 +248,47 @@ export class Group implements IGroup {
         if (!this.participants.find(p => p.id === participant.id)) {
             this.participants.push(participant);
         }
+    }
+}
+
+export type WorkspaceType = 'personal' | 'team';
+
+export interface IWorkspace {
+    id: string;
+    name: string;
+    type: WorkspaceType;
+    groups: Group[];
+    dumpAreaTasks: Task[];
+}
+
+export class Workspace implements IWorkspace {
+    id: string;
+    name: string;
+    type: WorkspaceType;
+    groups: Group[] = [];
+    dumpAreaTasks: Task[] = [];
+
+    constructor(name: string, type: WorkspaceType) {
+        this.id = uuidv4();
+        this.name = name;
+        this.type = type;
+        makeAutoObservable(this);
+    }
+
+    // Proxy methods for easier access, but logic can remain in Store or move here fully later
+    createGroup(name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
+        // GroupType is inferred from Workspace type? Or independent?
+        // User request implies workspace is container. Let's make groups inherent to workspace.
+        const group = new Group(name, icon || '📝', this.type as any, defaultLabelId, autoAddLabelEnabled);
+        // Note: casting type because GroupType in previous step matches WorkspaceType values but we might want flexibility.
+        // Actually, let's keep GroupType on Group aligned with WorkspaceType for now.
+        this.groups.push(group);
+        return group;
+    }
+
+    addTaskToDump(title: string) {
+        const task = new Task(title);
+        this.dumpAreaTasks.push(task);
+        return task;
     }
 }

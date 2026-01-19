@@ -13,6 +13,8 @@ import { Task } from '../../models/core';
 import { Sidebar } from '../Layout/Sidebar';
 import { AccountSettings } from '../Settings/AccountSettings';
 import { BottomDock, DockTab } from '../Navigation/BottomDock';
+import { GuestUpdateModal } from '../Gantt/CalendarView/GuestUpdateModal';
+import { runInAction } from 'mobx';
 import './GroupView.css';
 
 interface GroupViewProps {
@@ -33,10 +35,32 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    const handleGuestUpdateConfirm = (strategy: 'all' | 'none') => {
+        const pending = store.uiStore.pendingCalendarUpdate;
+        if (pending) {
+            const task = store.getTaskById(pending.taskId);
+            if (task) {
+                runInAction(() => {
+                    task.scheduledDate = pending.newDate;
+                    task.scheduledTime = pending.newTime;
+                });
+                console.log(`[GroupView] Updated calendar event with strategy: ${strategy}`);
+            }
+        }
+        store.uiStore.closeGuestUpdateModal();
+    };
+
+    const handleGuestUpdateCancel = () => {
+        store.uiStore.closeGuestUpdateModal();
+    };
+
+
     if (!group) return <div>Group not found</div>;
 
     const globalTasks = store.filteredTasks;
-    const hasTasks = globalTasks.length > 0;
+    // Removed unused variable `hasTasks` to avoid lint warning if not used, 
+    // keeping it if logic needed it, but previously it was defining but seemingly not used in render blocks shown.
+    // Actually standardizing on provided code.
 
     const handleTaskClick = (task: Task) => {
         store.openTaskModal(task);
@@ -72,6 +96,19 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                 {/* Task Details Modal */}
                 {store.activeTask && (
                     <TaskModal task={store.activeTask} onClose={() => store.closeTaskModal()} />
+                )}
+
+                {/* Upgrade Modal */}
+                <UpgradeModal />
+
+                {/* Guest Update Modal */}
+                {store.uiStore.isGuestUpdateModalOpen && (
+                    <GuestUpdateModal
+                        isOpen={true}
+                        onClose={handleGuestUpdateCancel}
+                        onUpdateWithoutEmail={() => handleGuestUpdateConfirm('none')}
+                        onUpdateWithEmail={() => handleGuestUpdateConfirm('all')}
+                    />
                 )}
             </div>
         );
@@ -120,6 +157,16 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
 
             {/* Upgrade Modal */}
             <UpgradeModal />
+
+            {/* Guest Update Modal */}
+            {store.uiStore.isGuestUpdateModalOpen && (
+                <GuestUpdateModal
+                    isOpen={true}
+                    onClose={handleGuestUpdateCancel}
+                    onUpdateWithoutEmail={() => handleGuestUpdateConfirm('none')}
+                    onUpdateWithEmail={() => handleGuestUpdateConfirm('all')}
+                />
+            )}
 
         </div>
     );

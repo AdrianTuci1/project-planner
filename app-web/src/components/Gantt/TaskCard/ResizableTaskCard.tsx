@@ -11,13 +11,23 @@ import { TaskContextMenu } from './TaskContextMenu';
 
 interface ResizableTaskCardProps {
     task: Task;
-    onTaskClick?: (task: Task) => void;
+    onTaskClick?: (task: Task, e?: React.MouseEvent) => void;
     style?: React.CSSProperties;
     className?: string;
     // We might need these for resize logic if handled internally or via props
     onResizeStart?: (e: React.MouseEvent | React.TouchEvent) => void;
     containerData?: any;
 }
+
+// Google Icon Component (inline for now)
+const GoogleIcon = ({ size = 14 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="cal-provider-icon">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+    </svg>
+);
 
 // Separated View Component for use in DragOverlay
 export const ResizableTaskCardView = observer(({
@@ -40,14 +50,15 @@ export const ResizableTaskCardView = observer(({
     handleRemoveFromTimebox,
     handleDelete,
     startTime,
-    endTime
+    endTime,
+    isCalendarEvent // New prop
 }: any) => {
     return (
         <div
             ref={setNodeRef}
-            style={{ ...style, ...completedStyle, color: '#000' }}
+            style={{ ...style, ...completedStyle, color: isCalendarEvent ? 'white' : '#000' }}
             // Critical: 'calendar-event' is required for resize logic in parent views.
-            className={`task-card calendar-event ${className || ''}`}
+            className={`task-card calendar-event ${isCalendarEvent ? 'is-calendar-event' : ''} ${className || ''}`}
             onClick={(e) => {
                 onTaskClick?.(task);
             }}
@@ -55,24 +66,28 @@ export const ResizableTaskCardView = observer(({
             {...listeners}
             {...attributes}
         >
+            {isCalendarEvent && <GoogleIcon />}
+
             <div className="tc-header" style={{ gap: '6px', alignItems: 'flex-start', height: '100%', overflow: 'hidden' }}>
-                <div className="tc-checkbox-wrapper" style={{ paddingTop: '2px', flexShrink: 0 }}>
-                    <div
-                        className={`tc-checkbox ${task.status === 'done' ? 'checked' : ''}`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            task.toggleStatus();
-                        }}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        style={{
-                            width: (task.duration || 15) <= 15 ? '12px' : '14px',
-                            height: (task.duration || 15) <= 15 ? '12px' : '14px',
-                            borderColor: '#000' // Ensure checkmark border is visible/black
-                        }}
-                    >
-                        {task.status === 'done' && <Check size={(task.duration || 15) <= 15 ? 8 : 10} style={{ color: '#fff' }} />}
+                {!isCalendarEvent && (
+                    <div className="tc-checkbox-wrapper" style={{ paddingTop: '2px', flexShrink: 0 }}>
+                        <div
+                            className={`tc-checkbox ${task.status === 'done' ? 'checked' : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                task.toggleStatus();
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            style={{
+                                width: (task.duration || 15) <= 15 ? '12px' : '14px',
+                                height: (task.duration || 15) <= 15 ? '12px' : '14px',
+                                borderColor: '#000' // Ensure checkmark border is visible/black
+                            }}
+                        >
+                            {task.status === 'done' && <Check size={(task.duration || 15) <= 15 ? 8 : 10} style={{ color: '#fff' }} />}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
                     <div
@@ -81,7 +96,7 @@ export const ResizableTaskCardView = observer(({
                             // Dynamic font size based on duration passed via style prop, or calculate locally
                             fontSize: (task.duration || 15) <= 15 ? '10px' : '11px',
                             marginBottom: 0,
-                            color: '#000',
+                            color: isCalendarEvent ? 'white' : '#000',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -95,7 +110,7 @@ export const ResizableTaskCardView = observer(({
                     {(task.duration || 0) >= 30 && task.scheduledDate && (
                         <div style={{
                             fontSize: '9px',
-                            color: 'rgba(0,0,0,0.7)',
+                            color: isCalendarEvent ? '#a3a3a3' : 'rgba(0,0,0,0.7)',
                             marginTop: '2px',
                             lineHeight: 1
                         }}>
@@ -140,24 +155,33 @@ export const ResizableTaskCard = observer(({
     containerData,
     dragPrefix // New prop for namespacing (e.g. 'timebox')
 }: ResizableTaskCardProps & { dragPrefix?: string }) => {
-    // Determine unique ID based on context. Default to 'calendar' for backward compat in CalendarView.
-    // Ideally update CalendarView to pass 'calendar' prefix explicitly too.
+    // Determine unique ID based on context.
     const prefix = dragPrefix || (containerData?.type === 'timebox-slot' ? 'timebox' : 'calendar');
     const draggableId = `${prefix}-${task.id}`;
+
+    // Determine if it is a calendar event (temporary logic: check for 'calendar' in ID or a flag)
+    // In a real implementation this should be a property on the task model like task.isCalendarEvent
+    const isCalendarEvent = task.id.startsWith('evt_') || (task as any).isCalendarEvent;
 
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: draggableId,
         data: {
             type: 'task',
             task: task,
-            origin: prefix, // Pass origin matches prefix
-            containerData
+            origin: prefix,
+            containerData,
+            isCalendarEvent // Pass this data along
         }
     });
 
     // Determine background color
-    const backgroundColor = task.labels.length > 0 ? store.getLabelColor(task.labels[0]) : '#e6c581ff';
+    // If it's a calendar event, we'll let CSS handle the specific override via class, 
+    // but we can provide a fallback here.
+    const backgroundColor = isCalendarEvent
+        ? '#1e293b' // Fallback matte blue
+        : (task.labels.length > 0 ? store.getLabelColor(task.labels[0]) : '#e6c581ff');
 
+    // ... (rest of resize/measure logic) ...
     // Measure column width for horizontal snapping
     const [colWidth, setColWidth] = React.useState(0);
     const measureRef = React.useRef<HTMLDivElement>(null);
@@ -199,10 +223,8 @@ export const ResizableTaskCard = observer(({
         if (colWidth > 0) {
             // Horizontal Sticky Logic
             if (Math.abs(x) < stickyThreshold) {
-                // Inside deadzone -> Lock to column center (0)
                 x = 0;
             } else {
-                // Outside deadzone -> Snap to nearest column grid
                 x = Math.round(x / snapStepX) * snapStepX;
             }
         }
@@ -214,27 +236,21 @@ export const ResizableTaskCard = observer(({
         y
     } : null;
 
-    // Check if this task is the one being dragged globally (ignoring prefix mismatch)
     const isGlobalDragging = store.draggingTaskId === task.id;
     const effectiveIsDragging = isDragging || isGlobalDragging;
 
-    // Merge styles
     const combinedStyle: React.CSSProperties = {
         ...style,
-        backgroundColor,
+        backgroundColor: isCalendarEvent ? undefined : backgroundColor, // Let CSS override for calendar events
         transform: CSS.Translate.toString(snappedTransform),
         opacity: 1,
-        // Remove "Lift" styles to match "Already There" request
         zIndex: (style?.zIndex ?? 1),
         boxShadow: undefined,
         touchAction: 'none',
         cursor: effectiveIsDragging ? 'grabbing' : 'grab',
-        pointerEvents: effectiveIsDragging ? 'none' : 'auto', // Still need this for drop detection!
+        pointerEvents: effectiveIsDragging ? 'none' : 'auto',
         ...style,
     };
-
-    // No Z-index boost, let it sit in the grid
-
 
     const { isOver: isOverDroppable, setNodeRef: setDroppableRef } = useDroppable({
         id: draggableId,
@@ -244,9 +260,6 @@ export const ResizableTaskCard = observer(({
         }
     });
 
-    // Attach ref to listeners or element? 
-    // attributes & listeners go to the div. We also need our measureRef.
-    // We can merge refs.
     const setRefs = (node: HTMLDivElement | null) => {
         setNodeRef(node);
         setDroppableRef(node);
@@ -254,24 +267,21 @@ export const ResizableTaskCard = observer(({
         measureRef.current = node;
     };
 
-    // Font size logic based on height (approximated by duration usually, but here relies on parent styling or explicit height)
-    // We'll trust the parent 'style' passed in contains height/width/top etc.
-
     const [contextMenu, setContextMenu] = React.useState<{ x: number; y: number } | null>(null);
 
     const handleContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
-        // Calculate position relative to viewport
+        if (isCalendarEvent) return; // Disable context menu for calendar events
+
         const rect = e.currentTarget.getBoundingClientRect();
-        // Position to the left of the card, aligned with the top
-        // Give 4px spacing
         setContextMenu({
-            x: rect.left - 210, // Assuming menu width approx 200px + 10 padding. We might need to adjust or measure.
+            x: rect.left - 210,
             y: rect.top
         });
     };
+
 
     const handleCloseContextMenu = () => {
         setContextMenu(null);

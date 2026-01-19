@@ -1,5 +1,5 @@
-import { makeAutoObservable } from "mobx";
-import { Task } from "./core";
+import { makeAutoObservable, runInAction } from "mobx";
+import { Task, GroupType } from "./core";
 import { TaskStore } from "./stores/TaskStore";
 import { UIStore } from "./stores/UIStore";
 import { RecurrenceStore } from "./stores/RecurrenceStore";
@@ -21,7 +21,9 @@ export class ProjectStore {
     }
 
     // --- Delegation to TaskStore ---
-    get groups() { return this.taskStore.groups; }
+    get workspaces() { return this.taskStore.workspaces; }
+    get activeWorkspace() { return this.taskStore.activeWorkspace; }
+    get groups() { return this.taskStore.groups; } // Now delegates to activeWorkspace via TaskStore getter
     get dumpAreaTasks() { return this.taskStore.dumpAreaTasks; }
     get templates() { return this.taskStore.templates; }
     get currentUser() { return this.taskStore.currentUser; }
@@ -38,12 +40,12 @@ export class ProjectStore {
         });
     }
 
-    createGroup(name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
-        return this.taskStore.createGroup(name, icon, defaultLabelId, autoAddLabelEnabled);
+    createGroup(name: string, icon?: string, type: GroupType = 'personal', defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
+        return this.taskStore.createGroup(name, icon, type, defaultLabelId, autoAddLabelEnabled);
     }
     deleteGroup(groupId: string) { this.taskStore.deleteGroup(groupId); }
-    updateGroup(groupId: string, name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled?: boolean) {
-        this.taskStore.updateGroup(groupId, name, icon, defaultLabelId, autoAddLabelEnabled);
+    updateGroup(groupId: string, name: string, icon?: string, type?: GroupType, defaultLabelId?: string, autoAddLabelEnabled?: boolean) {
+        this.taskStore.updateGroup(groupId, name, icon, type, defaultLabelId, autoAddLabelEnabled);
     }
     getLabel(labelId: string) { return this.taskStore.getLabel(labelId); }
     getLabelColor(labelId: string) { return this.taskStore.getLabelColor(labelId); }
@@ -116,6 +118,18 @@ export class ProjectStore {
 
     setDraggingTaskId(id: string | null) { this.draggingTaskId = id; }
     setDragOverLocation(loc: { date: Date, hour: number, minute: number } | null) { this.dragOverLocation = loc; }
+
+    setActiveWorkspace(id: string) {
+        runInAction(() => {
+            this.taskStore.activeWorkspaceId = id;
+            // Maybe reset activeGroupId when switching workspace?
+            if (this.taskStore.groups.length > 0) {
+                this.activeGroupId = this.taskStore.groups[0].id;
+            } else {
+                this.activeGroupId = null;
+            }
+        });
+    }
 
     applyGlobalFilters(tasks: Task[]) { return this.uiStore.applyGlobalFilters(tasks); }
     setDate(date: Date) { this.uiStore.setDate(date); }

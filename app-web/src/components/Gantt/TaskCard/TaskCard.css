@@ -288,3 +288,35 @@
     font-weight: 500;
     margin-left: auto;
 }
+
+/* Footer Reveal Animation */
+.footer-reveal-item {
+    max-width: 0;
+    opacity: 0;
+    transform: translateX(-10px);
+    overflow: hidden;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0;
+    /* Prevent margin issues during collapse */
+    padding: 0;
+}
+
+.task-card:hover .footer-reveal-item,
+.task-card.hovered .footer-reveal-item {
+    max-width: 150px;
+    /* Sufficient width for content */
+    opacity: 1;
+    transform: translateX(0);
+    margin-left: 2px;
+    /* Add spacing when visible */
+}
+
+/* Ensure active items don't jump */
+.tc-footer {
+    min-height: 24px;
+    /* Ensure height stability */
+    transition: height 0.2s;
+}

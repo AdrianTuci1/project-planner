@@ -69,4 +69,55 @@ export class CalendarService {
         }
         return current;
     }
+
+    // --- Google Calendar Integration Methods (Simulated) ---
+
+    // In a real app, this would use googleapis with the stored refresh_token for the account
+    public async fetchSubCalendars(accountId: string, userId: string = 'default-user'): Promise<CalendarData> {
+        const current = await this.getCalendars(userId);
+        const account = current.accounts.find(a => a.id === accountId);
+
+        if (!account) return current;
+
+        // Simulated fetch from Google
+        // const calendarList = await google.calendar.calendarList.list(...)
+
+        const mockSubCalendars = [
+            { id: 'primary', name: 'Primary', color: account.color, isVisible: true, canEdit: true },
+            { id: 'work', name: 'Work', color: '#ff5722', isVisible: true, canEdit: true },
+            { id: 'family', name: 'Family', isVisible: false, color: '#9c27b0', canEdit: true }
+        ];
+
+        // Merge with existing preference if exists, or overwrite
+        const mergedSubs = mockSubCalendars.map(mock => {
+            const existing = account.subCalendars?.find(s => s.id === mock.id);
+            return existing ? { ...mock, isVisible: existing.isVisible } : mock;
+        });
+
+        // Update local storage
+        return this.updateAccount(accountId, { subCalendars: mergedSubs }, userId);
+    }
+
+    public async updateEventTime(accountId: string, eventId: string, newStart: string, newEnd: string, userId: string = 'default-user'): Promise<boolean> {
+        const current = await this.getCalendars(userId);
+        const account = current.accounts.find(a => a.id === accountId);
+        if (!account) return false;
+
+        // Determine guest update notification strategy
+        const sendUpdates = account.guestUpdateStrategy === 'all' ? 'all' : 'none';
+
+        try {
+            // await google.calendar.events.patch({
+            //   calendarId: 'primary', // or find which subcalendar event belongs to
+            //   eventId: eventId,
+            //   requestBody: { start: { dateTime: newStart }, end: { dateTime: newEnd } },
+            //   sendUpdates: sendUpdates
+            // });
+            console.log(`[GoogleSync] Moved event ${eventId} on ${account.email}. SendUpdates: ${sendUpdates}`);
+            return true;
+        } catch (e) {
+            console.error("Failed to update remote event", e);
+            return false;
+        }
+    }
 }

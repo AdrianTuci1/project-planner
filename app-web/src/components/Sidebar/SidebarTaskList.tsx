@@ -13,12 +13,22 @@ interface SidebarTaskListProps {
     onDuplicate: (t: Task) => void;
     onDelete: (t: Task) => void;
     isSortable?: boolean;
+    id?: string;
+    containerData?: any;
 }
 
-export const SidebarTaskList = observer(({ tasks, activeGroup, onDuplicate, onDelete, isSortable = true }: SidebarTaskListProps) => {
+export const SidebarTaskList = observer(({
+    tasks,
+    activeGroup,
+    onDuplicate,
+    onDelete,
+    isSortable = true,
+    id = 'sidebar-list',
+    containerData
+}: SidebarTaskListProps) => {
     const { isOver, setNodeRef } = useDroppable({
-        id: 'sidebar-list',
-        data: {
+        id: id,
+        data: containerData || {
             type: 'sidebar-list',
             groupId: store.activeGroupId
         },
@@ -33,7 +43,7 @@ export const SidebarTaskList = observer(({ tasks, activeGroup, onDuplicate, onDe
         >
             {isSortable ? (
                 <SortableContext
-                    id="sidebar-list"
+                    id={id}
                     items={tasks.map((t: Task) => t.id)}
                     strategy={verticalListSortingStrategy}
                 >
@@ -43,7 +53,7 @@ export const SidebarTaskList = observer(({ tasks, activeGroup, onDuplicate, onDe
                             task={task}
                             onDuplicate={onDuplicate}
                             onDelete={onDelete}
-                            containerData={{ type: 'sidebar-list', groupId: store.activeGroupId }}
+                            containerData={containerData || { type: 'sidebar-list', groupId: store.activeGroupId }}
                         />
                     ))}
                 </SortableContext>

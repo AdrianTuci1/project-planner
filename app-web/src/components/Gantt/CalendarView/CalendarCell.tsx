@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { startOfDay, isSameDay } from 'date-fns';
 import { Task } from '../../../models/core';
@@ -6,18 +6,35 @@ import { store } from '../../../models/store';
 import { calculateOverlappingLayout } from '../layoutUtils';
 import { ResizableTaskCard, ResizableTaskCardView } from '../TaskCard/ResizableTaskCard';
 import { CalendarSlot } from './CalendarSlot';
+import { CalendarEventPopover } from './CalendarEventPopover';
 
 export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart, className, slotPrefix }: {
     date: Date,
     hour: number,
     tasks: Task[],
-    onTaskClick: (task: Task) => void,
+    onTaskClick: (task: Task, e?: React.MouseEvent) => void,
     onResizeStart: (e: React.MouseEvent | React.TouchEvent, task: Task) => void,
     className?: string,
     slotPrefix?: string
 }) => {
     const today = startOfDay(new Date());
     const isToday = isSameDay(date, today);
+
+    const [popover, setPopover] = useState<{ task: Task, position: { x: number, y: number } } | null>(null);
+
+    const handleTaskClick = (task: Task, e?: React.MouseEvent) => {
+        // Check if calendar event
+        const isCalendarEvent = task.id.startsWith('evt_') || (task as any).isCalendarEvent;
+        if (isCalendarEvent && e) {
+            e.stopPropagation();
+            setPopover({
+                task,
+                position: { x: e.clientX, y: e.clientY }
+            });
+        } else {
+            onTaskClick(task, e);
+        }
+    };
 
     const getTasksForDayHour = (date: Date, hour: number) => {
         return tasks.filter(t => {
@@ -158,7 +175,7 @@ export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResize
                     <ResizableTaskCard
                         key={task.id}
                         task={task}
-                        onTaskClick={onTaskClick}
+                        onTaskClick={handleTaskClick}
                         onResizeStart={(e) => onResizeStart(e, task)}
                         containerData={{
                             type: 'calendar-cell',
@@ -180,6 +197,13 @@ export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResize
                     />
                 );
             })}
+            {popover && (
+                <CalendarEventPopover
+                    task={popover.task}
+                    position={popover.position}
+                    onClose={() => setPopover(null)}
+                />
+            )}
         </td>
     );
 });

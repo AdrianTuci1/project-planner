@@ -13,7 +13,8 @@ import {
     Copy,
     Link,
     Trash2,
-    Flag
+    Flag,
+    Target
 } from 'lucide-react';
 import { format, startOfDay } from 'date-fns';
 
@@ -149,7 +150,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                                 }}
                             >
                                 <div className="meta-row-label">
-                                    <Calendar size={18} className="text-red-500" /> {/* Distinguish with color? */}
+                                    <Target size={18} className="text-red-500" /> {/* Distinguish with color? */}
                                     <span>Due Date</span>
                                 </div>
                                 <div className="meta-row-value chip-style">

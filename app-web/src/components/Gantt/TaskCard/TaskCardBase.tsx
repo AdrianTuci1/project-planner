@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Task } from '../../../models/core';
+import { format, differenceInDays, isTomorrow, isYesterday, isToday } from 'date-fns';
 import {
     Check,
     Flag,
@@ -9,7 +10,9 @@ import {
     Play,
     Copy,
     Trash2,
-    Timer
+    Timer,
+    Paperclip,
+    Target
 } from 'lucide-react';
 import { TimeEntryContext } from '../../ContextMenu/TimeEntryContext';
 import { ContextMenu, MenuItem } from '../../ContextMenu/ContextMenu';
@@ -19,7 +22,6 @@ import { RecurringTaskActionsContext } from '../../ContextMenu/RecurringTaskActi
 import { PriorityContext } from '../../ContextMenu/PriorityContext';
 import { TaskUIModel } from '../../../models/TaskUIModel';
 import { store } from '../../../models/store';
-import { format } from 'date-fns';
 import { SubtaskList } from '../../Shared/SubtaskList';
 import './TaskCard.css';
 
@@ -175,115 +177,134 @@ export const TaskCardBase = observer(({
                     </div>
                 </div>
 
-                {(ui.isHovered || isAnyContextOpen || (task.labels && task.labels.length > 0) || (task.scheduledDate && task.scheduledTime)) && (
+                {(ui.isHovered || isAnyContextOpen || (task.labels && task.labels.length > 0) || (task.scheduledDate && task.scheduledTime) || (task.dueDate) || (task.attachments && task.attachments.length > 0) || (task.priority !== 'none') || (task.subtasks.length > 0) || (task.recurrence && task.recurrence !== 'none')) && (
                     <div className="tc-footer">
-                        {ui.isHovered || isAnyContextOpen ? (
-                            <>
-                                <div
-                                    className="tc-label"
-                                    onClick={(e) => ui.openLabelContext(e)}
-                                >
-                                    {task.labels && task.labels.length > 0 ? (
-                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                                            {task.labels.map(labelId => {
-                                                const label = store.getLabel(labelId);
-                                                if (!label) return null;
-                                                return (
-                                                    <div key={labelId} className="tc-label-chip" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                        <div
-                                                            className="tc-label-dot"
-                                                            style={{ backgroundColor: label.color }}
-                                                        />
-                                                        {label.name}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        "Select Label"
-                                    )}
-                                </div>
-                                <div className="tc-actions">
-                                    {store.settings.powerFeatures.taskPriorityEnabled && (
-                                        <div
-                                            className="tc-action-icon"
-                                            style={{ cursor: 'pointer' }}
-                                            onClick={(e) => ui.openPriorityContext(e)}
-                                        >
-                                            <Flag
-                                                size={14}
-                                                className={task.priority !== 'none' ? 'active' : ''}
-                                                style={{
-                                                    color: task.priority === 'high' ? '#EF4444' :
-                                                        task.priority === 'medium' ? '#F97316' :
-                                                            task.priority === 'low' ? '#3B82F6' : undefined,
-                                                    fill: task.priority === 'high' ? '#EF4444' :
-                                                        task.priority === 'medium' ? '#F97316' :
-                                                            task.priority === 'low' ? '#3B82F6' : 'none'
-                                                }}
-                                            />
-                                        </div>
-                                    )}
-                                    <div
-                                        style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer' }}
-                                        onClick={(e) => { e.stopPropagation(); ui.setSubtaskMode(!ui.isSubtaskMode); }}
-                                    >
-                                        <Link2
-                                            size={14}
-                                            className="tc-action-icon"
-                                        />
-                                        {task.subtasks.length > 0 && (
-                                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                                                {task.subtasks.filter(s => s.isCompleted).length}/{task.subtasks.length}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <RotateCw
-                                        size={14}
-                                        className={`tc-action-icon ${task.recurrence && task.recurrence !== 'none' ? 'active' : ''}`}
-                                        style={task.recurrence && task.recurrence !== 'none' ? { color: 'var(--accent-primary)' } : undefined}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (task.recurrence && task.recurrence !== 'none') {
-                                                ui.openRecurrenceContext(e, 'actions');
-                                            } else {
-                                                ui.openRecurrenceContext(e, 'set');
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                {task.labels && task.labels.length > 0 && (
-                                    <div className="tc-label" style={{ display: 'flex', gap: '4px' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', width: '100%' }}>
+
+                            {/* Labels */}
+                            <div
+                                className={`tc-label ${task.labels && task.labels.length === 0 ? 'footer-reveal-item' : ''}`}
+                                onClick={(e) => ui.openLabelContext(e)}
+                                style={{ padding: 0, height: 'auto' }}
+                            >
+                                {task.labels && task.labels.length > 0 ? (
+                                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                                         {task.labels.map(labelId => {
                                             const label = store.getLabel(labelId);
                                             if (!label) return null;
                                             return (
-                                                <div
-                                                    key={labelId}
-                                                    className="tc-label-dot"
-                                                    style={{ backgroundColor: label.color }}
-                                                    title={label.name}
-                                                />
+                                                <div key={labelId} className="tc-label-chip" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <div
+                                                        className="tc-label-dot"
+                                                        style={{ backgroundColor: label.color }}
+                                                    />
+                                                    {label.name}
+                                                </div>
                                             );
                                         })}
-                                        {task.labels.length === 1 && store.getLabel(task.labels[0])?.name}
                                     </div>
+                                ) : (
+                                    <span style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>Select Label</span>
                                 )}
-                                {task.scheduledDate && task.scheduledTime && (
-                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                            </div>
+
+                            {/* Priority */}
+                            <div
+                                className={`tc-action-icon ${task.priority === 'none' ? 'footer-reveal-item' : ''}`}
+                                style={{ cursor: 'pointer', display: 'flex' }}
+                                onClick={(e) => ui.openPriorityContext(e)}
+                            >
+                                <Flag
+                                    size={14}
+                                    className={task.priority !== 'none' ? 'active' : ''}
+                                    style={{
+                                        color: task.priority === 'high' ? '#EF4444' :
+                                            task.priority === 'medium' ? '#F97316' :
+                                                task.priority === 'low' ? '#3B82F6' : undefined,
+                                        fill: task.priority === 'high' ? '#EF4444' :
+                                            task.priority === 'medium' ? '#F97316' :
+                                                task.priority === 'low' ? '#3B82F6' : 'none'
+                                    }}
+                                />
+                            </div>
+
+                            {/* Scheduled Time */}
+                            {task.scheduledDate && task.scheduledTime && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 11, color: 'var(--text-muted)' }}>
+                                    {(() => {
+                                        const [h, m] = task.scheduledTime.split(':').map(Number);
+                                        const date = new Date();
+                                        date.setHours(h, m);
+                                        return format(date, 'h:mmaaa');
+                                    })()}
+                                </div>
+                            )}
+
+                            {/* Subtasks */}
+                            <div
+                                className={`${task.subtasks.length === 0 ? 'footer-reveal-item' : ''}`}
+                                style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer' }}
+                                onClick={(e) => { e.stopPropagation(); ui.setSubtaskMode(!ui.isSubtaskMode); }}
+                            >
+                                <Link2
+                                    size={14}
+                                    className="tc-action-icon"
+                                />
+                                {task.subtasks.length > 0 && (
+                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                                        {task.subtasks.filter(s => s.isCompleted).length}/{task.subtasks.length}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Recurrence */}
+                            <div className={`${(!task.recurrence || task.recurrence === 'none') ? 'footer-reveal-item' : ''}`}>
+                                <RotateCw
+                                    size={14}
+                                    className={`tc-action-icon ${task.recurrence && task.recurrence !== 'none' ? 'active' : ''}`}
+                                    style={task.recurrence && task.recurrence !== 'none' ? { color: 'var(--accent-primary)' } : undefined}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (task.recurrence && task.recurrence !== 'none') {
+                                            ui.openRecurrenceContext(e, 'actions');
+                                        } else {
+                                            ui.openRecurrenceContext(e, 'set');
+                                        }
+                                    }}
+                                />
+                            </div>
+
+                            {/* Attachments */}
+                            {task.attachments && task.attachments.length > 0 && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: 'var(--text-muted)', fontSize: '11px' }}>
+                                    <Paperclip size={12} />
+                                    <span>{task.attachments.length}</span>
+                                </div>
+                            )}
+
+                            {/* Due Date */}
+                            {task.dueDate && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '11px' }}>
+                                    <Target size={12} />
+                                    <span>
                                         {(() => {
-                                            const [h, m] = task.scheduledTime.split(':').map(Number);
-                                            const date = new Date();
-                                            date.setHours(h, m);
-                                            return format(date, 'h:mmaaa');
+                                            const today = new Date();
+                                            today.setHours(0, 0, 0, 0);
+                                            const due = new Date(task.dueDate);
+                                            due.setHours(0, 0, 0, 0);
+
+                                            if (isToday(due)) return "Due today";
+                                            if (isTomorrow(due)) return "Due tomorrow";
+                                            if (isYesterday(due)) return "Due yesterday";
+
+                                            const days = differenceInDays(due, today);
+                                            if (days > 0) return `Due in ${days} days`;
+                                            return `Due ${Math.abs(days)} days ago`;
                                         })()}
-                                    </div>
-                                )}
-                            </>
-                        )}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 

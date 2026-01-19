@@ -96,8 +96,94 @@ export class CalendarSettingsModel {
         }
     }
 
+    async toggleSubCalendarVisibility(accountId: string, subCalendarId: string) {
+        const account = this.calendars.find(c => c.id === accountId);
+        if (!account || !account.subCalendars) return;
+
+        const sub = account.subCalendars.find(s => s.id === subCalendarId);
+        if (!sub) return;
+
+        const newVis = !sub.isVisible;
+        runInAction(() => {
+            sub.isVisible = newVis;
+        });
+
+        // Persist
+        try {
+            const updatedSubs = account.subCalendars.map(s => s.id === subCalendarId ? { ...s, isVisible: newVis } : s);
+            await api.updateCalendar(accountId, { subCalendars: updatedSubs });
+        } catch (e) {
+            console.error("Failed to update subcalendar", e);
+            runInAction(() => {
+                sub.isVisible = !newVis; // revert
+            });
+        }
+    }
+
+    async setGuestUpdateStrategy(accountId: string, strategy: 'all' | 'none') {
+        const account = this.calendars.find(c => c.id === accountId);
+        if (!account) return;
+
+        runInAction(() => {
+            account.guestUpdateStrategy = strategy;
+        });
+
+        await api.updateCalendar(accountId, { guestUpdateStrategy: strategy });
+    }
+
+    // Call after connection or periodically
+    async fetchSubCalendars(accountId: string) {
+        // Mock API call to backend service we just added
+        // In real app: await api.refreshSubCalendars(accountId);
+
+        // Simulating the backend response since we don't have the full API wire-up
+        const account = this.calendars.find(c => c.id === accountId);
+        if (!account) return;
+
+        const mockSubCalendars = [
+            { id: 'primary', name: 'Primary', color: account.color, isVisible: true, canEdit: true },
+            { id: 'work', name: 'Work', color: '#ff5722', isVisible: true, canEdit: true },
+            { id: 'family', name: 'Family', isVisible: false, color: '#9c27b0', canEdit: true }
+        ];
+
+        runInAction(() => {
+            if (!account.subCalendars || account.subCalendars.length === 0) {
+                account.subCalendars = mockSubCalendars;
+            }
+        });
+
+        // Sync with backend
+        await api.updateCalendar(accountId, { subCalendars: mockSubCalendars });
+    }
+
+    async connectGoogle() {
+        await this.connectCalendar('google');
+    }
+
+    async disconnect() {
+        const googleCal = this.calendars.find(c => c.provider === 'google');
+        if (googleCal) {
+            await this.disconnectCalendar(googleCal.id);
+        }
+    }
+
+    get isConnected() {
+        return this.calendars.some(c => c.provider === 'google');
+    }
+
+    get connectedEmail() {
+        const googleCal = this.calendars.find(c => c.provider === 'google');
+        return googleCal ? googleCal.email : '';
+    }
+
     setShowManageView(show: boolean) {
         this.showManageView = show;
+        if (show && this.isConnected) {
+            const googleCal = this.calendars.find(c => c.provider === 'google');
+            if (googleCal) {
+                this.fetchSubCalendars(googleCal.id);
+            }
+        }
     }
 
     toggleCreateTasksFromEvents(value: boolean) {

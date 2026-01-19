@@ -1,0 +1,133 @@
+.cal-event-popover {
+    position: fixed;
+    width: 300px;
+    background-color: #262626;
+    /* Dark grey */
+    border: 1px solid #404040;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    color: #e5e5e5;
+    padding-bottom: 8px;
+    animation: popIn 0.1s ease-out;
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.popover-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px;
+}
+
+.popover-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.popover-icon-btn {
+    background: transparent;
+    border: none;
+    color: #a3a3a3;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.popover-icon-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.popover-icon-btn.close:hover {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.popover-content {
+    padding: 0 16px 16px 16px;
+}
+
+.event-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: white;
+    line-height: 1.3;
+}
+
+.event-datetime {
+    font-size: 13px;
+    color: #a3a3a3;
+    margin-bottom: 16px;
+}
+
+.time-separator {
+    margin: 0 4px;
+}
+
+.event-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.event-row:last-child {
+    margin-bottom: 0;
+}
+
+.row-icon {
+    color: #a3a3a3;
+    margin-top: 2px;
+}
+
+.row-text {
+    font-size: 13px;
+    color: #d4d4d4;
+    line-height: 1.4;
+}
+
+.row-text.desc {
+    color: #a3a3a3;
+    white-space: pre-wrap;
+}
+
+/* Calendar Event Card Styles (to be used in ResizableTaskCard.css or here if globally imported) */
+.task-card.is-calendar-event {
+    background-color: #1e293b !important;
+    /* Matte Dark Blue */
+    border: 1px solid #3b82f6 !important;
+    /* Solid Blue */
+    border-left: 3px solid #3b82f6 !important;
+    /* Solid thick left border */
+}
+
+.task-card.is-calendar-event .tc-title {
+    color: white !important;
+}
+
+.task-card.is-calendar-event .tc-checkbox {
+    border-color: #60a5fa !important;
+}
+
+.cal-provider-icon {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    pointer-events: none;
+}

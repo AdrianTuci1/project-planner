@@ -91,13 +91,43 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
                     <div className="sidebar-section-header" style={{ padding: '0 10px 10px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
                         UPCOMING
                     </div>
-                    <SidebarTaskList
-                        tasks={store.allTasks.filter(t => t.dueDate).sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())}
-                        activeGroup={null} // No group context for flat list
-                        onDuplicate={(t: Task) => store.dumpAreaTasks.push(t.clone())} // Fallback or implement specific logic
-                        onDelete={(t: Task) => store.deleteTask(t.id)}
-                        isSortable={false}
-                    />
+                    {(() => {
+                        const dueTasks = store.allTasks.filter(t => t.dueDate).sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
+
+                        if (dueTasks.length === 0) {
+                            return (
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-start',
+                                    opacity: 1,
+                                    marginTop: '20px'
+                                }}>
+                                    <img
+                                        src="/due-date.png"
+                                        alt="No upcoming tasks"
+                                        style={{
+                                            maxWidth: '80%', // Slightly larger for this view if needed, but 80% is safe
+                                            height: 'auto',
+                                            marginBottom: '10px'
+                                        }}
+                                    />
+                                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>You have no upcoming tasks</span>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <SidebarTaskList
+                                tasks={dueTasks}
+                                activeGroup={null} // No group context for flat list
+                                onDuplicate={(t: Task) => store.dumpAreaTasks.push(t.clone())} // Fallback or implement specific logic
+                                onDelete={(t: Task) => store.deleteTask(t.id)}
+                                isSortable={false}
+                            />
+                        );
+                    })()}
                 </div>
             )}
 
@@ -106,6 +136,34 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
                 <TemplatesView />
             )}
 
+            {/* Sidebar Footer - Personal/Team Switch */}
+            <div className="sidebar-footer">
+                <div className="workspace-switcher">
+                    <button
+                        className={`workspace-btn ${store.activeWorkspace?.type === 'personal' ? 'active' : ''}`}
+                        onClick={() => {
+                            const personal = store.workspaces.find(w => w.type === 'personal');
+                            if (personal) store.setActiveWorkspace(personal.id);
+                        }}
+                    >
+                        Personal
+                    </button>
+                    <button
+                        className={`workspace-btn ${store.activeWorkspace?.type === 'team' ? 'active' : ''}`}
+                        onClick={() => {
+                            const team = store.workspaces.find(w => w.type === 'team');
+                            if (team) {
+                                store.setActiveWorkspace(team.id);
+                            } else {
+                                // If for some reason team doesn't exist (should be created in init), nothing happens?
+                                // Assuming init creates it.
+                            }
+                        }}
+                    >
+                        Team
+                    </button>
+                </div>
+            </div>
         </aside>
     );
 });

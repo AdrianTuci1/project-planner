@@ -39,6 +39,14 @@ export interface IApiService {
     deleteCalendar(id: string): Promise<CalendarData>;
 }
 
+export interface SubCalendar {
+    id: string;
+    name: string;
+    color: string;
+    isVisible: boolean;
+    canEdit: boolean;
+}
+
 export interface CalendarAccount {
     id: string;
     email: string;
@@ -46,6 +54,8 @@ export interface CalendarAccount {
     provider: 'google' | 'outlook' | 'apple' | 'other';
     color: string;
     isVisible: boolean;
+    guestUpdateStrategy?: 'all' | 'none';
+    subCalendars?: SubCalendar[];
 }
 
 export interface CalendarData {

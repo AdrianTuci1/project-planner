@@ -1,0 +1,92 @@
+.guest-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.guest-modal-content {
+    background-color: #1e1e1e;
+    /* Dark background per screenshot */
+    border-radius: 8px;
+    padding: 24px;
+    width: 500px;
+    max-width: 90%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    color: white;
+    /* Assuming dark mode context from screenshot */
+}
+
+.guest-modal-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: #f3f4f6;
+    line-height: 1.4;
+}
+
+.guest-modal-text {
+    font-size: 14px;
+    color: #9ca3af;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.guest-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.guest-modal-actions-right {
+    display: flex;
+    gap: 12px;
+}
+
+.guest-modal-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.guest-modal-btn.cancel {
+    background-color: transparent;
+    border: 1px solid #374151;
+    color: #e5e7eb;
+}
+
+.guest-modal-btn.cancel:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.guest-modal-btn.secondary {
+    background-color: transparent;
+    border: 1px solid #374151;
+    /* Dark grey border */
+    color: #e5e7eb;
+}
+
+.guest-modal-btn.secondary:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.guest-modal-btn.primary {
+    background-color: #8b5cf6;
+    /* Purple accent */
+    color: white;
+    border: none;
+}
+
+.guest-modal-btn.primary:hover {
+    background-color: #7c3aed;
+}
