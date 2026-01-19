@@ -205,4 +205,39 @@ export class MockApiService implements IApiService {
             }, MOCK_DELAY);
         });
     }
+
+    async getCalendars(): Promise<any> {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({ accounts: [] });
+            }, MOCK_DELAY);
+        });
+    }
+
+    async addCalendar(account: any): Promise<any> {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                console.log('Mock API: Added calendar', account);
+                resolve({ accounts: [] });
+            }, MOCK_DELAY);
+        });
+    }
+
+    async updateCalendar(id: string, data: any): Promise<any> {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                console.log('Mock API: Updated calendar', id, data);
+                resolve({ accounts: [] });
+            }, MOCK_DELAY);
+        });
+    }
+
+    async deleteCalendar(id: string): Promise<any> {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                console.log('Mock API: Deleted calendar', id);
+                resolve({ accounts: [] });
+            }, MOCK_DELAY);
+        });
+    }
 }

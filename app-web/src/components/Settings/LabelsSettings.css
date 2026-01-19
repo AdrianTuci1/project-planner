@@ -251,3 +251,28 @@
 .color-option.selected {
     border-color: #FFFFFF;
 }
+
+/* Context Menu Color Picker */
+.color-picker-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9998;
+    background: transparent;
+}
+
+.color-picker-context {
+    position: fixed;
+    z-index: 9999;
+    background: var(--bg-elevated, #2C2C2E);
+    border: 1px solid var(--border-subtle, #3A3A3C);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 180px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}

@@ -55,8 +55,11 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
     };
 
 
-    if (!group) return <div>Group not found</div>;
+    // if (!group) return <div>Group not found</div>;
+    // Instead of returning early, we continue rendering the layout.
 
+    // Fallback for globalTasks if group logic is strict, but store.filteredTasks 
+    // usually returns tasks based on activeGroup. If activeGroup is null, it might return empty or dump tasks.
     const globalTasks = store.filteredTasks;
     // Removed unused variable `hasTasks` to avoid lint warning if not used, 
     // keeping it if logic needed it, but previously it was defining but seemingly not used in render blocks shown.
@@ -120,17 +123,33 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
             <div className="group-main-area">
                 <TopBar />
                 <div className="group-content">
-                    {store.viewMode === 'tasks' ? (
-                        <KanbanBoard
-                            tasks={globalTasks}
-                            onTaskClick={handleTaskClick}
-                            groupId={store.activeGroupId}
-                        />
+                    {group ? (
+                        store.viewMode === 'tasks' ? (
+                            <KanbanBoard
+                                tasks={globalTasks}
+                                onTaskClick={handleTaskClick}
+                                groupId={group.id}
+                            />
+                        ) : (
+                            <CalendarView
+                                tasks={globalTasks}
+                                onTaskClick={handleTaskClick}
+                            />
+                        )
                     ) : (
-                        <CalendarView
-                            tasks={globalTasks}
-                            onTaskClick={handleTaskClick}
-                        />
+                        // Brain Dump View (No Group)
+                        store.viewMode === 'tasks' ? (
+                            <KanbanBoard
+                                tasks={store.applyGlobalFilters(store.dumpAreaTasks)}
+                                onTaskClick={handleTaskClick}
+                                groupId={null}
+                            />
+                        ) : (
+                            <CalendarView
+                                tasks={store.applyGlobalFilters(store.dumpAreaTasks)}
+                                onTaskClick={handleTaskClick}
+                            />
+                        )
                     )}
                 </div>
                 {/* Task Timer */}

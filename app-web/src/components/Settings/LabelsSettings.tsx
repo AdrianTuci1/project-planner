@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { Search, Edit2, Trash2, Plus } from 'lucide-react';
@@ -25,6 +26,42 @@ const PRESET_COLORS = [
     '#78716C', // Stone
 ];
 
+interface ColorPickerContextMenuProps {
+    isOpen: boolean;
+    onClose: () => void;
+    position: { x: number; y: number } | null;
+    colors: string[];
+    selectedColor: string;
+    onSelect: (color: string) => void;
+}
+
+const ColorPickerContextMenu = ({ isOpen, onClose, position, colors, selectedColor, onSelect }: ColorPickerContextMenuProps) => {
+    if (!isOpen || !position) return null;
+
+    return ReactDOM.createPortal(
+        <>
+            <div className="color-picker-backdrop" onClick={onClose} />
+            <div
+                className="color-picker-context"
+                style={{
+                    left: position.x,
+                    top: position.y
+                }}
+            >
+                {colors.map(c => (
+                    <div
+                        key={c}
+                        className={`color-option ${selectedColor === c ? 'selected' : ''}`}
+                        style={{ backgroundColor: c }}
+                        onClick={() => onSelect(c)}
+                    />
+                ))}
+            </div>
+        </>,
+        document.body
+    );
+};
+
 export const LabelsSettings = observer(() => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isCreating, setIsCreating] = useState(false);
@@ -34,6 +71,7 @@ export const LabelsSettings = observer(() => {
     const [name, setName] = useState('');
     const [color, setColor] = useState(PRESET_COLORS[12]); // Default Violet
     const [showColorPicker, setShowColorPicker] = useState(false);
+    const [colorPickerPos, setColorPickerPos] = useState<{ x: number, y: number } | null>(null);
 
     const filteredLabels = store.availableLabels.filter(label =>
         label.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -44,9 +82,10 @@ export const LabelsSettings = observer(() => {
         setEditingLabelId(null);
         setName('');
         setColor(PRESET_COLORS[12]); // Default Violet
+        setShowColorPicker(false);
     };
 
-    const handleEditStart = (label: { id: string, name: string, color: string }) => {
+    const handleEditStart = (label: { id: string; name: string; color: string }) => {
         setEditingLabelId(label.id);
         setIsCreating(false);
         setName(label.name);
@@ -68,6 +107,7 @@ export const LabelsSettings = observer(() => {
         // Reset form
         setName('');
         setColor(PRESET_COLORS[12]);
+        setShowColorPicker(false);
     };
 
     const handleCancel = () => {
@@ -80,6 +120,16 @@ export const LabelsSettings = observer(() => {
     const handleDelete = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         store.deleteLabel(id);
+    };
+
+    const handleColorClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        setColorPickerPos({
+            x: rect.left,
+            y: rect.bottom + 4 // Small gap
+        });
+        setShowColorPicker(!showColorPicker);
     };
 
     return (
@@ -108,20 +158,8 @@ export const LabelsSettings = observer(() => {
                 {/* Creation Mode Form - Inside List */}
                 {isCreating && (
                     <div className="edit-label-inline">
-                        <div className="color-picker-trigger" onClick={() => setShowColorPicker(!showColorPicker)}>
+                        <div className="color-picker-trigger" onClick={handleColorClick}>
                             <div className="color-dot-large" style={{ backgroundColor: color }} />
-                            {showColorPicker && (
-                                <div className="color-palette" onClick={e => e.stopPropagation()}>
-                                    {PRESET_COLORS.map(c => (
-                                        <div
-                                            key={c}
-                                            className={`color-option ${color === c ? 'selected' : ''}`}
-                                            style={{ backgroundColor: c }}
-                                            onClick={() => { setColor(c); setShowColorPicker(false); }}
-                                        />
-                                    ))}
-                                </div>
-                            )}
                         </div>
                         <input
                             className="label-name-input"
@@ -143,20 +181,8 @@ export const LabelsSettings = observer(() => {
                     <React.Fragment key={label.id}>
                         {editingLabelId === label.id ? (
                             <div className="edit-label-inline">
-                                <div className="color-picker-trigger" onClick={() => setShowColorPicker(!showColorPicker)}>
+                                <div className="color-picker-trigger" onClick={handleColorClick}>
                                     <div className="color-dot-large" style={{ backgroundColor: color }} />
-                                    {showColorPicker && (
-                                        <div className="color-palette" onClick={e => e.stopPropagation()}>
-                                            {PRESET_COLORS.map(c => (
-                                                <div
-                                                    key={c}
-                                                    className={`color-option ${color === c ? 'selected' : ''}`}
-                                                    style={{ backgroundColor: c }}
-                                                    onClick={() => { setColor(c); setShowColorPicker(false); }}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
                                 </div>
                                 <input
                                     className="label-name-input"
@@ -190,6 +216,18 @@ export const LabelsSettings = observer(() => {
                     </React.Fragment>
                 ))}
             </div>
+
+            <ColorPickerContextMenu
+                isOpen={showColorPicker}
+                onClose={() => setShowColorPicker(false)}
+                position={colorPickerPos}
+                colors={PRESET_COLORS}
+                selectedColor={color}
+                onSelect={(c) => {
+                    setColor(c);
+                    setShowColorPicker(false);
+                }}
+            />
         </div>
     );
 });

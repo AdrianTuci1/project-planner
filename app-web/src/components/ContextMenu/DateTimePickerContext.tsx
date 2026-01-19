@@ -56,7 +56,7 @@ export const DateTimePickerContext = observer(({
             setViewDate(selectedDate);
             setIsTimePickerVisible(getHours(selectedDate) !== 0 || getMinutes(selectedDate) !== 0);
         }
-    }, [selectedDate]);
+    }, [selectedDate?.getTime()]);
 
     const handleSelect = (date: Date) => {
         const h = date.getHours();

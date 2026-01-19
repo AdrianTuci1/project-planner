@@ -1,0 +1,249 @@
+/* NotificationContext.css */
+
+.notification-context-container {
+    height: 500px;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    /* Ensure it fits within the context menu constraints */
+    width: 320px;
+}
+
+/* Header / Tabs */
+.notification-header {
+    display: flex;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0 var(--space-2);
+    flex-shrink: 0;
+}
+
+.notification-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.notification-tab:hover {
+    color: var(--text-main);
+}
+
+.notification-tab.active {
+    border-bottom-color: var(--primary-color);
+    color: var(--text-main);
+}
+
+/* List */
+.notification-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.notification-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 4px;
+}
+
+.notification-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    text-align: center;
+}
+
+/* Notification Card */
+.notification-card {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 0.2s;
+    background: transparent;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.notification-card:hover {
+    background-color: var(--bg-card-hover);
+}
+
+.notification-card.unread {
+    background-color: var(--bg-active);
+    border-left: 3px solid var(--primary-color);
+    /* Adjust padding to account for border if box-sizing isn't border-box (it usually is) */
+}
+
+.notification-card.read {
+    border-left: 3px solid transparent;
+}
+
+.notification-card-icon {
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.notification-card.unread .notification-card-icon {
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+}
+
+.notification-card-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 4px;
+    min-width: 0;
+    /* Important for truncation */
+}
+
+.notification-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.notification-message {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Actions in Card (Invites) */
+.notification-actions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    width: 100%;
+}
+
+.btn-notification-action {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.btn-accept {
+    color: white;
+    background: transparent;
+}
+
+.btn-accept:hover {
+    color: #1396077c;
+    filter: brightness(1.1);
+}
+
+.btn-accept:active {
+    transform: translateY(0);
+}
+
+.btn-decline {
+    color: var(--text-secondary);
+    background: transparent;
+}
+
+.btn-decline:hover {
+    color: #ff2e2eae;
+}
+
+/* Footer */
+.notification-footer {
+    padding: var(--space-2);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-subtle);
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.btn-footer {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+.btn-footer.close {
+    color: var(--text-muted);
+}
+
+.btn-footer.close:hover {
+    color: var(--text-main);
+}
+
+.btn-footer.primary {
+    color: var(--primary-color);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-footer.primary:hover {
+    background-color: var(--bg-input);
+}
+
+/* Standalone Popover Styles - Fixed */
+.notification-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: transparent;
+}
+
+.notification-popover {
+    position: fixed;
+    z-index: 9999;
+    background: var(--bg-popover);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    transform: translate(-50%, -100%);
+    margin-top: -12px;
+}

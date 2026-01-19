@@ -5,20 +5,22 @@ import { GroupView } from './Group/GroupView';
 import './MainView.css';
 
 export const MainView = observer(() => {
-    const mainGroupId = store.activeGroupId || (store.groups.length > 0 ? store.groups[0].id : null);
+    const mainGroupId = store.activeGroupId;
 
     // Ensure activeGroupId is set if not already
+    // Ensure activeGroupId is valid. If not found in current groups, reset to null (Brain Dump).
     React.useEffect(() => {
-        if (!store.activeGroupId && store.groups.length > 0) {
-            store.activeGroupId = store.groups[0].id;
+        if (store.activeGroupId) {
+            const group = store.groups.find(g => g.id === store.activeGroupId);
+            if (!group) {
+                store.activeGroupId = null;
+            }
         }
-    }, [store.groups]);
+    }, [store.groups, store.activeGroupId]);
 
     return (
         <div className="main-view-container">
-            {mainGroupId && (
-                <GroupView groupId={mainGroupId} />
-            )}
+            <GroupView groupId={mainGroupId || ''} />
         </div>
     );
 });

@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
-import { Task } from '../../models/core';
+import { Task, Workspace } from '../../models/core';
 import { SidebarTaskList } from '../Sidebar/SidebarTaskList';
 import { GroupList } from '../Shared/GroupList';
 import { TemplatesView } from '../Sidebar/TemplatesView';
@@ -8,6 +8,9 @@ import { sidebarUI } from '../../models/SidebarUIModel';
 import { TaskCard } from '../Gantt/TaskCard/index';
 import './Sidebar.css';
 import { SidebarViewToggle } from './SidebarViewToggle';
+import { Bell } from 'lucide-react';
+import { useState } from 'react';
+import { NotificationContext } from '../ContextMenu/NotificationContext';
 
 
 interface SidebarProps {
@@ -16,6 +19,8 @@ interface SidebarProps {
 
 export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
     const activeGroup = store.activeGroup;
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [notificationPosition, setNotificationPosition] = useState({ x: 0, y: 0 });
 
     const handleCreateTask = (title: string) => {
         if (title) {
@@ -138,11 +143,18 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
 
             {/* Sidebar Footer - Personal/Team Switch */}
             <div className="sidebar-footer">
-                <div className="workspace-switcher">
+                <div className="workspace-switcher" style={{ flex: 1 }}>
+
                     <button
                         className={`workspace-btn ${store.activeWorkspace?.type === 'personal' ? 'active' : ''}`}
                         onClick={() => {
-                            const personal = store.workspaces.find(w => w.type === 'personal');
+                            let personal = store.workspaces.find(w => w.type === 'personal');
+                            if (!personal) {
+                                // Self-healing: Create Personal workspace if missing
+                                personal = new Workspace("Personal", 'personal');
+                                // No default group created
+                                store.taskStore.workspaces.unshift(personal);
+                            }
                             if (personal) store.setActiveWorkspace(personal.id);
                         }}
                     >
@@ -151,19 +163,47 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
                     <button
                         className={`workspace-btn ${store.activeWorkspace?.type === 'team' ? 'active' : ''}`}
                         onClick={() => {
-                            const team = store.workspaces.find(w => w.type === 'team');
+                            let team = store.workspaces.find(w => w.type === 'team');
+                            if (!team) {
+                                // Self-healing: Create Team workspace if missing
+                                team = new Workspace("Team", 'team');
+                                // No default group created
+                                store.taskStore.workspaces.push(team);
+                            }
+                            // Re-find in case push didn't update ref or just use 'team' object
+                            // 'team' object is valid reference.
                             if (team) {
                                 store.setActiveWorkspace(team.id);
-                            } else {
-                                // If for some reason team doesn't exist (should be created in init), nothing happens?
-                                // Assuming init creates it.
                             }
                         }}
                     >
                         Team
                     </button>
                 </div>
+
+                <div
+                    className="notification-icon-wrapper"
+                    onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        // Position above the icon: y = rect.top
+                        // The ContextMenu will need logic or CSS transform to go 'up' from this point
+                        setNotificationPosition({
+                            x: rect.left + rect.width / 2, // Center horizontally
+                            y: rect.top - 8 // Slight gap above button
+                        });
+                        setIsNotificationOpen(true);
+                    }}
+                >
+                    <Bell size={18} />
+                    {store.notificationStore.hasUnread && <span className="notification-dot" />}
+                </div>
             </div>
+
+            <NotificationContext
+                isOpen={isNotificationOpen}
+                onClose={() => setIsNotificationOpen(false)}
+                position={notificationPosition}
+            />
         </aside>
     );
 });

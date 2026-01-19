@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction } from "mobx";
+import { makeAutoObservable, runInAction, reaction } from "mobx";
 import { Group, Task, IParticipant, GroupType, Workspace } from "../core";
 import { v4 as uuidv4 } from 'uuid';
 import { api } from "../../services/api";
@@ -14,7 +14,7 @@ const MOCK_USER: IParticipant = {
 export class TaskStore {
     rootStore: ProjectStore;
 
-    workspaces: Workspace[] = [];
+    workspaces: Workspace[] = [new Workspace("Personal", 'personal')];
     activeWorkspaceId: string | null = null;
 
     // Legacy support / Shortcuts? No, we should force usage of activeWorkspace to be safe.
@@ -32,6 +32,29 @@ export class TaskStore {
     constructor(rootStore: ProjectStore) {
         this.rootStore = rootStore;
         makeAutoObservable(this);
+
+        // Pre-set active workspace from default or storage immediately
+        if (typeof window !== 'undefined') {
+            const savedType = localStorage.getItem('activeWorkspaceType');
+            if (savedType === 'team') {
+            } else {
+                // Ensure ID is set for the default workspace
+                this.activeWorkspaceId = this.workspaces[0].id;
+            }
+
+            // Start reaction for persistence
+            reaction(
+                () => this.activeWorkspace?.type,
+                (type) => {
+                    if (type) {
+                        localStorage.setItem('activeWorkspaceType', type);
+                    }
+                }
+            );
+        } else {
+            // Server-side safe default
+            this.activeWorkspaceId = this.workspaces[0].id;
+        }
     }
 
     get activeWorkspace() {
@@ -56,35 +79,41 @@ export class TaskStore {
             // const data: any = {}; // Placeholder for actual API data
 
             runInAction(() => {
-                // Initialize default workspaces if empty
-                if (this.workspaces.length === 0) {
-                    const personal = new Workspace("Personal", 'personal');
-                    const team = new Workspace("Team", 'team');
+                // Initialize default workspaces if they don't exist
+                let personal = this.workspaces.find(w => w.type === 'personal');
+                let team = this.workspaces.find(w => w.type === 'team');
 
-                    this.workspaces = [personal, team];
-                    this.activeWorkspaceId = personal.id;
+                if (!personal) {
+                    // Should actully be there due to pre-seeding, but safe check
+                    personal = new Workspace("Personal", 'personal');
+                    this.workspaces.unshift(personal);
+                }
 
+                if (!team) {
+                    team = new Workspace("Team", 'team');
+                    this.workspaces.push(team);
+                }
+
+                // If workspaces were just created or are empty, seed them
+                if (personal.groups.length === 0) {
                     // Hydrate legacy/mock data into Personal workspace
                     if (data.groups && data.groups.length > 0) {
                         personal.groups = data.groups.map((g: any) => {
-                            // Ensure type is 'personal' for these legacy groups
                             const group = new Group(g.name, g.icon, 'personal', g.defaultLabelId, g.autoAddLabelEnabled);
                             group.id = g.id;
                             group.tasks = g.tasks.map((t: any) => this.hydrateTask(t));
                             return group;
                         });
-                    } else {
-                        // Seed default if no data
-                        personal.createGroup("My Tasks");
                     }
+                    // REMOVED: Seed default if no data ("My Tasks")
+                }
 
-                    // Hydrate Dump Tasks into Personal
-                    if (data.dumpTasks) {
-                        personal.dumpAreaTasks = data.dumpTasks.map((t: any) => this.hydrateTask(t));
-                    }
+                // REMOVED: Seed Team Workspace ("General")
 
-                    // Seed Team Workspace
-                    team.createGroup("General", "📢", 'team');
+                // Hydrate Dump Tasks into Personal
+                // Only if not already hydrated/present (simple check)
+                if (personal.dumpAreaTasks.length === 0 && data.dumpTasks) {
+                    personal.dumpAreaTasks = data.dumpTasks.map((t: any) => this.hydrateTask(t));
                 }
 
                 // Load Labels
@@ -97,14 +126,35 @@ export class TaskStore {
                     ];
                 }
 
+                // Determine active workspace from persistence or default
+                const savedType = localStorage.getItem('activeWorkspaceType');
+                let targetWorkspace = personal; // Default to Personal
+
+                if (savedType === 'team' && team) {
+                    targetWorkspace = team;
+                } else if (savedType === 'personal' && personal) {
+                    targetWorkspace = personal;
+                }
+
+                if (targetWorkspace) {
+                    this.activeWorkspaceId = targetWorkspace.id;
+                }
+
                 // Ensure activeGroupId is valid for the current workspace
+                // If switching workspaces or init, we check activeGroupId validity.
                 const currentGroups = this.groups; // Accessed via proxy getter
-                if (currentGroups.length > 0) {
-                    // If activeGroupId is null or not found in current groups, reset it
-                    const uiStore = this.rootStore.uiStore;
-                    if (!uiStore.activeGroupId || !currentGroups.some(g => g.id === uiStore.activeGroupId)) {
-                        uiStore.activeGroupId = currentGroups[0].id;
+                const uiStore = this.rootStore.uiStore;
+
+                if (uiStore.activeGroupId) {
+                    // VERIFY if activeGroupId exists in current workspace groups
+                    // If NOT, reset to null (Brain Dump).
+                    const exists = currentGroups.some(g => g.id === uiStore.activeGroupId);
+                    if (!exists) {
+                        uiStore.activeGroupId = null;
+                        // Or persist cleanup? 
                     }
+                } else {
+                    // If null, it means Brain Dump, valid.
                 }
             });
         } catch (err) {
