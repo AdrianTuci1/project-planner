@@ -1,7 +1,6 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import { api } from "../../services/api";
 import { CalendarAccount } from "../../services/types";
-import { v4 as uuidv4 } from 'uuid';
 
 export class CalendarSettingsModel {
     calendars: CalendarAccount[] = [];
@@ -32,25 +31,21 @@ export class CalendarSettingsModel {
     }
 
     async connectCalendar(provider: 'google' | 'outlook' | 'apple' | 'other' = 'google') {
+        if (provider !== 'google') {
+            alert("Only Google Calendar is currently supported.");
+            return;
+        }
+
         this.isLoading = true;
         try {
-            // Mocking the OAuth flow result for now
-            const newAccount: CalendarAccount = {
-                id: uuidv4(),
-                email: 'new.user@example.com',
-                name: 'New Calendar',
-                provider: provider,
-                color: '#4285F4',
-                isVisible: true
-            };
+            const data = await api.getGoogleAuthUrl();
 
-            const data = await api.addCalendar(newAccount);
-            runInAction(() => {
-                this.calendars = data.accounts;
-            });
+            if (data && data.url) {
+                window.location.href = data.url;
+            }
+
         } catch (error) {
-            console.error("Failed to connect calendar", error);
-        } finally {
+            console.error("Failed to initiate Google Auth", error);
             runInAction(() => {
                 this.isLoading = false;
             });

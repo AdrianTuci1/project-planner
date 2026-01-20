@@ -56,6 +56,8 @@ export interface CalendarAccount {
     isVisible: boolean;
     guestUpdateStrategy?: 'all' | 'none'; // 'all' = send update, 'none' = update but don't send
     subCalendars?: SubCalendar[];
+    refreshToken?: string;
+    tokenExpiry?: number;
 }
 
 export interface Workspace {

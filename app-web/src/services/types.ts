@@ -43,6 +43,13 @@ export interface IApiService {
     getNotifications(): Promise<any[]>;
     markNotificationRead(id: string): Promise<void>;
     respondToInvite(id: string, accept: boolean): Promise<void>;
+
+    // Auth
+    getGoogleAuthUrl(): Promise<{ url: string }>;
+
+    // Storage
+    getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }>;
+    deleteFile(key: string): Promise<void>;
 }
 
 export interface SubCalendar {

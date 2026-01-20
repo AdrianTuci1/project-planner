@@ -12,6 +12,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import { StorageRoute } from './routes/storage.route';
+
 const port = parseInt(process.env.PORT || '3000'); // Default to 3001 to avoid React conflict
 
 const app = new App(
@@ -24,6 +26,7 @@ const app = new App(
         new CalendarRoute(),
         new InvitationsRoute(),
         new NotificationsRoute(),
+        new StorageRoute(),
     ],
     port,
 );

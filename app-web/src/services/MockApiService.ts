@@ -240,4 +240,23 @@ export class MockApiService implements IApiService {
             }, MOCK_DELAY);
         });
     }
+
+    async inviteUser(email: string, workspaceId: string): Promise<void> { console.log("Mock Invite", email); }
+    async getNotifications(): Promise<any[]> { return []; }
+    async markNotificationRead(id: string): Promise<void> { }
+    async respondToInvite(id: string, accept: boolean): Promise<void> { }
+    async getGoogleAuthUrl(): Promise<{ url: string }> { return { url: '' }; }
+
+    async getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string }> {
+        // Return a fake object URL for testing local upload flow logic if possible,
+        // but since we need a PUT url, we can't really mock the S3 PUT easily without a real server or nock.
+        // For now, we return a dummy URL. The frontend might fail to PUT to it if it expects a real S3 signed URL.
+        // We will just log it.
+        console.log("Mock getUploadUrl", contentType, fileName);
+        return { url: "", key: "" };
+    }
+
+    async deleteFile(key: string): Promise<void> {
+        console.log("Mock deleteFile", key);
+    }
 }

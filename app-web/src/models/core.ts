@@ -49,8 +49,13 @@ export interface IAttachment {
     size: number;
     type: string;
     url: string;
+    key: string; // S3 Key
     createdAt: Date;
 }
+
+// ... existing code ...
+
+
 
 export type PriorityType = 'high' | 'medium' | 'low' | 'none';
 
@@ -182,14 +187,14 @@ export class Task implements ITask {
         return newTask;
     }
 
-    addAttachment(file: File) {
-        // Mock upload - in real app this would upload to server
+    addAttachment(attachmentData: { name: string, size: number, type: string, url: string, key: string }) {
         const attachment: IAttachment = {
             id: uuidv4(),
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            url: URL.createObjectURL(file), // Local preview URL
+            name: attachmentData.name,
+            size: attachmentData.size,
+            type: attachmentData.type,
+            url: attachmentData.url,
+            key: attachmentData.key,
             createdAt: new Date()
         };
         this.attachments.push(attachment);

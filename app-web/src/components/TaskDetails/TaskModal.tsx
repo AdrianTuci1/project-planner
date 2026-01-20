@@ -26,7 +26,6 @@ import { MakeRecurringTaskContext } from '../ContextMenu/MakeRecurringTaskContex
 import { RecurringTaskActionsContext } from '../ContextMenu/RecurringTaskActionsContext';
 import { PriorityContext } from '../ContextMenu/PriorityContext';
 import { SubtaskList } from '../Shared/SubtaskList';
-import { GroupList } from '../Shared/GroupList';
 import './TaskModal.css';
 import { AttachmentsSection } from './Attachments/AttachmentsSection';
 

@@ -4,12 +4,14 @@ import { TaskStore } from "./stores/TaskStore";
 import { UIStore } from "./stores/UIStore";
 import { RecurrenceStore } from "./stores/RecurrenceStore";
 import { NotificationStore } from "./stores/NotificationStore";
+import { AuthStore } from "./stores/AuthStore";
 
 export class ProjectStore {
     taskStore: TaskStore;
     uiStore: UIStore;
     recurrenceStore: RecurrenceStore;
     notificationStore: NotificationStore;
+    authStore: AuthStore;
 
     constructor() {
         // Initialize sub-stores
@@ -17,6 +19,7 @@ export class ProjectStore {
         this.uiStore = new UIStore(this);
         this.recurrenceStore = new RecurrenceStore(this);
         this.notificationStore = new NotificationStore(this);
+        this.authStore = new AuthStore(this);
 
         makeAutoObservable(this);
 

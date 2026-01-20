@@ -43,4 +43,33 @@ export class CalendarController {
             next(error);
         }
     }
+
+    public getGoogleAuthUrl = (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const url = this.calendarService.generateGoogleAuthUrl();
+            res.status(200).json({ url });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public googleCallback = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { code } = req.query;
+            if (!code || typeof code !== 'string') {
+                throw new Error("Missing code query param");
+            }
+
+            await this.calendarService.handleGoogleCallback(code);
+
+            // Redirect back to frontend
+            // Assuming frontend is at process.env.FRONTEND_URL or hardcoded for now
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            res.redirect(`${frontendUrl}?googleAuthSuccess=true`);
+        } catch (error) {
+            // Redirect with error
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            res.redirect(`${frontendUrl}?googleAuthError=true`);
+        }
+    }
 }

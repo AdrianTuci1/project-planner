@@ -5,23 +5,13 @@ import { SignupPage } from './pages/SignupPage';
 import { observer } from 'mobx-react-lite';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
+import { store } from './models/store';
+
 const AuthWrapper = observer(() => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // Use MobX store state instead of local state
+  const { isAuthenticated, isLoading } = store.authStore;
 
-  useEffect(() => {
-    // Simulate initial auth check
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div style={{
         display: 'flex',
@@ -40,11 +30,11 @@ const AuthWrapper = observer(() => {
     <Routes>
       <Route
         path="/signup"
-        element={isAuthenticated ? <Navigate to="/" /> : <SignupPage onComplete={handleLogin} />}
+        element={isAuthenticated ? <Navigate to="/" /> : <SignupPage onComplete={() => { }} />}
       />
       <Route
         path="/"
-        element={isAuthenticated ? <MainApp /> : <Login onLogin={handleLogin} />}
+        element={isAuthenticated ? <MainApp /> : <Login onLogin={() => { }} />}
       />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

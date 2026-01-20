@@ -10,6 +10,11 @@ export class RealApiService implements IApiService {
         syncService.init();
     }
 
+    private getAuthHeader(): HeadersInit {
+        const token = localStorage.getItem('accessToken');
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
     /**
      * Generic fetcher that handles ETag caching and Offline fallback.
      * @param url The API endpoint
@@ -24,8 +29,8 @@ export class RealApiService implements IApiService {
     private async fetchOrCached<T>(url: string, storeKey: string, fallbackValue: T): Promise<T> {
         // 1. Get Metadata (ETag)
         const meta = await dbService.get('meta', storeKey);
-        const headers: HeadersInit = {};
-        if (meta?.etag) headers['If-None-Match'] = meta.etag;
+        const headers: HeadersInit = { ...this.getAuthHeader() };
+        if (meta?.etag) (headers as any)['If-None-Match'] = meta.etag;
 
         try {
             // 2. Check Online Status
@@ -84,8 +89,8 @@ export class RealApiService implements IApiService {
             // Since we previously implemented dedicated stores for 'groups' and 'tasks', we should leverage them.
 
             const meta = await dbService.get('meta', key);
-            const headers: HeadersInit = {};
-            if (meta?.etag) headers['If-None-Match'] = meta.etag;
+            const headers: HeadersInit = { ...this.getAuthHeader() };
+            if (meta?.etag) (headers as any)['If-None-Match'] = meta.etag;
 
             try {
                 if (!navigator.onLine) {
@@ -153,7 +158,10 @@ export class RealApiService implements IApiService {
         if (navigator.onLine) {
             const res = await fetch(`${this.baseUrl}/settings/general`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...this.getAuthHeader()
+                },
                 body: JSON.stringify(settings)
             });
             if (!res.ok) throw new Error(`Update settings failed: ${res.statusText}`);
@@ -174,7 +182,10 @@ export class RealApiService implements IApiService {
         if (navigator.onLine) {
             const res = await fetch(`${this.baseUrl}/calendars`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...this.getAuthHeader()
+                },
                 body: JSON.stringify(account)
             });
             if (!res.ok) throw new Error(`Add calendar failed: ${res.statusText}`);
@@ -189,7 +200,10 @@ export class RealApiService implements IApiService {
         if (navigator.onLine) {
             const res = await fetch(`${this.baseUrl}/calendars/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...this.getAuthHeader()
+                },
                 body: JSON.stringify(data)
             });
             if (!res.ok) throw new Error(`Update calendar failed: ${res.statusText}`);
@@ -203,7 +217,8 @@ export class RealApiService implements IApiService {
     async deleteCalendar(id: string): Promise<CalendarData> {
         if (navigator.onLine) {
             const res = await fetch(`${this.baseUrl}/calendars/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: { ...this.getAuthHeader() }
             });
             if (!res.ok) throw new Error(`Delete calendar failed: ${res.statusText}`);
             return await res.json();
@@ -220,7 +235,10 @@ export class RealApiService implements IApiService {
 
         const res = await fetch(`${this.baseUrl}/invitations`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...this.getAuthHeader()
+            },
             body: JSON.stringify({ email, workspaceId })
         });
         if (!res.ok) throw new Error(`Invite failed: ${res.statusText}`);
@@ -235,12 +253,47 @@ export class RealApiService implements IApiService {
     }
 
     async markNotificationRead(id: string): Promise<void> {
-        await fetch(`${this.baseUrl}/notifications/${id}/read`, { method: 'PUT' });
+        await fetch(`${this.baseUrl}/notifications/${id}/read`, {
+            method: 'PUT',
+            headers: { ...this.getAuthHeader() }
+        });
     }
 
     async respondToInvite(id: string, accept: boolean): Promise<void> {
         const action = accept ? 'accept' : 'decline';
-        const res = await fetch(`${this.baseUrl}/invitations/${id}/${action}`, { method: 'POST' });
+        const res = await fetch(`${this.baseUrl}/invitations/${id}/${action}`, {
+            method: 'POST',
+            headers: { ...this.getAuthHeader() }
+        });
         if (!res.ok) throw new Error(`Respond invite failed: ${res.statusText}`);
+    }
+
+    async getGoogleAuthUrl(): Promise<{ url: string }> {
+        const res = await fetch(`${this.baseUrl}/calendars/auth/google`, {
+            headers: { ...this.getAuthHeader() }
+        });
+        if (!res.ok) throw new Error(`Failed to get auth url: ${res.statusText}`);
+        return await res.json();
+    }
+
+    async getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }> {
+        const res = await fetch(`${this.baseUrl}/storage/presigned-url`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...this.getAuthHeader()
+            },
+            body: JSON.stringify({ contentType, fileName })
+        });
+        if (!res.ok) throw new Error(`Failed to get upload URL: ${res.statusText}`);
+        return await res.json();
+    }
+
+    async deleteFile(key: string): Promise<void> {
+        const res = await fetch(`${this.baseUrl}/storage/files/${encodeURIComponent(key)}`, {
+            method: 'DELETE',
+            headers: { ...this.getAuthHeader() }
+        });
+        if (!res.ok) throw new Error(`Failed to delete file: ${res.statusText}`);
     }
 }

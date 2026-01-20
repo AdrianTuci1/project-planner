@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { Task } from '../../../models/core';
 import { Paperclip, Plus } from 'lucide-react';
 import { AttachmentCard } from './AttachmentCard';
+import { api } from '../../../services/api';
 
 interface AttachmentsSectionProps {
     task: Task;
@@ -13,24 +14,68 @@ export const AttachmentsSection = observer(({ task }: AttachmentsSectionProps) =
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0];
 
-            // Mock Upload Process
+            // 1. Validation (25MB)
+            const MAX_SIZE = 25 * 1024 * 1024;
+            if (file.size > MAX_SIZE) {
+                alert("File is too large. Max 25MB allowed.");
+                return;
+            }
+
             setUploading(true);
             setProgress(0);
 
-            let p = 0;
-            const interval = setInterval(() => {
-                p += 10;
-                setProgress(p);
-                if (p >= 100) {
-                    clearInterval(interval);
-                    task.addAttachment(file);
+            try {
+                // 2. Get Presigned URL
+                const { url, key, publicUrl } = await api.getUploadUrl(file.type, file.name);
+
+                // 3. Upload to S3
+                const xhr = new XMLHttpRequest();
+                xhr.open('PUT', url, true);
+                xhr.setRequestHeader('Content-Type', file.type);
+
+                xhr.upload.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const percentComplete = (event.loaded / event.total) * 100;
+                        setProgress(percentComplete);
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        // 4. Add to Task
+                        task.addAttachment({
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            url: publicUrl,
+                            key: key
+                        });
+                        setUploading(false);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                    } else {
+                        console.error("Upload failed", xhr.statusText);
+                        alert("Upload failed. Please try again.");
+                        setUploading(false);
+                    }
+                };
+
+                xhr.onerror = () => {
+                    console.error("Upload error");
+                    alert("Upload error. Please check your connection.");
                     setUploading(false);
-                }
-            }, 100);
+                };
+
+                xhr.send(file);
+
+            } catch (err) {
+                console.error(err);
+                alert("Failed to initiate upload.");
+                setUploading(false);
+            }
         }
     };
 
@@ -81,7 +126,14 @@ export const AttachmentsSection = observer(({ task }: AttachmentsSectionProps) =
                         <AttachmentCard
                             key={attachment.id}
                             attachment={attachment}
-                            onDelete={() => task.removeAttachment(attachment.id)}
+                            onDelete={async () => {
+                                if (window.confirm("Delete this attachment?")) {
+                                    if (attachment.key) {
+                                        await api.deleteFile(attachment.key);
+                                    }
+                                    task.removeAttachment(attachment.id);
+                                }
+                            }}
                         />
                     ))}
 
