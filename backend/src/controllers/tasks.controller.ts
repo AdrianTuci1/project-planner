@@ -4,10 +4,11 @@ import { TasksService } from '../services/tasks.service';
 export class TasksController {
     public tasksService = new TasksService();
 
-    public getDump = async (req: Request, res: Response, next: NextFunction) => {
+    public getTasks = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { startDate, endDate } = req.query;
-            const tasks = await this.tasksService.getDump(startDate as string, endDate as string);
+            const { startDate, endDate, workspaceId } = req.query;
+            const userId = (req as any).user.sub; // Cognito 'sub' is the userId
+            const tasks = await this.tasksService.getTasks(startDate as string, endDate as string, workspaceId as string, userId);
             res.status(200).json(tasks);
         } catch (error) {
             next(error);

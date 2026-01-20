@@ -72,7 +72,7 @@ export class RealApiService implements IApiService {
         }
     }
 
-    async getInitialData(startDate: Date, endDate: Date): Promise<InitialDataResponse> {
+    async getInitialData(startDate: Date, endDate: Date, workspaceId?: string): Promise<InitialDataResponse> {
         const startStr = startDate.toISOString();
         const endStr = endDate.toISOString();
 
@@ -122,9 +122,11 @@ export class RealApiService implements IApiService {
             return [];
         };
 
+        const workspaceParam = workspaceId ? `&workspaceId=${workspaceId}` : '';
+
         const [groups, dumpTasks, availableLabels] = await Promise.all([
             fetchItem<any>(`${this.baseUrl}/groups?startDate=${startStr}&endDate=${endStr}`, 'groups_req', 'groups'),
-            fetchItem<any>(`${this.baseUrl}/tasks/dump?startDate=${startStr}&endDate=${endStr}`, 'dump_req', 'tasks'),
+            fetchItem<any>(`${this.baseUrl}/tasks?startDate=${startStr}&endDate=${endStr}${workspaceParam}`, 'tasks_req', 'tasks'),
             this.fetchOrCached<any[]>(`${this.baseUrl}/labels`, 'labels_req', [])
         ]);
 
@@ -209,5 +211,36 @@ export class RealApiService implements IApiService {
             await syncService.addToQueue(`${this.baseUrl}/calendars/${id}`, 'DELETE', {});
             return { accounts: [] };
         }
+    }
+
+    // Invitations & Notifications
+    async inviteUser(email: string, workspaceId: string): Promise<void> {
+        // Assume online for now
+        if (!navigator.onLine) throw new Error("Must be online to invite");
+
+        const res = await fetch(`${this.baseUrl}/invitations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, workspaceId })
+        });
+        if (!res.ok) throw new Error(`Invite failed: ${res.statusText}`);
+    }
+
+    async getNotifications(): Promise<any[]> {
+        return this.fetchOrCached<any[]>(
+            `${this.baseUrl}/notifications`,
+            'notifications_list',
+            []
+        );
+    }
+
+    async markNotificationRead(id: string): Promise<void> {
+        await fetch(`${this.baseUrl}/notifications/${id}/read`, { method: 'PUT' });
+    }
+
+    async respondToInvite(id: string, accept: boolean): Promise<void> {
+        const action = accept ? 'accept' : 'decline';
+        const res = await fetch(`${this.baseUrl}/invitations/${id}/${action}`, { method: 'POST' });
+        if (!res.ok) throw new Error(`Respond invite failed: ${res.statusText}`);
     }
 }

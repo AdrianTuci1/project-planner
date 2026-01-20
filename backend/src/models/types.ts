@@ -28,18 +28,9 @@ export interface GeneralSettings {
     rolloverTo: string;
 }
 
-export interface Group {
-    id: string;
-    title: string;
-    type: string;
-    [key: string]: any;
-}
 
-export interface Task {
-    id: string;
-    title: string;
-    [key: string]: any;
-}
+
+
 
 export interface Label {
     id: string;
@@ -65,6 +56,41 @@ export interface CalendarAccount {
     isVisible: boolean;
     guestUpdateStrategy?: 'all' | 'none'; // 'all' = send update, 'none' = update but don't send
     subCalendars?: SubCalendar[];
+}
+
+export interface Workspace {
+    id: string;
+    name: string;
+    type: 'personal' | 'team';
+    ownerId: string;
+    members: string[]; // User IDs
+    createdAt: number;
+}
+
+export interface Subscription {
+    userId: string;
+    plan: 'free' | 'pro';
+    frequency?: 'monthly' | 'yearly';
+    status: 'active' | 'canceled' | 'expired';
+    startDate: number;
+    expirationDate: number;
+    autoRenew: boolean;
+}
+
+export interface Group {
+    id: string;
+    title: string;
+    type: string;
+    workspaceId?: string; // Link to workspace
+    [key: string]: any;
+}
+
+export interface Task {
+    id: string;
+    title: string;
+    workspaceId?: string; // Link to workspace
+    assigneeId?: string; // For team tasks
+    [key: string]: any;
 }
 
 export interface CalendarData {

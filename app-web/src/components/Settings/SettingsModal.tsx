@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import './SettingsModal.css';
 import { GeneralSettings } from './GeneralSettings';
+import { TeamSettings } from './TeamSettings';
 import { LabelsSettings } from './LabelsSettings';
 import { PowerFeaturesSettings } from './PowerFeaturesSettings';
 import { CalendarSettings } from './CalendarSettings';
@@ -126,38 +127,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                         {settings.activeTab === 'account' && <AccountSettings />}
 
                         {settings.activeTab === 'team' && (
-                            <div>
-                                <h3>Your Team</h3>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: 20 }}>
-                                    Manage members of your workspace.
-                                </p>
-
-                                <div className="invite-section">
-                                    <label className="form-label" style={{ marginBottom: 0 }}>Invite new member</label>
-                                    <div className="invite-row">
-                                        <input
-                                            className="form-input"
-                                            placeholder="colleague@example.com"
-                                            value={settings.emailToInvite}
-                                            onChange={(e) => settings.setEmailToInvite(e.target.value)}
-                                        />
-                                        <button className="btn-primary" onClick={handleInvite}>Invite</button>
-                                    </div>
-                                </div>
-
-                                <div style={{ marginTop: 30 }}>
-                                    <div className="form-label">Active Members</div>
-                                    {/* List would go here */}
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: 10,
-                                        padding: 10, borderBottom: '1px solid var(--border-subtle)'
-                                    }}>
-                                        <div className="settings-avatar-sm" style={{ width: 32, height: 32, fontSize: 12 }}>T</div>
-                                        <div style={{ fontSize: 14 }}>Tuci (You)</div>
-                                        <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>Owner</div>
-                                    </div>
-                                </div>
-                            </div>
+                            <TeamSettings />
                         )}
 
                         {settings.activeTab === 'general' && <GeneralSettings />}

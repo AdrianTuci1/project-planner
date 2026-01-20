@@ -1,0 +1,98 @@
+import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DBClient } from "../config/db.client";
+import { Workspace } from '../models/types';
+import { v4 as uuidv4 } from 'uuid';
+
+import { NotificationsService } from "./notifications.service";
+
+export class WorkspacesService {
+    private docClient: DynamoDBDocumentClient;
+    private tableName: string;
+
+    private notificationsService: NotificationsService;
+
+    constructor() {
+        this.docClient = DBClient.getInstance();
+        this.tableName = process.env.TABLE_WORKSPACES || 'workspaces';
+        this.notificationsService = new NotificationsService();
+    }
+
+    public async getAllWorkspaces(userId: string, email?: string): Promise<Workspace[]> {
+        // Warning: Scan is expensive. Ideally use GSI on members.
+        // But for < 1000 workspaces it's fine.
+        const command = new ScanCommand({
+            TableName: this.tableName,
+        });
+
+        const result = await this.docClient.send(command);
+        const all = (result.Items || []) as Workspace[];
+
+        const userWorkspaces = all.filter(w => w.members.includes(userId));
+
+        // Ensure Personal Workspace Exists
+        const hasPersonal = userWorkspaces.some(w => w.type === 'personal' && w.ownerId === userId);
+        if (!hasPersonal) {
+            const personal = await this.createWorkspace("Personal", 'personal', userId);
+            userWorkspaces.unshift(personal);
+
+            // Trigger Welcome Notification
+            if (email) {
+                await this.notificationsService.sendWelcomeNotification(userId, email);
+            }
+        }
+
+        return userWorkspaces;
+    }
+
+    public async createWorkspace(name: string, type: 'personal' | 'team', ownerId: string): Promise<Workspace> {
+        const newWorkspace: Workspace = {
+            id: uuidv4(),
+            name,
+            type: type,
+            ownerId,
+            members: [ownerId],
+            createdAt: Date.now()
+        };
+
+        const command = new PutCommand({
+            TableName: this.tableName,
+            Item: newWorkspace
+        });
+
+        await this.docClient.send(command);
+        return newWorkspace;
+    }
+
+    public async getWorkspaceById(id: string): Promise<Workspace | undefined> {
+        const command = new GetCommand({
+            TableName: this.tableName,
+            Key: { id }
+        });
+        const result = await this.docClient.send(command);
+        return result.Item as Workspace | undefined;
+    }
+
+    public async addMember(workspaceId: string, userId: string) {
+        // Use SET to append to list, checking if not exists ideally.
+        // DynamoDB List append: list_append(members, :u)
+        // But let's read-modify-write for safety or use simple update if we assume set.
+        // Actually workspace.members is an array.
+
+        // Retrieve first to avoid duplicates
+        const workspace = await this.getWorkspaceById(workspaceId);
+        if (!workspace) throw new Error("Workspace not found");
+
+        if (workspace.members.includes(userId)) return; // Already member
+
+        const command = new UpdateCommand({
+            TableName: this.tableName,
+            Key: { id: workspaceId },
+            UpdateExpression: "SET members = list_append(members, :u)",
+            ExpressionAttributeValues: {
+                ":u": [userId]
+            }
+        });
+
+        await this.docClient.send(command);
+    }
+}

@@ -30,13 +30,19 @@ export interface GeneralSettings {
 }
 
 export interface IApiService {
-    getInitialData(startDate: Date, endDate: Date): Promise<InitialDataResponse>;
+    getInitialData(startDate: Date, endDate: Date, workspaceId?: string): Promise<InitialDataResponse>;
     getGeneralSettings(): Promise<GeneralSettings>;
     updateGeneralSettings(settings: Partial<GeneralSettings>): Promise<void>;
     getCalendars(): Promise<CalendarData>;
     addCalendar(account: CalendarAccount): Promise<CalendarData>;
     updateCalendar(id: string, data: Partial<CalendarAccount>): Promise<CalendarData>;
     deleteCalendar(id: string): Promise<CalendarData>;
+
+    // Invitations & Notifications
+    inviteUser(email: string, workspaceId: string): Promise<void>;
+    getNotifications(): Promise<any[]>;
+    markNotificationRead(id: string): Promise<void>;
+    respondToInvite(id: string, accept: boolean): Promise<void>;
 }
 
 export interface SubCalendar {

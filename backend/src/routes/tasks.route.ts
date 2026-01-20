@@ -14,7 +14,7 @@ export class TasksRoute implements Routes {
     }
 
     private initializeRoutes() {
-        this.router.get(`${this.path}/dump`, this.authMiddleware.verifyToken, this.tasksController.getDump);
+        this.router.get(`${this.path}`, this.authMiddleware.verifyToken, this.tasksController.getTasks);
         this.router.post(`${this.path}`, this.authMiddleware.verifyToken, this.tasksController.createTask);
         this.router.put(`${this.path}/:id`, this.authMiddleware.verifyToken, this.tasksController.updateTask);
         this.router.delete(`${this.path}/:id`, this.authMiddleware.verifyToken, this.tasksController.deleteTask);

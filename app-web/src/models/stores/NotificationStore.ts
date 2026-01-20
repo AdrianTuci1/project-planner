@@ -1,5 +1,6 @@
 import { makeAutoObservable } from "mobx";
 import { ProjectStore } from "../store";
+import { api } from "../../services/api";
 
 export type NotificationType = 'announcement' | 'invite';
 
@@ -13,6 +14,7 @@ export interface Notification {
     // For invite
     inviterName?: string;
     workspaceName?: string;
+    data?: any;
 }
 
 export class NotificationStore {
@@ -22,26 +24,27 @@ export class NotificationStore {
     constructor(rootStore: ProjectStore) {
         this.rootStore = rootStore;
         makeAutoObservable(this);
+        this.fetchNotifications();
+    }
 
-        // Add some dummy data for testing
-        this.addNotification({
-            id: '1',
-            type: 'announcement',
-            title: 'New Feature Available',
-            message: 'Check out the new dark mode!',
-            date: new Date(),
-            isRead: false
-        });
-        this.addNotification({
-            id: '2',
-            type: 'invite',
-            title: 'Workspace Invite',
-            message: 'John Doe invited you to join "Marketing Team"',
-            inviterName: 'John Doe',
-            workspaceName: 'Marketing Team',
-            date: new Date(Date.now() - 3600000), // 1 hour ago
-            isRead: false
-        });
+    async fetchNotifications() {
+        try {
+            const data = await api.getNotifications();
+            this.notifications = data.map((n: any) => ({
+                id: n.id,
+                type: n.type,
+                title: n.title,
+                message: n.message,
+                date: new Date(n.createdAt),
+                isRead: n.isRead,
+                // data payload mapping
+                inviterName: n.data?.inviterName,
+                workspaceName: n.data?.workspaceName,
+                data: n.data
+            }));
+        } catch (err) {
+            console.error("Failed to fetch notifications", err);
+        }
     }
 
     get hasUnread() {
@@ -56,21 +59,42 @@ export class NotificationStore {
         const note = this.notifications.find(n => n.id === id);
         if (note) {
             note.isRead = true;
+            api.markNotificationRead(id).catch((err: any) => console.error("Failed to mark read", err));
         }
     }
 
     markAllAsRead() {
-        this.notifications.forEach(n => n.isRead = true);
+        this.notifications.forEach(n => {
+            if (!n.isRead) this.markAsRead(n.id);
+        });
     }
 
     deleteNotification(id: string) {
         this.notifications = this.notifications.filter(n => n.id !== id);
     }
 
-    // Mock invite handling
-    handleInvite(id: string, accept: boolean) {
-        console.log(`Invite ${id} ${accept ? 'accepted' : 'declined'}`);
-        // In a real app, this would make an API call
-        this.deleteNotification(id);
+    async handleInvite(id: string, accept: boolean) {
+        try {
+            const note = this.notifications.find(n => n.id === id);
+            // If the notification `data` contains `inviteId`, use it.
+            const inviteId = note?.data?.inviteId || note?.data?.id; // fallback
+
+            if (!inviteId) {
+                console.error("Invite ID not found on notification");
+                return;
+            }
+
+            await api.respondToInvite(inviteId, accept);
+            this.deleteNotification(id);
+
+            if (accept) {
+                // Refresh data to show new workspace
+                if (this.rootStore.taskStore) {
+                    this.rootStore.taskStore.initializeData();
+                }
+            }
+        } catch (err) {
+            console.error("Failed to respond to invite", err);
+        }
     }
 }

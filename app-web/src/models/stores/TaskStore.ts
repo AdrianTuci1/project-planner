@@ -75,7 +75,7 @@ export class TaskStore {
             this.lastFetchRange = { start, end };
 
             // Mock Data or API call
-            const data = await api.getInitialData(start, end);
+            const data = await api.getInitialData(start, end, this.activeWorkspaceId || undefined);
             // const data: any = {}; // Placeholder for actual API data
 
             runInAction(() => {

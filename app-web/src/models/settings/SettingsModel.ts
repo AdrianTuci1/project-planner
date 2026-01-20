@@ -1,4 +1,5 @@
 import { makeAutoObservable } from "mobx";
+import { api } from "../../services/api";
 
 export type SettingsTab = 'account' | 'team' | 'general' | 'labels' | 'power' | 'calendar' | 'due_dates';
 export type AccountView = 'main' | 'email' | 'password';
@@ -43,10 +44,20 @@ export class SettingsModel {
         this.emailToInvite = email;
     }
 
-    inviteUser() {
-        if (this.emailToInvite) {
-            alert(`Invited ${this.emailToInvite} to the team!`);
+    async inviteUser(workspaceId?: string) {
+        if (!this.emailToInvite) return;
+        if (!workspaceId) {
+            alert("No active workspace to invite to.");
+            return;
+        }
+
+        try {
+            await api.inviteUser(this.emailToInvite, workspaceId);
+            alert(`Invited ${this.emailToInvite} successfully!`);
             this.emailToInvite = '';
+        } catch (err) {
+            console.error("Failed to invite user", err);
+            alert("Failed to send invitation.");
         }
     }
 }

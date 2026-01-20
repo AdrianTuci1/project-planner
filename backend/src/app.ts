@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { Routes } from './routes/routes.interface';
-import { CalendarRoute } from './routes/calendar.route';
 
 dotenv.config();
 
