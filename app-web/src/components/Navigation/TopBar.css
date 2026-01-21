@@ -133,3 +133,8 @@
     height: 16px;
     color: inherit;
 }
+
+.avatar-button {
+    width: 32px;
+    height: 32px;
+}

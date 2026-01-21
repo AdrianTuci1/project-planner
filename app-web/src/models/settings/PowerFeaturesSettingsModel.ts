@@ -3,7 +3,7 @@ import { sidebarUI } from "../SidebarUIModel";
 
 export class PowerFeaturesSettingsModel {
     dueDatesEnabled: boolean = false;
-    templatesEnabled: boolean = true;
+    templatesEnabled: boolean = false;
 
     constructor() {
         makeAutoObservable(this);

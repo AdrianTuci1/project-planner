@@ -27,9 +27,9 @@
 
 .tc-header {
     display: flex;
+    padding: 8px 0px;
     align-items: flex-start;
     gap: var(--space-3);
-    padding: 2px 0px;
 }
 
 .tc-checkbox-wrapper {

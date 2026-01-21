@@ -45,7 +45,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
     const isTemplate = store.templates.some(t => t.id === task.id) || store.isTemplateCreationMode;
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay task-details-overlay" onClick={onClose}>
             <div className="task-card-modal" onClick={e => e.stopPropagation()}>
                 {/* Template Banner */}
                 {isTemplate && (

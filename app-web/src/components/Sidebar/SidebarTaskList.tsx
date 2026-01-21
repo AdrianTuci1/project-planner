@@ -39,7 +39,7 @@ export const SidebarTaskList = observer(({
         <div
             ref={isSortable ? setNodeRef : undefined}
             className={`sidebar-tasks-list`}
-            style={{ minHeight: '50px' }}
+            style={{ minHeight: '200px' }}
         >
             {isSortable ? (
                 <SortableContext
@@ -53,6 +53,7 @@ export const SidebarTaskList = observer(({
                             task={task}
                             onDuplicate={onDuplicate}
                             onDelete={onDelete}
+                            onTaskClick={(t) => store.openTaskModal(t)}
                             containerData={containerData || { type: 'sidebar-list', groupId: store.activeGroupId }}
                         />
                     ))}
@@ -65,6 +66,7 @@ export const SidebarTaskList = observer(({
                         task={task}
                         onDuplicate={onDuplicate}
                         onDelete={onDelete}
+                        onTaskClick={(t) => store.openTaskModal(t)}
                     // Add style or className to match look if needed
                     />
                 ))

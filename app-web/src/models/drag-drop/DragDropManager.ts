@@ -35,8 +35,10 @@ export class DragDropManager {
         if (activeId.startsWith('calendar-') || activeId.startsWith('timebox-')) return;
 
         const taskId = activeId;
-        const task = store.allTasks.find(t => t.id === taskId);
+        const task = store.getTaskById(taskId);
         if (!task) return;
+
+        const isTemplate = store.templates.some(t => t.id === task.id);
 
         const overId = over.id as string;
         let overData = over.data.current as DragData | undefined;
@@ -45,6 +47,25 @@ export class DragDropManager {
         }
 
         if (!overData) return;
+
+        // SKIP optimistic updates for Templates
+        if (isTemplate) {
+            // Handle Calendar/Timebox Live Preview Tracking ONLY
+            if (overData.type === 'calendar-cell' || overData.type === 'timebox-slot') {
+                const { date, hour, minute: slotMinute } = overData;
+                if (date && hour !== undefined) {
+                    const minute = slotMinute || 0;
+                    runInAction(() => {
+                        store.setDragOverLocation({
+                            date: startOfDay(date),
+                            hour: Number(hour),
+                            minute: Number(minute)
+                        });
+                    });
+                }
+            }
+            return;
+        }
 
         // Identify containers
         // We rely on checking if task is already in the target group/list
@@ -255,7 +276,7 @@ export class DragDropManager {
         if (activeId.startsWith('calendar-')) taskId = activeId.replace('calendar-', '');
         else if (activeId.startsWith('timebox-')) taskId = activeId.replace('timebox-', '');
 
-        const task = store.allTasks.find(t => t.id === taskId);
+        let task = store.getTaskById(taskId);
 
         if (!task) {
             console.warn('Task not found for DnD:', taskId);
@@ -290,6 +311,25 @@ export class DragDropManager {
             // If starting from Calendar/Timebox, can ONLY go to Calendar/Timebox
             if (dropType !== 'calendar-cell' && dropType !== 'timebox-slot') {
                 console.warn('[DragDropManager] Isolation rule blocked drop:', { origin, dropType });
+                return;
+            }
+        }
+
+        // CLONE TEMPLATES if needed
+        const isTemplate = store.templates.some(t => t.id === taskId);
+        if (isTemplate) {
+            if (dropType === 'kanban-column' || dropType === 'calendar-cell' || dropType === 'timebox-slot') {
+                const clone = task.clone();
+                runInAction(() => {
+                    if (store.activeGroup) {
+                        store.activeGroup.addTask(clone);
+                    } else {
+                        store.workspaceStore.activeWorkspace?.dumpAreaTasks.push(clone);
+                    }
+                });
+                task = clone;
+            } else {
+                console.warn('[DragDropManager] Copied template dropped on invalid target:', dropType);
                 return;
             }
         }

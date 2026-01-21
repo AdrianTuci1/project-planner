@@ -41,7 +41,7 @@ export const MainApp = observer(() => {
         store.setDragOverLocation(null);
     };
 
-    const activeTask = activeId ? store.allTasks.find(t => t.id === (activeId.startsWith('calendar-') ? activeId.replace('calendar-', '') : activeId)) : null;
+    const activeTask = activeId ? store.getTaskById(activeId.startsWith('calendar-') ? activeId.replace('calendar-', '') : activeId) : null;
 
     // Determine if we are dragging over a calendar-like area
     const isOverCalendar = overId?.startsWith('calendar-') || overId?.startsWith('timebox-');
