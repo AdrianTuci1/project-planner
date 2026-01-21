@@ -1,6 +1,7 @@
 import { reaction, IReactionDisposer } from "mobx";
 import { api } from "../../services/api";
 import { Group } from "../core";
+import { taskSyncStrategy } from "./TaskSyncStrategy";
 
 type DebouncedFunction = ((...args: any[]) => void) & { cancel: () => void };
 
@@ -45,6 +46,16 @@ export class GroupSyncStrategy {
             }),
             (data) => {
                 this.scheduleUpdate(group.id, group);
+            }
+        ));
+
+        // Auto-monitor tasks
+        disposers.push(reaction(
+            () => group.tasks.length,
+            () => {
+                group.tasks.forEach(t => {
+                    taskSyncStrategy.monitor(t);
+                });
             }
         ));
 

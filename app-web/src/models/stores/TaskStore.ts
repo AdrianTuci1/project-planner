@@ -1,7 +1,8 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, reaction } from "mobx";
 import { Task, IParticipant } from "../core";
 import { ProjectStore } from "../store";
 import { taskSyncStrategy } from "../strategies/TaskSyncStrategy";
+import { api } from "../../services/api";
 
 const MOCK_USER: IParticipant = {
     id: 'u1',
@@ -17,6 +18,14 @@ export class TaskStore {
     constructor(rootStore: ProjectStore) {
         this.rootStore = rootStore;
         makeAutoObservable(this);
+
+        // Auto-monitor templates
+        reaction(
+            () => this.templates.length,
+            () => {
+                this.templates.forEach(t => taskSyncStrategy.monitor(t));
+            }
+        );
     }
 
     get allTasks() {
@@ -44,8 +53,7 @@ export class TaskStore {
     }
 
     addTaskToDump(title: string) {
-        const task = this.rootStore.workspaceStore.activeWorkspace?.addTaskToDump(title);
-        if (task) taskSyncStrategy.monitor(task);
+        return this.rootStore.workspaceStore.activeWorkspace?.addTaskToDump(title);
     }
 
     moveTaskToGroup(taskId: string, groupId: string) {
@@ -66,6 +74,11 @@ export class TaskStore {
     deleteTask(taskId: string) {
         const activeWorkspace = this.rootStore.workspaceStore.activeWorkspace;
         if (!activeWorkspace) return;
+
+        // Perform API delete
+        api.deleteTask(taskId).catch(err => {
+            console.error(`[TaskStore] Failed to delete task ${taskId} from server`, err);
+        });
 
         const dumpIndex = activeWorkspace.dumpAreaTasks.findIndex(t => t.id === taskId);
         if (dumpIndex > -1) {
@@ -90,7 +103,6 @@ export class TaskStore {
         if (dumpIndex > -1) {
             const clone = task.clone();
             activeWorkspace.dumpAreaTasks.splice(dumpIndex + 1, 0, clone);
-            taskSyncStrategy.monitor(clone);
             return clone;
         }
 
@@ -98,7 +110,6 @@ export class TaskStore {
             const groupTask = group.tasks.find(t => t.id === task.id);
             if (groupTask) {
                 const clone = group.duplicateTask(task.id);
-                if (clone) taskSyncStrategy.monitor(clone);
                 return clone;
             }
         }
@@ -133,7 +144,22 @@ export class TaskStore {
     createTaskInGroup(title: string, group: any) {
         const task = new Task(title);
         group.addTask(task);
-        taskSyncStrategy.monitor(task);
         return task;
+    }
+
+    removeLabelFromTasks(labelId: string) {
+        this.allTasks.forEach(task => {
+            if (task.labelId === labelId) {
+                task.labelId = null;
+                // Strategy will auto-sync this change
+            }
+        });
+
+        // Also remove from templates
+        this.templates.forEach(t => {
+            if (t.labelId === labelId) {
+                t.labelId = null;
+            }
+        });
     }
 }

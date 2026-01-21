@@ -23,20 +23,18 @@ export class TasksService {
         const result = await this.docClient.send(command);
         let allTasks = result.Items || [];
 
-        console.log(`[TasksService] Total DB Items: ${allTasks.length}`);
         if (allTasks.length > 0) {
-            console.log(`[TasksService] Sample Item [0]:`, JSON.stringify(allTasks[0], null, 2));
-            const matchUser = allTasks[0].createdBy === userId;
-            const matchWorkspace = (allTasks[0].workspaceId === 'personal' || !allTasks[0].workspaceId);
-            console.log(`[TasksService] Sample Match Check - User: ${matchUser} (Item: ${allTasks[0].createdBy} vs Req: ${userId}), Workspace: ${matchWorkspace}`);
+            const matchUser = allTasks.some(t => t.createdBy === userId);
+            const matchWorkspace = allTasks.some(t => t.workspaceId === workspaceId || (!t.workspaceId && workspaceId === 'personal'));
+            console.log(`[TasksService] Match Summary - Found Any User Match: ${matchUser}, Found Any Workspace Match: ${matchWorkspace} (Search: ${workspaceId}, User: ${userId})`);
         }
 
         // 1. Filter by Workspace Access
         if (workspaceId === 'personal') {
-            // For Personal: Only return tasks created by this user that are marked as 'personal' OR have no workspaceId
+            // For Personal: Only return tasks created by this user OR tasks with no creator if they belong to personal space
             allTasks = allTasks.filter((t: any) =>
                 (t.workspaceId === 'personal' || !t.workspaceId) &&
-                t.createdBy === userId
+                (t.createdBy === userId || !t.createdBy)
             );
         } else if (workspaceId && workspaceId.startsWith('team-')) {
             // New Strict Team Logic: specific ID requested (e.g., team-u123)
@@ -75,7 +73,7 @@ export class TasksService {
             // No workspaceId provided: Return personal tasks as default
             allTasks = allTasks.filter((t: any) =>
                 (!t.workspaceId || t.workspaceId === 'personal') &&
-                t.createdBy === userId
+                (t.createdBy === userId || !t.createdBy)
             );
         }
 
@@ -110,12 +108,27 @@ export class TasksService {
     }
 
     public async updateTask(id: string, task: any) {
+        // Fetch existing to preserve fields like createdBy
+        const existing = await this.getTaskById(id);
+
         const command = new PutCommand({
             TableName: this.tableName,
-            Item: { ...task, id }
+            Item: { ...existing, ...task, id }
         });
         await this.docClient.send(command);
-        return { ...task, id };
+        return { ...existing, ...task, id };
+    }
+
+    public async getTaskById(id: string) {
+        const command = new ScanCommand({
+            TableName: this.tableName,
+            FilterExpression: "id = :id",
+            ExpressionAttributeValues: {
+                ":id": id
+            }
+        });
+        const result = await this.docClient.send(command);
+        return result.Items && result.Items.length > 0 ? result.Items[0] : null;
     }
 
     public async deleteTask(id: string) {

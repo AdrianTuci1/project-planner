@@ -10,12 +10,12 @@ export class LabelStore {
     constructor(rootStore: ProjectStore) {
         this.rootStore = rootStore;
         makeAutoObservable(this);
+        labelSyncStrategy.monitorStore(this);
     }
 
     setAvailableLabels(labels: { id: string; name: string; color: string }[]) {
         this.availableLabels = labels;
-        // Monitor loaded labels
-        labels.forEach(l => labelSyncStrategy.monitor(l));
+        // Strategy listens to observable array changes now
     }
 
     getLabel(labelId: string) {
@@ -34,7 +34,6 @@ export class LabelStore {
             color
         };
         this.availableLabels.push(newLabel);
-        labelSyncStrategy.monitor(newLabel);
         return newLabel;
     }
 
@@ -43,12 +42,15 @@ export class LabelStore {
         if (label) {
             label.name = name;
             label.color = color;
-            // Strategy handles monitoring
         }
     }
 
     deleteLabel(id: string) {
-        this.availableLabels = this.availableLabels.filter(l => l.id !== id);
-        labelSyncStrategy.stopMonitoring(id);
+        const index = this.availableLabels.findIndex(l => l.id === id);
+        if (index > -1) {
+            this.availableLabels.splice(index, 1);
+            // Cleanup from tasks
+            this.rootStore.taskStore.removeLabelFromTasks(id);
+        }
     }
 }

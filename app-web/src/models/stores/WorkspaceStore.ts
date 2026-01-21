@@ -1,6 +1,6 @@
 import { makeAutoObservable, runInAction, reaction } from "mobx";
 import { startOfDay, endOfDay, subMonths, addMonths } from "date-fns";
-import { Workspace, Group, Task } from "../core";
+import { Workspace, Group, Task, Subtask } from "../core";
 import { api } from "../../services/api";
 import { ProjectStore } from "../store";
 import { taskSyncStrategy } from "../strategies/TaskSyncStrategy";
@@ -190,14 +190,50 @@ export class WorkspaceStore {
     private hydrateTask(data: any): Task {
         const task = new Task(data.title);
         task.id = data.id;
+        task.description = data.description || "";
+        task.status = data.status || 'todo';
+        task.priority = data.priority || 'none';
+        task.recurrence = data.recurrence || 'none';
+
+        task.duration = data.duration || 0;
+        task.actualDuration = data.actualDuration || 0;
+
         task.scheduledDate = data.scheduledDate ? new Date(data.scheduledDate) : undefined;
         task.scheduledTime = data.scheduledTime;
-        task.duration = data.duration;
-        task.labels = data.labels || [];
-        task.status = data.status || 'todo';
-        // Add other fields hydration if necessary
+        task.dueDate = data.dueDate ? new Date(data.dueDate) : undefined;
+
+        // Hydrate labelId, fallback to legacy labels array if needed
+        if (data.labelId !== undefined) {
+            task.labelId = data.labelId;
+        } else if (data.labels && Array.isArray(data.labels) && data.labels.length > 0) {
+            task.labelId = data.labels[0];
+        } else {
+            task.labelId = null;
+        }
+
+        task.workspaceId = data.workspaceId;
+        task.groupId = data.groupId;
+
+        if (data.subtasks) {
+            task.subtasks = data.subtasks.map((s: any) => {
+                const sub = new Subtask(s.title);
+                sub.id = s.id;
+                sub.isCompleted = !!s.isCompleted;
+                return sub;
+            });
+        }
+
+        if (data.attachments) {
+            task.attachments = data.attachments.map((a: any) => ({
+                ...a,
+                createdAt: a.createdAt ? new Date(a.createdAt) : new Date()
+            }));
+        }
+
+        task.participants = data.participants || [];
 
         // Start monitoring for auto-sync
+        taskSyncStrategy.markAsPersisted(task.id);
         taskSyncStrategy.monitor(task);
 
         return task;

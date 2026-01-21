@@ -179,7 +179,7 @@ export const ResizableTaskCard = observer(({
     // but we can provide a fallback here.
     const backgroundColor = isCalendarEvent
         ? '#1e293b' // Fallback matte blue
-        : (task.labels.length > 0 ? store.getLabelColor(task.labels[0]) : '#e6c581ff');
+        : (task.labelId ? store.getLabelColor(task.labelId) : '#e6c581ff');
 
     // ... (rest of resize/measure logic) ...
     // Measure column width for horizontal snapping

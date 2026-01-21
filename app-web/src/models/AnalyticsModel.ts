@@ -157,8 +157,13 @@ export class AnalyticsModel {
 
             const labelDurations = new Map<string, number>();
             tasks.forEach(t => {
-                // If a task has multiple labels, we currently only visualize the first one in lists
-                const label = t.labels[0] || 'Unlabeled';
+                // Use single labelId
+                let labelName = 'Unlabeled';
+                if (t.labelId) {
+                    const l = store.getLabel(t.labelId);
+                    if (l) labelName = l.name;
+                }
+                const label = labelName;
                 // Fallback to estimated duration if actual is 0, so the chart isn't empty for non-timer users
                 const duration = t.actualDuration || t.duration || 0;
                 if (duration > 0) {
@@ -201,7 +206,12 @@ export class AnalyticsModel {
             // Find dominant label
             const labelCounts = new Map<string, number>();
             tasks.forEach(t => {
-                const label = t.labels[0] || 'Unlabeled';
+                let labelName = 'Unlabeled';
+                if (t.labelId) {
+                    const l = store.getLabel(t.labelId);
+                    if (l) labelName = l.name;
+                }
+                const label = labelName;
                 labelCounts.set(label, (labelCounts.get(label) || 0) + (t.actualDuration || t.duration || 0));
             });
 
@@ -226,17 +236,22 @@ export class AnalyticsModel {
         const labelStats = new Map<string, { count: number, completed: number, estimated: number, actual: number }>();
 
         this.tasksInPeriod.forEach(t => {
-            const labels = t.labels.length > 0 ? t.labels : ['Unlabeled'];
-            labels.forEach((label: string) => {
-                if (!labelStats.has(label)) {
-                    labelStats.set(label, { count: 0, completed: 0, estimated: 0, actual: 0 });
-                }
-                const stat = labelStats.get(label)!;
-                stat.count++;
-                if (t.status === 'done') stat.completed++;
-                stat.estimated += t.duration || 0;
-                stat.actual += t.actualDuration || 0;
-            });
+            let labelName = 'Unlabeled';
+            if (t.labelId) {
+                const l = store.getLabel(t.labelId);
+                if (l) labelName = l.name;
+            }
+
+            const label = labelName;
+
+            if (!labelStats.has(label)) {
+                labelStats.set(label, { count: 0, completed: 0, estimated: 0, actual: 0 });
+            }
+            const stat = labelStats.get(label)!;
+            stat.count++;
+            if (t.status === 'done') stat.completed++;
+            stat.estimated += t.duration || 0;
+            stat.actual += t.actualDuration || 0;
         });
 
         const totalTasks = this.tasksInPeriod.length;

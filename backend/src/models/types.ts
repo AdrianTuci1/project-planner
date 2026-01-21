@@ -5,6 +5,7 @@ export interface InitialDataResponse {
 }
 
 export interface GeneralSettings {
+    // Existing General Settings
     moveTasksBottom: boolean;
     markCompleteSubtasks: boolean;
     autoSetActualTime: boolean;
@@ -26,8 +27,22 @@ export interface GeneralSettings {
     rolloverNextDay: boolean;
     rolloverRecurring: boolean;
     rolloverTo: string;
-    teamId?: string; // ID of the team this user belongs to
-    teamMembers?: string[]; // If THIS user is the owner, list of members
+
+    // Team
+    teamId?: string;
+    teamMembers?: string[];
+
+    // Power Features
+    dueDatesEnabled?: boolean;
+    templatesEnabled?: boolean;
+    taskPriorityEnabled?: boolean;
+    attachmentsEnabled?: boolean;
+
+    // Due Dates
+    thresholdDays?: number;
+
+    // Account
+    displayName?: string;
 }
 
 

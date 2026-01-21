@@ -23,10 +23,12 @@ class DailyShutdownModel {
         const stats: Record<string, { minutes: number, color: string }> = {};
 
         this.completedTasks.forEach(task => {
-            if (task.labels.length > 0) {
-                // Determine primary label (first one)
-                const labelName = task.labels[0];
-                const color = store.getLabelColor(labelName);
+            if (task.labelId) {
+                // Determine primary label (single)
+                const labelId = task.labelId;
+                const label = store.getLabel(labelId);
+                const labelName = label ? label.name : 'Unknown';
+                const color = label ? label.color : '#e5e7eb';
 
                 if (!stats[labelName]) {
                     stats[labelName] = { minutes: 0, color };

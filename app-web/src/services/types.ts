@@ -27,6 +27,22 @@ export interface GeneralSettings {
     rolloverNextDay: boolean;
     rolloverRecurring: boolean;
     rolloverTo: string;
+
+    // Team
+    teamId?: string;
+    teamMembers?: string[];
+
+    // Power Features
+    dueDatesEnabled?: boolean;
+    templatesEnabled?: boolean;
+    taskPriorityEnabled?: boolean;
+    attachmentsEnabled?: boolean;
+
+    // Due Dates
+    thresholdDays?: number;
+
+    // Account
+    displayName?: string;
 }
 
 export interface IApiService {

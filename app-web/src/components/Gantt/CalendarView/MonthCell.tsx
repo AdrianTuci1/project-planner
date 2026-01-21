@@ -25,16 +25,19 @@ export const MonthCell = observer(({ date, tasks, onTaskClick }: { date: Date, t
         >
             <div className={`month-day-number ${isToday ? 'today' : ''}`}>{format(date, 'd')}</div>
             <div className="month-cell-tasks">
-                {dayTasks.map(task => (
-                    <div
-                        key={task.id}
-                        className="month-task-item"
-                        onClick={(e) => { e.stopPropagation(); onTaskClick(task); }}
-                        style={{ backgroundColor: store.getLabelColor(task.labels[0] || '') + '20', borderLeft: `3px solid ${store.getLabelColor(task.labels[0] || '')}` }}
-                    >
-                        <span className="month-task-title">{task.title}</span>
-                    </div>
-                ))}
+                {dayTasks.map(task => {
+                    const labelColor = task.labelId ? store.getLabelColor(task.labelId) : 'transparent';
+                    return (
+                        <div
+                            key={task.id}
+                            className="month-task-item"
+                            onClick={(e) => { e.stopPropagation(); onTaskClick(task); }}
+                            style={{ backgroundColor: labelColor !== 'transparent' ? labelColor + '20' : 'transparent', borderLeft: `3px solid ${labelColor}` }}
+                        >
+                            <span className="month-task-title">{task.title}</span>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

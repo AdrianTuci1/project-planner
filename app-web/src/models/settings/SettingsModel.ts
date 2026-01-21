@@ -25,8 +25,35 @@ export class SettingsModel {
 
     constructor() {
         makeAutoObservable(this);
+        // Load settings immediately
+        this.loadSettings();
         // Defer monitoring slightly or do it immediately
         settingsSyncStrategy.monitor(this);
+    }
+
+    async loadSettings() {
+        try {
+            const { api } = await import("../../services/api");
+            const settings = await api.getGeneralSettings();
+
+            // Populate General
+            Object.assign(this.general, settings);
+
+            // Populate Power Features
+            if (settings.dueDatesEnabled !== undefined) this.powerFeatures.dueDatesEnabled = settings.dueDatesEnabled;
+            if (settings.templatesEnabled !== undefined) this.powerFeatures.templatesEnabled = settings.templatesEnabled;
+            if (settings.taskPriorityEnabled !== undefined) this.powerFeatures.taskPriorityEnabled = settings.taskPriorityEnabled;
+            if (settings.attachmentsEnabled !== undefined) this.powerFeatures.attachmentsEnabled = settings.attachmentsEnabled;
+
+            // Populate Due Dates
+            if (settings.thresholdDays !== undefined) this.dueDates.thresholdDays = settings.thresholdDays;
+
+            // Populate Account
+            if (settings.displayName !== undefined) this.account.displayName = settings.displayName;
+
+        } catch (error) {
+            console.error("Failed to load global settings", error);
+        }
     }
 
     setActiveTab(tab: string) {

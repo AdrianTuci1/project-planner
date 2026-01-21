@@ -32,29 +32,76 @@ export class SettingsSyncStrategy {
 
     monitor(settings: SettingsModel) {
         if (this.isMonitoring.has('general')) return;
-        this.isMonitoring.add('general');
 
         const disposers: IReactionDisposer[] = [];
+
+        const safeGet = (obj: any, path: string) => obj ? obj[path] : undefined;
 
         // Monitor General Settings
         disposers.push(reaction(
             () => ({
-                // Monitor key fields
                 moveTasksBottom: settings.general.moveTasksBottom,
                 darkMode: settings.general.darkMode,
                 sidebarLayout: settings.general.sidebarLayout,
                 startWeekOn: settings.general.startWeekOn,
                 showWeekends: settings.general.showWeekends,
-                timeFormat: settings.general.timeFormat
+                timeFormat: settings.general.timeFormat,
+                markCompleteSubtasks: settings.general.markCompleteSubtasks,
+                autoSetActualTime: settings.general.autoSetActualTime,
+                deepLinkDetection: settings.general.deepLinkDetection,
+                workdayThreshold: settings.general.workdayThreshold,
+                workloadThreshold: settings.general.workloadThreshold,
+                showDeclinedEvents: settings.general.showDeclinedEvents,
+                startDayAt: settings.general.startDayAt,
+                calendarIncrements: settings.general.calendarIncrements,
+                autoStartNextTask: settings.general.autoStartNextTask,
+                addNewTasksTo: settings.general.addNewTasksTo,
+                detectLabel: settings.general.detectLabel,
+                defaultEstimatedTime: settings.general.defaultEstimatedTime,
+                rolloverNextDay: settings.general.rolloverNextDay,
+                rolloverRecurring: settings.general.rolloverRecurring,
+                rolloverTo: settings.general.rolloverTo
             }),
             (data) => {
                 this.scheduleUpdate('general', data);
             }
         ));
 
-        // Add monitoring for other settings sub-models here...
+        // Monitor Power Features
+        disposers.push(reaction(
+            () => ({
+                dueDatesEnabled: settings.powerFeatures.dueDatesEnabled,
+                templatesEnabled: settings.powerFeatures.templatesEnabled,
+                taskPriorityEnabled: settings.powerFeatures.taskPriorityEnabled,
+                attachmentsEnabled: settings.powerFeatures.attachmentsEnabled
+            }),
+            (data) => {
+                this.scheduleUpdate('power', data);
+            }
+        ));
+
+        // Monitor Due Dates Settings
+        disposers.push(reaction(
+            () => ({
+                thresholdDays: settings.dueDates.thresholdDays
+            }),
+            (data) => {
+                this.scheduleUpdate('dueDates', data);
+            }
+        ));
+
+        // Monitor Account Settings (Display Name)
+        disposers.push(reaction(
+            () => ({
+                displayName: settings.account.displayName
+            }),
+            (data) => {
+                this.scheduleUpdate('account', data);
+            }
+        ));
 
         this.disposers.set('general', disposers);
+        this.isMonitoring.add('general');
     }
 
     stopMonitoring(key: string = 'general') {
@@ -64,11 +111,14 @@ export class SettingsSyncStrategy {
             this.disposers.delete(key);
         }
 
-        const pending = this.pendingUpdates.get(key);
-        if (pending) {
-            pending.cancel();
-            this.pendingUpdates.delete(key);
-        }
+        const keysToClear = [key, 'power', 'dueDates', 'account'];
+        keysToClear.forEach(k => {
+            const pending = this.pendingUpdates.get(k);
+            if (pending) {
+                pending.cancel();
+                this.pendingUpdates.delete(k);
+            }
+        });
 
         this.isMonitoring.delete(key);
     }

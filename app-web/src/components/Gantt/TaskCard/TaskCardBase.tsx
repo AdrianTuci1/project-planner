@@ -23,6 +23,7 @@ import { PriorityContext } from '../../ContextMenu/PriorityContext';
 import { TaskUIModel } from '../../../models/TaskUIModel';
 import { store } from '../../../models/store';
 import { SubtaskList } from '../../Shared/SubtaskList';
+import { TaskContextMenu } from './TaskContextMenu';
 import './TaskCard.css';
 
 
@@ -177,23 +178,23 @@ export const TaskCardBase = observer(({
                     </div>
                 </div>
 
-                {(ui.isHovered || isAnyContextOpen || (task.labels && task.labels.length > 0) || (task.scheduledDate && task.scheduledTime) || (task.dueDate) || (task.attachments && task.attachments.length > 0) || (task.priority !== 'none') || (task.subtasks.length > 0) || (task.recurrence && task.recurrence !== 'none')) && (
+                {(ui.isHovered || isAnyContextOpen || task.labelId || (task.scheduledDate && task.scheduledTime) || (task.dueDate) || (task.attachments && task.attachments.length > 0) || (task.priority !== 'none') || (task.subtasks.length > 0) || (task.recurrence && task.recurrence !== 'none')) && (
                     <div className="tc-footer">
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', width: '100%' }}>
 
                             {/* Labels */}
                             <div
-                                className={`tc-label ${task.labels && task.labels.length === 0 ? 'footer-reveal-item' : ''}`}
+                                className={`tc-label ${!task.labelId ? 'footer-reveal-item' : ''}`}
                                 onClick={(e) => ui.openLabelContext(e)}
                                 style={{ padding: 0, height: 'auto' }}
                             >
-                                {task.labels && task.labels.length > 0 ? (
+                                {task.labelId ? (
                                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                                        {task.labels.map(labelId => {
-                                            const label = store.getLabel(labelId);
+                                        {(() => {
+                                            const label = store.getLabel(task.labelId);
                                             if (!label) return null;
                                             return (
-                                                <div key={labelId} className="tc-label-chip" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <div key={label.id} className="tc-label-chip" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                     <div
                                                         className="tc-label-dot"
                                                         style={{ backgroundColor: label.color }}
@@ -201,7 +202,7 @@ export const TaskCardBase = observer(({
                                                     {label.name}
                                                 </div>
                                             );
-                                        })}
+                                        })()}
                                     </div>
                                 ) : (
                                     <span style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>Select Label</span>
@@ -388,28 +389,16 @@ export const TaskCardBase = observer(({
 
             <PriorityContext ui={ui} task={task} />
 
-            <ContextMenu
+            <TaskContextMenu
                 isOpen={ui.actionContext.isOpen}
                 onClose={() => ui.closeActionContext()}
                 position={ui.actionContext.position}
-            >
-                <MenuItem
-                    icon={<Copy size={14} />}
-                    label="Duplicate"
-                    onClick={() => {
-                        onDuplicate?.(task);
-                        ui.closeActionContext();
-                    }}
-                />
-                <MenuItem
-                    icon={<Trash2 size={14} />}
-                    label="Delete"
-                    onClick={() => {
-                        onDelete?.(task);
-                        ui.closeActionContext();
-                    }}
-                />
-            </ContextMenu>
+                task={task}
+                onMarkAsComplete={() => task.toggleStatus()}
+                onDuplicate={() => onDuplicate?.(task)}
+                onRemoveFromTimebox={() => task.setScheduling(undefined, undefined)}
+                onDelete={() => onDelete?.(task)}
+            />
 
         </>
     );

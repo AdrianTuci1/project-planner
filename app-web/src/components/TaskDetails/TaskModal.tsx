@@ -247,20 +247,16 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                             </div>
                             <div className="meta-row-value">
                                 <span className="value-placeholder">
-                                    {task.labels.length > 0 ? (
-                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                                            {task.labels.map(labelId => {
-                                                const label = store.getLabel(labelId);
-                                                if (!label) return null;
-                                                return (
-                                                    <div key={labelId} className="tc-label-chip" style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>
-                                                        <div className="tc-label-dot" style={{ backgroundColor: label.color }} />
-                                                        <span style={{ fontSize: '12px' }}>{label.name}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : 'Select a label'}
+                                    {task.labelId ? (() => {
+                                        const label = store.getLabel(task.labelId);
+                                        if (!label) return 'Unknown Label';
+                                        return (
+                                            <div className="tc-label-chip" style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                <div className="tc-label-dot" style={{ backgroundColor: label.color }} />
+                                                <span style={{ fontSize: '12px' }}>{label.name}</span>
+                                            </div>
+                                        );
+                                    })() : 'Select a label'}
                                 </span>
                             </div>
                         </div>

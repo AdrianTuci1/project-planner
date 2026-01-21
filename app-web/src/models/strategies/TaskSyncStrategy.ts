@@ -29,10 +29,25 @@ export class TaskSyncStrategy {
     private disposers = new Map<string, IReactionDisposer[]>();
     private pendingUpdates = new Map<string, DebouncedFunction>();
     private isMonitoring = new Set<string>();
+    private persistedTasks = new Set<string>();
+
+    markAsPersisted(taskId: string) {
+        this.persistedTasks.add(taskId);
+    }
 
     monitor(task: Task) {
         if (this.isMonitoring.has(task.id)) return;
         this.isMonitoring.add(task.id);
+
+        // If not already on server, create it
+        if (!this.persistedTasks.has(task.id)) {
+            console.log(`[TaskSyncStrategy] Creating task ${task.id} on server...`);
+            api.createTask(task).then(() => {
+                this.persistedTasks.add(task.id);
+            }).catch(err => {
+                console.error(`[TaskSyncStrategy] Failed to create task ${task.id}`, err);
+            });
+        }
 
         const disposers: IReactionDisposer[] = [];
 
@@ -67,10 +82,8 @@ export class TaskSyncStrategy {
 
         // 3. Collection Changes (Labels)
         disposers.push(reaction(
-            () => ({
-                labels: task.labels.slice(),
-            }),
-            (data) => {
+            () => task.labelId,
+            (labelId) => {
                 this.scheduleUpdate(task.id, task);
             }
         ));
@@ -107,13 +120,7 @@ export class TaskSyncStrategy {
             }
         ));
 
-        // 4. Description (Debounce longer?)
-        disposers.push(reaction(
-            () => task.description,
-            (desc) => {
-                this.scheduleUpdate(task.id, task, 2000); // Longer debounce for text
-            }
-        ));
+
 
         this.disposers.set(task.id, disposers);
     }

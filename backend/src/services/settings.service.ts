@@ -27,7 +27,19 @@ export class SettingsService {
         defaultEstimatedTime: '30',
         rolloverNextDay: false,
         rolloverRecurring: false,
-        rolloverTo: 'today'
+        rolloverTo: 'today',
+
+        // Power Features Defaults
+        dueDatesEnabled: false,
+        templatesEnabled: false,
+        taskPriorityEnabled: false,
+        attachmentsEnabled: false,
+
+        // Due Dates Defaults
+        thresholdDays: 7,
+
+        // Account Defaults
+        displayName: ''
     };
     // END: Default settings
 

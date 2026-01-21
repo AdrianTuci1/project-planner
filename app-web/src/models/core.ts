@@ -34,10 +34,10 @@ export interface ITask {
     participants: IParticipant[];
     subtasks: ISubtask[];
     createdAt: Date;
-    scheduledDate?: Date; // For Gantt/Calendar
-    scheduledTime?: string; // Format "HH:mm"
+    scheduledDate?: Date | null; // For Gantt/Calendar
+    scheduledTime?: string | null; // Format "HH:mm"
     dueDate?: Date;
-    labels: string[];
+    labelId?: string | null;
     recurrence?: RecurrenceType;
     priority: PriorityType;
     attachments: IAttachment[];
@@ -113,16 +113,16 @@ export class Task implements ITask {
     participants: IParticipant[] = [];
     subtasks: ISubtask[] = [];
     createdAt: Date;
-    scheduledDate?: Date = undefined;
+    scheduledDate?: Date | null = undefined;
     dueDate?: Date = undefined; // New field
-    labels: string[] = [];
+    labelId?: string | null = undefined;
     recurrence: RecurrenceType = 'none';
     priority: PriorityType = 'none';
     attachments: IAttachment[] = [];
     workspaceId?: string = undefined;
     groupId?: string = undefined;
 
-    scheduledTime?: string = undefined; // Format "HH:mm"
+    scheduledTime?: string | null = undefined; // Format "HH:mm"
 
     constructor(title: string) {
         this.id = uuidv4();
@@ -184,7 +184,7 @@ export class Task implements ITask {
         });
         newTask.scheduledDate = this.scheduledDate ? new Date(this.scheduledDate) : undefined;
         newTask.scheduledTime = this.scheduledTime;
-        newTask.labels = [...this.labels];
+        newTask.labelId = this.labelId;
         newTask.recurrence = this.recurrence;
         newTask.priority = this.priority;
         newTask.attachments = this.attachments.map(a => ({ ...a }));
@@ -234,14 +234,19 @@ export class Group implements IGroup {
     addTask(task: Task) {
         // Apply auto-label if enabled and label exists
         if (this.autoAddLabelEnabled && this.defaultLabelId) {
-            if (!task.labels.includes(this.defaultLabelId)) {
-                task.labels.push(this.defaultLabelId);
+            // Overwrite existing label or only set if empty?
+            // "Add label" implies adding, but now we have strict single label.
+            // If task has no label, we add it. If it has one... use default?
+            // Let's assume if it has NO label, we use default.
+            if (!task.labelId) {
+                task.labelId = this.defaultLabelId;
             }
         }
         // Ensure workspaceId is set
         if (!task.workspaceId) {
             task.workspaceId = this.type;
         }
+        task.groupId = this.id; // Assign group ID
         this.tasks.push(task);
     }
 
@@ -304,6 +309,7 @@ export class Workspace implements IWorkspace {
     addTaskToDump(title: string) {
         const task = new Task(title);
         task.workspaceId = this.id;
+        task.groupId = undefined; // Ensure no group
         this.dumpAreaTasks.push(task);
         return task;
     }

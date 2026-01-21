@@ -93,23 +93,21 @@ export const SearchSpotlight = observer(({ onClose }: SearchSpotlightProps) => {
                                         </span>
                                     </div>
                                     <div className="spotlight-result-meta">
-                                        {task.labels.length > 0 && (
-                                            <div className="spotlight-meta-item">
-                                                {task.labels.map(labelId => {
-                                                    const label = store.getLabel(labelId);
-                                                    if (!label) return null;
-                                                    return (
-                                                        <div key={labelId} className="spotlight-label">
-                                                            <div
-                                                                className="spotlight-label-dot"
-                                                                style={{ backgroundColor: label.color }}
-                                                            />
-                                                            <span>{label.name}</span>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
+                                        {task.labelId && (() => {
+                                            const label = store.getLabel(task.labelId);
+                                            if (!label) return null;
+                                            return (
+                                                <div className="spotlight-meta-item">
+                                                    <div className="spotlight-label">
+                                                        <div
+                                                            className="spotlight-label-dot"
+                                                            style={{ backgroundColor: label.color }}
+                                                        />
+                                                        <span>{label.name}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
 
                                         <div className="spotlight-meta-item">
                                             <Link2 size={12} className="spotlight-meta-icon" style={{ transform: 'rotate(-45deg)' }} />

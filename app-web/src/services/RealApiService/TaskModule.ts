@@ -4,6 +4,7 @@ import { dbService } from '../db';
 import { syncService } from '../SyncService';
 import { GroupModule } from './GroupModule';
 import { LabelModule } from './LabelModule';
+import { toJS } from 'mobx';
 
 export class TaskModule extends BaseApiService {
     private groupModule: GroupModule;
@@ -96,7 +97,7 @@ export class TaskModule extends BaseApiService {
 
     async createTask(taskData: any): Promise<any> {
         // Fix DataCloneError: Sanitize MobX proxy
-        const task = JSON.parse(JSON.stringify(taskData));
+        const task = toJS(taskData);
 
         await dbService.put('tasks', task);
 
@@ -124,7 +125,7 @@ export class TaskModule extends BaseApiService {
     }
 
     async updateTask(id: string, taskData: any): Promise<any> {
-        const task = JSON.parse(JSON.stringify(taskData));
+        const task = toJS(taskData);
         await dbService.put('tasks', task);
 
         if (navigator.onLine) {

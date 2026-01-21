@@ -2,6 +2,7 @@ import { reaction, IReactionDisposer } from "mobx";
 import { api } from "../../services/api";
 import { Workspace } from "../core";
 import { groupSyncStrategy } from "./GroupSyncStrategy";
+import { taskSyncStrategy } from "./TaskSyncStrategy";
 
 // Currently API might not support updating workspace metadata like name directly exposed,
 // but we will implement it assuming updateWorkspace or similar exists or will likely exist.
@@ -58,6 +59,16 @@ export class WorkspaceSyncStrategy {
                 // Monitor all groups (newly added ones included)
                 workspace.groups.forEach(g => {
                     groupSyncStrategy.monitor(g);
+                });
+            }
+        ));
+
+        // Auto-monitor dump tasks
+        disposers.push(reaction(
+            () => workspace.dumpAreaTasks.length,
+            () => {
+                workspace.dumpAreaTasks.forEach(t => {
+                    taskSyncStrategy.monitor(t);
                 });
             }
         ));

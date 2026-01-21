@@ -336,7 +336,7 @@ export const DailyShutdown = observer(() => {
                 {completedTasksStats.map((task) => {
                     const percentage = ((task.actualDuration || 0) / totalDuration) * 100;
                     if (percentage === 0) return null;
-                    const color = task.labels.length > 0 ? store.getLabelColor(task.labels[0]) : '#E3C099';
+                    const color = task.labelId ? store.getLabelColor(task.labelId) : '#E3C099';
 
                     return (
                         <div
@@ -386,7 +386,7 @@ export const DailyShutdown = observer(() => {
 
                                 <div className="labels-legend" style={{ marginTop: '16px' }}>
                                     {completedTasksStats.map(task => { // Iterate tasks, not labels
-                                        const color = task.labels.length > 0 ? store.getLabelColor(task.labels[0]) : '#E3C099';
+                                        const color = task.labelId ? store.getLabelColor(task.labelId) : '#E3C099';
                                         return (
                                             <div key={task.id} className="stat-row" style={{ fontSize: '12px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

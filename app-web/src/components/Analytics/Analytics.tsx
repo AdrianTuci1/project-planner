@@ -373,12 +373,15 @@ export const Analytics = observer(() => {
                                         <tr key={task.id}>
                                             <td>{task.title}</td>
                                             <td>
-                                                {task.labels.length > 0 ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <span className="label-dot" style={{ backgroundColor: store.getLabelColor(task.labels[0]) }}></span>
-                                                        {task.labels[0]}
-                                                    </div>
-                                                ) : (
+                                                {task.labelId ? (() => {
+                                                    const label = store.getLabel(task.labelId);
+                                                    return (
+                                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                            <span className="label-dot" style={{ backgroundColor: label ? label.color : '#666' }}></span>
+                                                            {label ? label.name : 'Unknown Label'}
+                                                        </div>
+                                                    );
+                                                })() : (
                                                     <div style={{ display: 'flex', alignItems: 'center' }}>
                                                         <span className="label-dot" style={{ backgroundColor: '#E4D0AA' }}></span>
                                                         Unlabeled
