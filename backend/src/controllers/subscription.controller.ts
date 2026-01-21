@@ -1,31 +1,49 @@
-import { Controller } from './controller.interface';
 import { Request, Response } from 'express';
 import { SubscriptionService } from '../services/subscription.service';
 
-export class SubscriptionController implements Controller {
-    public path = '/subscription';
-    public router = require('express').Router();
+export class SubscriptionController {
     private subscriptionService = new SubscriptionService();
 
-    constructor() {
-        this.initializeRoutes();
+    public createCheckoutSession = async (req: Request, res: Response) => {
+        try {
+            const { priceId } = req.body;
+            // @ts-ignore - Assuming auth middleware instills user
+            const userId = req.user.id;
+            const session = await this.subscriptionService.createCheckoutSession(userId, priceId);
+            res.status(200).json(session);
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
     }
 
-    private initializeRoutes() {
-        this.router.post(`${this.path}/upgrade`, this.upgradeToPro);
-        this.router.get(`${this.path}/status`, this.checkStatus);
+    public createPortalSession = async (req: Request, res: Response) => {
+        try {
+            // @ts-ignore
+            const userId = req.user.id;
+            const session = await this.subscriptionService.createCustomerPortalSession(userId);
+            res.status(200).json(session);
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
     }
 
-    private upgradeToPro = async (req: Request, res: Response) => {
-        const userId = 'default-user'; // Mock user
-        const { frequency } = req.body; // 'monthly' | 'yearly'
-        const result = await this.subscriptionService.upgradeToPro(userId, frequency);
-        res.status(200).json(result);
-    };
+    public handleWebhook = async (req: Request, res: Response) => {
+        const sig = req.headers['stripe-signature'];
 
-    private checkStatus = async (req: Request, res: Response) => {
-        const userId = 'default-user';
-        const status = await this.subscriptionService.getStatus(userId);
-        res.status(200).json(status);
-    };
+        if (!sig) {
+            res.status(400).send('Webhook Error: Missing stripe-signature');
+            return;
+        }
+
+        try {
+            // Use req.rawBody if available (set by custom middleware), else try req.body
+            // @ts-ignore
+            const payload = req.rawBody || req.body;
+
+            await this.subscriptionService.handleWebhook(sig as string, payload);
+            res.json({ received: true });
+        } catch (error: any) {
+            res.status(400).send(`Webhook Error: ${error.message}`);
+        }
+    }
 }

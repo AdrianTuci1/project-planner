@@ -70,4 +70,22 @@ export abstract class BaseApiService {
             return fallbackValue;
         }
     }
+    protected async post<T>(endpoint: string, body: any): Promise<T> {
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+            ...this.getAuthHeader()
+        };
+
+        const res = await fetch(`${this.baseUrl}${endpoint}`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+            throw new Error(`POST ${endpoint} failed: ${res.statusText}`);
+        }
+
+        return res.json();
+    }
 }

@@ -36,6 +36,7 @@ export interface IApiService {
     getCalendars(): Promise<CalendarData>;
     addCalendar(account: CalendarAccount): Promise<CalendarData>;
     updateCalendar(id: string, data: Partial<CalendarAccount>): Promise<CalendarData>;
+    syncSubCalendars(id: string): Promise<CalendarData>;
     deleteCalendar(id: string): Promise<CalendarData>;
 
     // Tasks (Offline + Sync)
@@ -66,10 +67,14 @@ export interface IApiService {
 
     // Auth
     getGoogleAuthUrl(): Promise<{ url: string }>;
+    exchangeGoogleCode(code: string): Promise<CalendarAccount>;
 
     // Storage
     getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }>;
     deleteFile(key: string): Promise<void>;
+    // Subscription
+    createCheckoutSession(priceId: string): Promise<{ url: string }>;
+    createCustomerPortalSession(): Promise<{ url: string }>;
 }
 
 export interface SubCalendar {

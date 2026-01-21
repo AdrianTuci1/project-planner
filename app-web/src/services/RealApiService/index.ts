@@ -8,6 +8,7 @@ import { StorageModule } from './StorageModule';
 import { GroupModule } from './GroupModule';
 import { WorkspaceModule } from './WorkspaceModule';
 import { LabelModule } from './LabelModule';
+import { SubscriptionModule } from './SubscriptionModule';
 
 export class RealApiService implements IApiService {
     private taskModule: TaskModule;
@@ -18,6 +19,7 @@ export class RealApiService implements IApiService {
     private calendarModule: CalendarModule;
     private notificationModule: NotificationModule;
     private storageModule: StorageModule;
+    private subscriptionModule: SubscriptionModule;
 
     constructor(baseUrl: string) {
         syncService.init();
@@ -29,6 +31,7 @@ export class RealApiService implements IApiService {
         this.calendarModule = new CalendarModule(baseUrl);
         this.notificationModule = new NotificationModule(baseUrl);
         this.storageModule = new StorageModule(baseUrl);
+        this.subscriptionModule = new SubscriptionModule(baseUrl);
     }
 
     // Tasks delegates
@@ -62,8 +65,10 @@ export class RealApiService implements IApiService {
     getCalendars(): Promise<CalendarData> { return this.calendarModule.getCalendars(); }
     addCalendar(account: CalendarAccount): Promise<CalendarData> { return this.calendarModule.addCalendar(account); }
     updateCalendar(id: string, data: Partial<CalendarAccount>): Promise<CalendarData> { return this.calendarModule.updateCalendar(id, data); }
+    syncSubCalendars(id: string): Promise<CalendarData> { return this.calendarModule.syncSubCalendars(id); }
     deleteCalendar(id: string): Promise<CalendarData> { return this.calendarModule.deleteCalendar(id); }
     getGoogleAuthUrl(): Promise<{ url: string }> { return this.calendarModule.getGoogleAuthUrl(); }
+    exchangeGoogleCode(code: string): Promise<CalendarAccount> { return this.calendarModule.exchangeGoogleCode(code); }
 
     // Notification delegates
     inviteUser(email: string, workspaceId: string): Promise<void> { return this.notificationModule.inviteUser(email, workspaceId); }
@@ -73,5 +78,10 @@ export class RealApiService implements IApiService {
 
     // Storage delegates
     getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }> { return this.storageModule.getUploadUrl(contentType, fileName); }
+
     deleteFile(key: string): Promise<void> { return this.storageModule.deleteFile(key); }
+
+    // Subscription delegates
+    createCheckoutSession(priceId: string): Promise<{ url: string }> { return this.subscriptionModule.createCheckoutSession(priceId); }
+    createCustomerPortalSession(): Promise<{ url: string }> { return this.subscriptionModule.createCustomerPortalSession(); }
 }

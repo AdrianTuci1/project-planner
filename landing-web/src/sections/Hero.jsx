@@ -70,7 +70,7 @@ export default function Hero() {
                 <div className="hero__visual">
                     {/* Placeholder for the large hero image */}
                     <div className="hero__image-placeholder">
-                        Dashboard Preview
+                        <img src="/hero.png" alt="hero" />
                     </div>
                 </div>
             </div>

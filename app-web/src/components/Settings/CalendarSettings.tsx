@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { ChevronRight, Apple, ArrowLeft } from 'lucide-react';
@@ -7,6 +7,15 @@ import './CalendarSettings.css';
 export const CalendarSettings = observer(() => {
     const { calendar } = store.settings;
     // Local state removed, using model
+
+    // Check for auth code on mount
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        if (code) {
+            calendar.handleGoogleCode(code);
+        }
+    }, []);
 
     // Google Icon component
     const GoogleIcon = ({ size = 18 }: { size?: number }) => (

@@ -2,7 +2,7 @@ import { makeAutoObservable } from "mobx";
 import { api } from "../../services/api";
 import { settingsSyncStrategy } from "../strategies/SettingsSyncStrategy";
 
-export type SettingsTab = 'account' | 'team' | 'general' | 'labels' | 'power' | 'calendar' | 'due_dates';
+export type SettingsTab = 'account' | 'team' | 'general' | 'labels' | 'power' | 'calendar' | 'due_dates' | 'subscription';
 export type AccountView = 'main' | 'email' | 'password';
 import { GeneralSettingsModel } from "./GeneralSettingsModel";
 import { AccountSettingsModel } from "./AccountSettingsModel";

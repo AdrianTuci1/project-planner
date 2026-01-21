@@ -157,8 +157,15 @@ export class AuthStore {
             // 1. Check for Authorization Code in URL (OAuth2 Callback)
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
+            const state = urlParams.get('state');
 
-            if (code) {
+            // If state indicates calendar settings, ignore this code (handled by CalendarSettings)
+            let skipExchange = false;
+            if (code && state === 'settings_calendar') {
+                skipExchange = true;
+            }
+
+            if (code && !skipExchange) {
                 // Clear the code from URL logic handled after exchange or here
                 // process the code
                 await this.exchangeCodeForTokens(code);

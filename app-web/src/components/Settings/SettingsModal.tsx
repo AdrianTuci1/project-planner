@@ -14,10 +14,6 @@ import {
     Cloud,
     LogOut,
     Users,
-    ChevronRight,
-    ArrowLeft,
-    Mail,
-    Lock
 } from 'lucide-react';
 import './SettingsModal.css';
 import { GeneralSettings } from './GeneralSettings';
@@ -27,6 +23,7 @@ import { PowerFeaturesSettings } from './PowerFeaturesSettings';
 import { CalendarSettings } from './CalendarSettings';
 import { DueDatesSettings } from './DueDatesSettings';
 import { AccountSettings } from './AccountSettings';
+import { SubscriptionSettings } from './SubscriptionSettings';
 
 interface SettingsModalProps {
     onClose: () => void;
@@ -56,7 +53,9 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                     <div className={`settings-nav-item ${settings.activeTab === 'account' ? 'active' : ''}`} onClick={() => { settings.setActiveTab('account'); settings.setAccountView('main'); }}>
                         <User size={16} /> Account Settings
                     </div>
-                    <div className="settings-nav-item"><CreditCard size={16} /> Subscription</div>
+                    <div className={`settings-nav-item ${settings.activeTab === 'subscription' ? 'active' : ''}`} onClick={() => settings.setActiveTab('subscription')}>
+                        <CreditCard size={16} /> Subscription
+                    </div>
 
                     <div className="settings-separator" />
 
@@ -117,6 +116,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                             {settings.activeTab === 'power' && 'Power Features'}
                             {settings.activeTab === 'due_dates' && 'Due Dates Settings'}
                             {settings.activeTab === 'calendar' && 'Calendar Integration'}
+                            {settings.activeTab === 'subscription' && 'Subscription'}
                         </span>
                         <button className="icon-btn" onClick={onClose}>
                             <X size={20} />
@@ -135,6 +135,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                         {settings.activeTab === 'power' && <PowerFeaturesSettings />}
                         {settings.activeTab === 'due_dates' && <DueDatesSettings />}
                         {settings.activeTab === 'calendar' && <CalendarSettings />}
+                        {settings.activeTab === 'subscription' && <SubscriptionSettings />}
                     </div>
                 </div>
             </div>

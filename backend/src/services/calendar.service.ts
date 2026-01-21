@@ -174,7 +174,8 @@ export class CalendarService {
                 'https://www.googleapis.com/auth/userinfo.email',
                 'https://www.googleapis.com/auth/userinfo.profile'
             ],
-            prompt: 'consent' // Force consent to ensure we usually get a refresh token
+            prompt: 'consent', // Force consent to ensure we usually get a refresh token
+            state: 'settings_calendar'
         });
     }
 

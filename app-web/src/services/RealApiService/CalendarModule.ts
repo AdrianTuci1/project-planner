@@ -29,6 +29,20 @@ export class CalendarModule extends BaseApiService {
         }
     }
 
+    async syncSubCalendars(id: string): Promise<CalendarData> {
+        if (navigator.onLine) {
+            const res = await fetch(`${this.baseUrl}/calendars/${id}/sync`, {
+                method: 'POST',
+                headers: { ...this.getAuthHeader() }
+            });
+            if (!res.ok) throw new Error(`Sync calendars failed: ${res.statusText}`);
+            return await res.json();
+        } else {
+            console.warn("Cannot sync calendars while offline");
+            return { accounts: [] };
+        }
+    }
+
     async updateCalendar(id: string, data: Partial<CalendarAccount>): Promise<CalendarData> {
         if (navigator.onLine) {
             const res = await fetch(`${this.baseUrl}/calendars/${id}`, {
@@ -67,5 +81,8 @@ export class CalendarModule extends BaseApiService {
         });
         if (!res.ok) throw new Error(`Failed to get auth url: ${res.statusText}`);
         return await res.json();
+    }
+    async exchangeGoogleCode(code: string): Promise<CalendarAccount> {
+        return this.post<CalendarAccount>('/calendars/auth/google/callback', { code });
     }
 }

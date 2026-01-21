@@ -1,6 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import { api } from "../../services/api";
 import { CalendarAccount } from "../../services/types";
+import { calendarSyncStrategy } from "../strategies/CalendarSyncStrategy";
 
 export class CalendarSettingsModel {
     calendars: CalendarAccount[] = [];
@@ -21,6 +22,10 @@ export class CalendarSettingsModel {
             runInAction(() => {
                 this.calendars = data.accounts;
             });
+
+            // Monitor all loaded accounts
+            this.calendars.forEach(cal => calendarSyncStrategy.monitor(cal));
+
         } catch (error) {
             console.error("Failed to fetch calendars", error);
         } finally {
@@ -46,6 +51,33 @@ export class CalendarSettingsModel {
 
         } catch (error) {
             console.error("Failed to initiate Google Auth", error);
+            runInAction(() => {
+                this.isLoading = false;
+            });
+        }
+    }
+
+    async handleGoogleCode(code: string) {
+        this.isLoading = true;
+        try {
+            const account = await api.exchangeGoogleCode(code);
+            runInAction(() => {
+                // Remove existing if present to avoid duplication in array (backend handles logic but we need to update local state)
+                this.calendars = this.calendars.filter(c => c.id !== account.id);
+                this.calendars.push(account);
+            });
+
+            // Start monitoring the new account
+            calendarSyncStrategy.monitor(account);
+
+            // Also fetch real sub-calendars immediately
+            this.fetchSubCalendars(account.id);
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error) {
+            console.error("Failed to exchange google code", error);
+            alert("Failed to connect Google Calendar.");
+        } finally {
             runInAction(() => {
                 this.isLoading = false;
             });
@@ -78,17 +110,7 @@ export class CalendarSettingsModel {
             calendar.isVisible = newVisibility;
         });
 
-        try {
-            const data = await api.updateCalendar(id, { isVisible: newVisibility });
-            runInAction(() => {
-                this.calendars = data.accounts;
-            });
-        } catch (error) {
-            console.error("Failed to update calendar visibility", error);
-            runInAction(() => {
-                calendar.isVisible = !newVisibility;
-            });
-        }
+        // Strategy monitors change and syncs automatically
     }
 
     async toggleSubCalendarVisibility(accountId: string, subCalendarId: string) {
@@ -103,16 +125,7 @@ export class CalendarSettingsModel {
             sub.isVisible = newVis;
         });
 
-        // Persist
-        try {
-            const updatedSubs = account.subCalendars.map(s => s.id === subCalendarId ? { ...s, isVisible: newVis } : s);
-            await api.updateCalendar(accountId, { subCalendars: updatedSubs });
-        } catch (e) {
-            console.error("Failed to update subcalendar", e);
-            runInAction(() => {
-                sub.isVisible = !newVis; // revert
-            });
-        }
+        // Strategy monitors change and syncs automatically
     }
 
     async setGuestUpdateStrategy(accountId: string, strategy: 'all' | 'none') {
@@ -123,32 +136,47 @@ export class CalendarSettingsModel {
             account.guestUpdateStrategy = strategy;
         });
 
-        await api.updateCalendar(accountId, { guestUpdateStrategy: strategy });
+        // Strategy monitors change and syncs automatically
     }
 
     // Call after connection or periodically
     async fetchSubCalendars(accountId: string) {
-        // Mock API call to backend service we just added
-        // In real app: await api.refreshSubCalendars(accountId);
+        this.isLoading = true;
+        try {
+            // Call the real sync endpoint we just created
+            // Call the real sync endpoint we just created
+            const data = await api.syncSubCalendars(accountId);
+            const updatedAccount = data.accounts.find((a: CalendarAccount) => a.id === accountId);
 
-        // Simulating the backend response since we don't have the full API wire-up
-        const account = this.calendars.find(c => c.id === accountId);
-        if (!account) return;
-
-        const mockSubCalendars = [
-            { id: 'primary', name: 'Primary', color: account.color, isVisible: true, canEdit: true },
-            { id: 'work', name: 'Work', color: '#ff5722', isVisible: true, canEdit: true },
-            { id: 'family', name: 'Family', isVisible: false, color: '#9c27b0', canEdit: true }
-        ];
-
-        runInAction(() => {
-            if (!account.subCalendars || account.subCalendars.length === 0) {
-                account.subCalendars = mockSubCalendars;
+            if (!updatedAccount) {
+                console.error("Updated account not found in sync response");
+                return;
             }
-        });
 
-        // Sync with backend
-        await api.updateCalendar(accountId, { subCalendars: mockSubCalendars });
+            // Stop monitoring the OLD object before we replace it
+            calendarSyncStrategy.stopMonitoring(accountId);
+
+            runInAction(() => {
+                // Update local model
+                this.calendars = this.calendars.map(c => c.id === accountId ? updatedAccount : c);
+            });
+
+            // Start monitoring the NEW object
+            calendarSyncStrategy.monitor(updatedAccount);
+
+            // Re-attach monitor to ensure we catch changes on new objects if reference changed
+            // simpler: just update the existing object properties if we want to keep reference, 
+            // but mapping is safer for React.
+            // We should ensure strategy monitors the *new* object.
+            // The fetchCalendars loop handles initial monitoring. We should probably handle it here too.
+            // But usually fetchCalendars happens on load.
+        } catch (error) {
+            console.error("Failed to sync sub-calendars", error);
+        } finally {
+            runInAction(() => {
+                this.isLoading = false;
+            });
+        }
     }
 
     async connectGoogle() {

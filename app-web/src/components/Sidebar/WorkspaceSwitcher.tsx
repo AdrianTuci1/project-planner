@@ -2,112 +2,76 @@ import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { ChevronUp, Check, Plus } from 'lucide-react';
+import './WorkspaceSwitcher.css';
 
 export const WorkspaceSwitcher = observer(() => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
-        <div className="workspace-switcher" style={{ flex: 1, position: 'relative' }}>
+        <div className="workspace-switcher">
 
             {/* Workspace Menu Trigger */}
             <div
-                className="workspace-trigger"
+                className={`workspace-trigger ${isMenuOpen ? 'active' : ''}`}
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    background: isMenuOpen ? 'var(--bg-surface-hover)' : 'transparent',
-                    border: '1px solid var(--border-subtle)',
-                    userSelect: 'none'
-                }}
             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{
-                        width: 20, height: 20, borderRadius: 4,
-                        background: store.activeWorkspace?.type === 'personal' ? 'var(--primary)' : 'var(--accent-purple)',
-                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold'
-                    }}>
+                <div className="workspace-info">
+                    <div className={`workspace-avatar ${store.activeWorkspace?.type === 'personal' ? 'personal' : 'team'}`}>
                         {store.activeWorkspace?.type === 'personal' ? 'P' : 'T'}
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 500 }}>
+                    <span className="workspace-name">
                         {store.activeWorkspace?.name || 'Workspace'}
                     </span>
                 </div>
-                <ChevronUp size={14} style={{ opacity: 0.5 }} />
+                <ChevronUp
+                    size={14}
+                    className="trigger-chevron"
+                    style={{ transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                />
             </div>
 
             {/* Workspace Dropdown Menu */}
             {isMenuOpen && (
                 <>
                     <div
-                        style={{ position: 'fixed', inset: 0, zIndex: 99 }}
+                        className="workspace-menu-backdrop"
                         onClick={() => setIsMenuOpen(false)}
                     />
-                    <div className="workspace-menu" style={{
-                        position: 'absolute',
-                        bottom: '100%',
-                        left: 0,
-                        right: 0,
-                        marginBottom: 5,
-                        background: 'var(--bg-surface)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 8,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        padding: 4,
-                        zIndex: 100
-                    }}>
-                        <div className="menu-label" style={{ padding: '4px 8px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>
-                            WORKSPACES
+                    <div className="workspace-menu">
+                        <div className="menu-section-label">
+                            Workspaces
                         </div>
 
                         {store.workspaces.map(ws => (
                             <div
                                 key={ws.id}
-                                className="menu-item"
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px',
-                                    borderRadius: 6, cursor: 'pointer',
-                                    background: store.activeWorkspace?.id === ws.id ? 'var(--bg-active)' : 'transparent'
-                                }}
+                                className={`menu-item ${store.activeWorkspace?.id === ws.id ? 'active' : ''}`}
                                 onClick={() => {
                                     store.setActiveWorkspace(ws.id);
                                     setIsMenuOpen(false);
                                 }}
                             >
-                                <div style={{
-                                    width: 20, height: 20, borderRadius: 4,
-                                    background: ws.type === 'personal' ? 'var(--primary)' : 'var(--accent-purple)',
-                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10
-                                }}>
+                                <div className={`workspace-avatar ${ws.type === 'personal' ? 'personal' : 'team'}`}>
                                     {ws.type === 'personal' ? 'P' : 'T'}
                                 </div>
-                                <span style={{ fontSize: 13, flex: 1 }}>{ws.name}</span>
-                                {store.activeWorkspace?.id === ws.id && <Check size={14} />}
+                                <span className="workspace-name">{ws.name}</span>
+                                {store.activeWorkspace?.id === ws.id && <Check size={14} className="menu-item-check" />}
                             </div>
                         ))}
 
                         {/* Create Team Option if no Team exists */}
                         {!store.workspaces.some(w => w.type === 'team') && (
                             <div
-                                className="menu-item"
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px',
-                                    borderRadius: 6, cursor: 'pointer', marginTop: 4,
-                                    color: 'var(--text-secondary)'
-                                }}
+                                className="menu-item create-team-item"
                                 onClick={() => {
                                     setIsMenuOpen(false);
                                     store.openSettings('team');
                                 }}
                             >
-                                <div style={{ width: 20, height: 20, borderRadius: 4, border: '1px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div className="create-team-avatar">
                                     <Plus size={12} />
                                 </div>
-                                <span style={{ fontSize: 13 }}>Create Team</span>
+                                <span className="workspace-name">Create Team</span>
                             </div>
                         )}
                     </div>

@@ -147,7 +147,7 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
                 <WorkspaceSwitcher />
 
                 <div
-                    className="notification-icon-wrapper"
+                    className={`notification-icon-wrapper ${isNotificationOpen ? 'active' : ''}`}
                     onClick={(e) => {
                         const rect = e.currentTarget.getBoundingClientRect();
                         // Position above the icon: y = rect.top

@@ -23,7 +23,11 @@ export class App {
         this.app.use(helmet());
         this.app.use(cors());
         this.app.use(morgan('dev'));
-        this.app.use(express.json());
+        this.app.use(express.json({
+            verify: (req: any, res, buf) => {
+                req.rawBody = buf;
+            }
+        }));
         this.app.use(express.urlencoded({ extended: true }));
     }
 

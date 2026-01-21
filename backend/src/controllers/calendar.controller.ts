@@ -53,23 +53,41 @@ export class CalendarController {
         }
     }
 
+    public syncSubCalendars = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            // @ts-ignore
+            const userId = req.user?.id || 'default-user';
+
+            const updated = await this.calendarService.fetchSubCalendars(id, userId);
+            res.status(200).json(updated);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     public googleCallback = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { code } = req.query;
+            // Support both GET (query) and POST (body) for transition, or switch strictly to POST
+            const code = req.body.code || req.query.code;
+
             if (!code || typeof code !== 'string') {
-                throw new Error("Missing code query param");
+                throw new Error("Missing code param");
             }
 
-            await this.calendarService.handleGoogleCallback(code);
+            // We pass 'default-user' or the authenticated user ID if available
+            // In a real flow, we should ensure we know WHO is connecting.
+            // If the user calls this from Frontend, they should be Authenticated via JWT.
+            // So we can get userId from req.user
+            // @ts-ignore
+            const userId = req.user?.id || 'default-user';
 
-            // Redirect back to frontend
-            // Assuming frontend is at process.env.FRONTEND_URL or hardcoded for now
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-            res.redirect(`${frontendUrl}?googleAuthSuccess=true`);
+            const account = await this.calendarService.handleGoogleCallback(code, userId);
+
+            // Respond with JSON
+            res.status(200).json(account);
         } catch (error) {
-            // Redirect with error
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-            res.redirect(`${frontendUrl}?googleAuthError=true`);
+            next(error);
         }
     }
 }
