@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand, ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { v4 as uuidv4 } from 'uuid';
 import { WorkspacesService } from "./workspaces.service";
@@ -79,7 +79,17 @@ export class InvitationsService {
             throw new Error("This invitation was not sent to your email address.");
         }
 
+        // --- SINGLE TEAM RULE ENFORCEMENT ---
+        // Fetch User Settings to check if they are already in a team
+        const userSettings = await this.getUserSettings(userId); // Helper needed
+        if (userSettings && userSettings.teamId) {
+            throw new Error("You are already part of a Team Workspace. You must leave it before joining another.");
+        }
+
         await this.workspacesService.addMember(invite.workspaceId, userId);
+
+        // Update User Settings with new teamId
+        await this.updateUserTeamId(userId, invite.workspaceId);
 
         // Update Invite Status
         await this.docClient.send(new DeleteCommand({
@@ -88,6 +98,41 @@ export class InvitationsService {
         }));
 
         return { success: true, workspaceId: invite.workspaceId };
+    }
+
+    private async getUserSettings(userId: string) {
+        // Using SettingsService logic or direct DB access? 
+        // Direct DB for internal service logic is cleaner/faster if we know the table.
+        // Table: 'settings' (usually)
+        try {
+            const res = await this.docClient.send(new GetCommand({
+                TableName: process.env.TABLE_SETTINGS || 'settings',
+                Key: { userId }
+            }));
+            return res.Item;
+        } catch (e) { return null; }
+    }
+
+    private async updateUserTeamId(userId: string, teamId: string) {
+        // Upsert teamId
+        const command = new PutCommand({
+            TableName: process.env.TABLE_SETTINGS || 'settings',
+            Item: {
+                userId,
+                teamId,
+                // We might overwrite other settings if we Put, but usually settings are merged.
+                // Better to use UpdateCommand.
+            }
+        });
+
+        // Let's use Update to be safe and not wipe other settings
+        const updateCmd = new UpdateCommand({
+            TableName: process.env.TABLE_SETTINGS || 'settings',
+            Key: { userId },
+            UpdateExpression: "SET teamId = :t",
+            ExpressionAttributeValues: { ":t": teamId }
+        });
+        await this.docClient.send(updateCmd);
     }
 
     public async declineInvitation(inviteId: string) {

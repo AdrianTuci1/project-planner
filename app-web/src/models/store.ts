@@ -1,10 +1,13 @@
-import { makeAutoObservable, runInAction } from "mobx";
+import { makeAutoObservable, reaction } from "mobx";
 import { Task, GroupType } from "./core";
 import { TaskStore } from "./stores/TaskStore";
 import { UIStore } from "./stores/UIStore";
 import { RecurrenceStore } from "./stores/RecurrenceStore";
 import { NotificationStore } from "./stores/NotificationStore";
 import { AuthStore } from "./stores/AuthStore";
+import { LabelStore } from "./stores/LabelStore";
+import { WorkspaceStore } from "./stores/WorkspaceStore";
+import { GroupStore } from "./stores/GroupStore";
 
 export class ProjectStore {
     taskStore: TaskStore;
@@ -12,9 +15,15 @@ export class ProjectStore {
     recurrenceStore: RecurrenceStore;
     notificationStore: NotificationStore;
     authStore: AuthStore;
+    labelStore: LabelStore;
+    workspaceStore: WorkspaceStore;
+    groupStore: GroupStore;
 
     constructor() {
         // Initialize sub-stores
+        this.labelStore = new LabelStore(this);
+        this.workspaceStore = new WorkspaceStore(this);
+        this.groupStore = new GroupStore(this);
         this.taskStore = new TaskStore(this);
         this.uiStore = new UIStore(this);
         this.recurrenceStore = new RecurrenceStore(this);
@@ -23,41 +32,67 @@ export class ProjectStore {
 
         makeAutoObservable(this);
 
-        this.initializeData();
+        // Only initialize data when authenticated
+        reaction(
+            () => this.authStore.isAuthenticated,
+            (isAuthenticated) => {
+                if (isAuthenticated) {
+                    console.log("[ProjectStore] Authenticated! Initializing data...");
+                    this.initializeData();
+                } else {
+                    console.log("[ProjectStore] Not authenticated yet.");
+                }
+            }
+        );
     }
 
-    // --- Delegation to TaskStore ---
-    get workspaces() { return this.taskStore.workspaces; }
-    get activeWorkspace() { return this.taskStore.activeWorkspace; }
-    get groups() { return this.taskStore.groups; } // Now delegates to activeWorkspace via TaskStore getter
-    get dumpAreaTasks() { return this.taskStore.dumpAreaTasks; }
-    get templates() { return this.taskStore.templates; }
-    get currentUser() { return this.taskStore.currentUser; }
-    get isLoading() { return this.taskStore.isLoading; }
-    get error() { return this.taskStore.error; }
-    get lastFetchRange() { return this.taskStore.lastFetchRange; }
-    get availableLabels() { return this.taskStore.availableLabels; }
-    get allTasks() { return this.taskStore.allTasks; }
+    // --- Delegation to Sub-Stores ---
+
+    // WorkspaceStore Delegations
+    get workspaces() { return this.workspaceStore.workspaces; }
+    get activeWorkspace() { return this.workspaceStore.activeWorkspace; }
+    get isLoading() { return this.workspaceStore.isLoading; }
+    get error() { return this.workspaceStore.error; }
+    get lastFetchRange() { return this.workspaceStore.lastFetchRange; }
+
+    setActiveWorkspace(id: string) {
+        this.workspaceStore.setActiveWorkspace(id);
+    }
 
     initializeData() {
+        console.log("[ProjectStore] initializeData called");
         // Delegate initialization
-        this.taskStore.initializeData().then(() => {
+        this.workspaceStore.initializeData().then(() => {
             this.checkAndGenerateRecurringTasks();
         });
     }
 
+    // LabelStore Delegations
+    get availableLabels() { return this.labelStore.availableLabels; }
+    getLabel(labelId: string) { return this.labelStore.getLabel(labelId); }
+    getLabelColor(labelId: string) { return this.labelStore.getLabelColor(labelId); }
+    addLabel(name: string, color: string) { return this.labelStore.addLabel(name, color); }
+    updateLabel(id: string, name: string, color: string) { this.labelStore.updateLabel(id, name, color); }
+    deleteLabel(id: string) { this.labelStore.deleteLabel(id); }
+
+    // GroupStore Delegations
     createGroup(name: string, icon?: string, type: GroupType = 'personal', defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
-        return this.taskStore.createGroup(name, icon, type, defaultLabelId, autoAddLabelEnabled);
+        return this.groupStore.createGroup(name, icon, type, defaultLabelId, autoAddLabelEnabled);
     }
-    deleteGroup(groupId: string) { this.taskStore.deleteGroup(groupId); }
+    deleteGroup(groupId: string) { this.groupStore.deleteGroup(groupId); }
     updateGroup(groupId: string, name: string, icon?: string, type?: GroupType, defaultLabelId?: string, autoAddLabelEnabled?: boolean) {
-        this.taskStore.updateGroup(groupId, name, icon, type, defaultLabelId, autoAddLabelEnabled);
+        this.groupStore.updateGroup(groupId, name, icon, type, defaultLabelId, autoAddLabelEnabled);
     }
-    getLabel(labelId: string) { return this.taskStore.getLabel(labelId); }
-    getLabelColor(labelId: string) { return this.taskStore.getLabelColor(labelId); }
-    addLabel(name: string, color: string) { return this.taskStore.addLabel(name, color); }
-    updateLabel(id: string, name: string, color: string) { this.taskStore.updateLabel(id, name, color); }
-    deleteLabel(id: string) { this.taskStore.deleteLabel(id); }
+
+    // TaskStore Delegations (and accessors via activeWorkspace)
+    get groups() { return this.workspaceStore.activeWorkspace?.groups || []; }
+    get dumpAreaTasks() { return this.workspaceStore.activeWorkspace?.dumpAreaTasks || []; }
+    get templates() { return this.taskStore.templates; }
+    get currentUser() { return this.taskStore.currentUser; }
+    get allTasks() { return this.taskStore.allTasks; }
+
+    createTaskInGroup(title: string, group: any) { return this.taskStore.createTaskInGroup(title, group); }
+    saveNewTask(task: Task) { return this.taskStore.saveNewTask(task); }
     addTaskToDump(title: string) { this.taskStore.addTaskToDump(title); }
     moveTaskToGroup(taskId: string, groupId: string) { this.taskStore.moveTaskToGroup(taskId, groupId); }
     deleteTask(taskId: string) { this.taskStore.deleteTask(taskId); }
@@ -66,7 +101,7 @@ export class ProjectStore {
 
     // --- Delegation to UIStore ---
     get activeGroupId() { return this.uiStore.activeGroupId; }
-    set activeGroupId(val) { this.uiStore.activeGroupId = val; } // Setters needed for writable properties
+    set activeGroupId(val) { this.uiStore.activeGroupId = val; }
     get isSidebarOpen() { return this.uiStore.isSidebarOpen; }
     set isSidebarOpen(val) { this.uiStore.isSidebarOpen = val; }
     get isRightSidebarOpen() { return this.uiStore.isRightSidebarOpen; }
@@ -124,18 +159,6 @@ export class ProjectStore {
 
     setDraggingTaskId(id: string | null) { this.draggingTaskId = id; }
     setDragOverLocation(loc: { date: Date, hour: number, minute: number } | null) { this.dragOverLocation = loc; }
-
-    setActiveWorkspace(id: string) {
-        runInAction(() => {
-            this.taskStore.activeWorkspaceId = id;
-            // Maybe reset activeGroupId when switching workspace?
-            if (this.taskStore.groups.length > 0) {
-                this.activeGroupId = this.taskStore.groups[0].id;
-            } else {
-                this.activeGroupId = null;
-            }
-        });
-    }
 
     applyGlobalFilters(tasks: Task[]) { return this.uiStore.applyGlobalFilters(tasks); }
     setDate(date: Date) { this.uiStore.setDate(date); }

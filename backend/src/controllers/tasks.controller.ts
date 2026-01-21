@@ -18,6 +18,8 @@ export class TasksController {
     public createTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const task = req.body;
+            // Inject createdBy from the authenticated user
+            task.createdBy = (req as any).user.sub;
             const result = await this.tasksService.createTask(task);
             res.status(201).json(result);
         } catch (error) {

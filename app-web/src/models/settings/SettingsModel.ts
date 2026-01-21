@@ -1,5 +1,6 @@
 import { makeAutoObservable } from "mobx";
 import { api } from "../../services/api";
+import { settingsSyncStrategy } from "../strategies/SettingsSyncStrategy";
 
 export type SettingsTab = 'account' | 'team' | 'general' | 'labels' | 'power' | 'calendar' | 'due_dates';
 export type AccountView = 'main' | 'email' | 'password';
@@ -24,6 +25,8 @@ export class SettingsModel {
 
     constructor() {
         makeAutoObservable(this);
+        // Defer monitoring slightly or do it immediately
+        settingsSyncStrategy.monitor(this);
     }
 
     setActiveTab(tab: string) {

@@ -11,6 +11,7 @@ import { SidebarViewToggle } from './SidebarViewToggle';
 import { Bell } from 'lucide-react';
 import { useState } from 'react';
 import { NotificationContext } from '../ContextMenu/NotificationContext';
+import { WorkspaceSwitcher } from '../Sidebar/WorkspaceSwitcher';
 
 
 interface SidebarProps {
@@ -143,43 +144,7 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
 
             {/* Sidebar Footer - Personal/Team Switch */}
             <div className="sidebar-footer">
-                <div className="workspace-switcher" style={{ flex: 1 }}>
-
-                    <button
-                        className={`workspace-btn ${store.activeWorkspace?.type === 'personal' ? 'active' : ''}`}
-                        onClick={() => {
-                            let personal = store.workspaces.find(w => w.type === 'personal');
-                            if (!personal) {
-                                // Self-healing: Create Personal workspace if missing
-                                personal = new Workspace("Personal", 'personal');
-                                // No default group created
-                                store.taskStore.workspaces.unshift(personal);
-                            }
-                            if (personal) store.setActiveWorkspace(personal.id);
-                        }}
-                    >
-                        Personal
-                    </button>
-                    <button
-                        className={`workspace-btn ${store.activeWorkspace?.type === 'team' ? 'active' : ''}`}
-                        onClick={() => {
-                            let team = store.workspaces.find(w => w.type === 'team');
-                            if (!team) {
-                                // Self-healing: Create Team workspace if missing
-                                team = new Workspace("Team", 'team');
-                                // No default group created
-                                store.taskStore.workspaces.push(team);
-                            }
-                            // Re-find in case push didn't update ref or just use 'team' object
-                            // 'team' object is valid reference.
-                            if (team) {
-                                store.setActiveWorkspace(team.id);
-                            }
-                        }}
-                    >
-                        Team
-                    </button>
-                </div>
+                <WorkspaceSwitcher />
 
                 <div
                     className="notification-icon-wrapper"

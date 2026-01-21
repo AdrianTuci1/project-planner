@@ -6,7 +6,8 @@ export class LabelsController {
 
     public getLabels = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const labels = await this.labelsService.getLabels();
+            const workspaceId = req.query.workspaceId as string;
+            const labels = await this.labelsService.getLabels(workspaceId);
             res.status(200).json(labels);
         } catch (error) {
             next(error);

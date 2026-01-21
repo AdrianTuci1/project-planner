@@ -247,16 +247,55 @@ export class MockApiService implements IApiService {
     async respondToInvite(id: string, accept: boolean): Promise<void> { }
     async getGoogleAuthUrl(): Promise<{ url: string }> { return { url: '' }; }
 
-    async getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string }> {
+    async getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }> {
         // Return a fake object URL for testing local upload flow logic if possible,
         // but since we need a PUT url, we can't really mock the S3 PUT easily without a real server or nock.
         // For now, we return a dummy URL. The frontend might fail to PUT to it if it expects a real S3 signed URL.
         // We will just log it.
         console.log("Mock getUploadUrl", contentType, fileName);
-        return { url: "", key: "" };
+        return { url: "", key: "", publicUrl: "" };
     }
 
     async deleteFile(key: string): Promise<void> {
         console.log("Mock deleteFile", key);
     }
+
+    async createTask(task: any): Promise<any> {
+        console.log("Mock createTask", task);
+        return task;
+    }
+
+    async updateTask(id: string, task: any): Promise<any> {
+        console.log("Mock updateTask", id, task);
+        return task;
+    }
+
+    async deleteTask(id: string): Promise<any> {
+        console.log("Mock deleteTask", id);
+        return { id };
+    }
+
+    async getLabels(workspaceId?: string): Promise<any[]> {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                // In a real app we'd filter by workspaceId. 
+                // For mock, we just return the global mock labels or filter if we had workspace info on them.
+                resolve(this.db.availableLabels);
+            }, MOCK_DELAY);
+        });
+    }
+
+    async createGroup(group: any): Promise<any> { return group; }
+    async updateGroup(id: string, group: any): Promise<any> { return group; }
+    async deleteGroup(id: string): Promise<any> { return { id }; }
+
+    async getWorkspaces(): Promise<any[]> {
+        return [];
+    }
+
+    async createWorkspace(name: string, type: string, ownerId: string): Promise<any> { return { id: `team-${ownerId}`, name, type, ownerId }; }
+
+    async createLabel(label: any): Promise<any> { return label; }
+    async updateLabel(id: string, label: any): Promise<any> { return label; }
+    async deleteLabel(id: string): Promise<any> { return { id }; }
 }

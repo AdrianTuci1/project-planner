@@ -29,13 +29,13 @@ export class App {
 
     private initializeRoutes(routes: Routes[]) {
         routes.forEach((route) => {
-            this.app.use('/', route.router);
+            this.app.use('/api', route.router);
         });
     }
 
     public listen() {
         this.app.listen(this.port, () => {
-            console.log(`App listening on the port ${this.port}`);
+            console.log(`Server started! App listening on the port ${this.port}`);
         });
     }
 }

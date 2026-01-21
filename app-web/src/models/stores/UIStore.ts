@@ -127,7 +127,7 @@ export class UIStore {
     }
 
     get activeGroup() {
-        return this.rootStore.taskStore.groups.find(g => g.id === this.activeGroupId);
+        return this.rootStore.groups.find(g => g.id === this.activeGroupId);
     }
 
     get filteredTasks() {

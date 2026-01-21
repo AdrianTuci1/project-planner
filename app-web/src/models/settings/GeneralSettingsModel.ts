@@ -56,7 +56,7 @@ export class GeneralSettingsModel {
     setSetting(key: keyof GeneralSettingsModel, value: any) {
         // @ts-ignore
         this[key] = value;
-        this.saveSettings(); // Auto-save on change
+        // Strategy handles auto-save
     }
 
     async loadSettings() {

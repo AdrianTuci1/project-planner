@@ -1,0 +1,77 @@
+import { IApiService, CalendarData, CalendarAccount, GeneralSettings, InitialDataResponse } from '../types';
+import { syncService } from '../SyncService';
+import { TaskModule } from './TaskModule';
+import { SettingsModule } from './SettingsModule';
+import { CalendarModule } from './CalendarModule';
+import { NotificationModule } from './NotificationModule';
+import { StorageModule } from './StorageModule';
+import { GroupModule } from './GroupModule';
+import { WorkspaceModule } from './WorkspaceModule';
+import { LabelModule } from './LabelModule';
+
+export class RealApiService implements IApiService {
+    private taskModule: TaskModule;
+    private groupModule: GroupModule;
+    private workspaceModule: WorkspaceModule;
+    private labelModule: LabelModule;
+    private settingsModule: SettingsModule;
+    private calendarModule: CalendarModule;
+    private notificationModule: NotificationModule;
+    private storageModule: StorageModule;
+
+    constructor(baseUrl: string) {
+        syncService.init();
+        this.taskModule = new TaskModule(baseUrl);
+        this.groupModule = new GroupModule(baseUrl);
+        this.workspaceModule = new WorkspaceModule(baseUrl);
+        this.labelModule = new LabelModule(baseUrl);
+        this.settingsModule = new SettingsModule(baseUrl);
+        this.calendarModule = new CalendarModule(baseUrl);
+        this.notificationModule = new NotificationModule(baseUrl);
+        this.storageModule = new StorageModule(baseUrl);
+    }
+
+    // Tasks delegates
+    getInitialData(startDate: Date, endDate: Date, workspaceId?: string): Promise<InitialDataResponse> {
+        return this.taskModule.getInitialData(startDate, endDate, workspaceId);
+    }
+    createTask(task: any): Promise<any> { return this.taskModule.createTask(task); }
+    updateTask(id: string, task: any): Promise<any> { return this.taskModule.updateTask(id, task); }
+    deleteTask(id: string): Promise<any> { return this.taskModule.deleteTask(id); }
+
+    // Groups delegates
+    createGroup(group: any): Promise<any> { return this.groupModule.createGroup(group); }
+    updateGroup(id: string, group: any): Promise<any> { return this.groupModule.updateGroup(id, group); }
+    deleteGroup(id: string): Promise<any> { return this.groupModule.deleteGroup(id); }
+
+    // Workspaces delegates
+    createWorkspace(name: string, type: string, ownerId: string): Promise<any> { return this.workspaceModule.createWorkspace(name, type, ownerId); }
+    getWorkspaces(): Promise<any[]> { return this.workspaceModule.getWorkspaces(); }
+
+    // Labels delegates
+    getLabels(workspaceId?: string): Promise<any[]> { return this.labelModule.getLabels(workspaceId); }
+    createLabel(label: any): Promise<any> { return this.labelModule.createLabel(label); }
+    updateLabel(id: string, label: any): Promise<any> { return this.labelModule.updateLabel(id, label); }
+    deleteLabel(id: string): Promise<any> { return this.labelModule.deleteLabel(id); }
+
+    // Settings delegates
+    getGeneralSettings(): Promise<GeneralSettings> { return this.settingsModule.getGeneralSettings(); }
+    updateGeneralSettings(settings: Partial<GeneralSettings>): Promise<void> { return this.settingsModule.updateGeneralSettings(settings); }
+
+    // Calendar delegates
+    getCalendars(): Promise<CalendarData> { return this.calendarModule.getCalendars(); }
+    addCalendar(account: CalendarAccount): Promise<CalendarData> { return this.calendarModule.addCalendar(account); }
+    updateCalendar(id: string, data: Partial<CalendarAccount>): Promise<CalendarData> { return this.calendarModule.updateCalendar(id, data); }
+    deleteCalendar(id: string): Promise<CalendarData> { return this.calendarModule.deleteCalendar(id); }
+    getGoogleAuthUrl(): Promise<{ url: string }> { return this.calendarModule.getGoogleAuthUrl(); }
+
+    // Notification delegates
+    inviteUser(email: string, workspaceId: string): Promise<void> { return this.notificationModule.inviteUser(email, workspaceId); }
+    getNotifications(): Promise<any[]> { return this.notificationModule.getNotifications(); }
+    markNotificationRead(id: string): Promise<void> { return this.notificationModule.markNotificationRead(id); }
+    respondToInvite(id: string, accept: boolean): Promise<void> { return this.notificationModule.respondToInvite(id, accept); }
+
+    // Storage delegates
+    getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }> { return this.storageModule.getUploadUrl(contentType, fileName); }
+    deleteFile(key: string): Promise<void> { return this.storageModule.deleteFile(key); }
+}

@@ -79,9 +79,7 @@ export const Login: React.FC<LoginProps> = observer(({ onLogin }) => {
                     type="button"
                     className="auth-button-secondary"
                     onClick={() => {
-                        // Placeholder for Google Login
-                        console.log("Google login clicked");
-                        alert("Google Login is not configured yet. Requires Identity Provider setup.");
+                        store.authStore.loginWithGoogle();
                     }}
                     style={{
                         background: 'transparent',

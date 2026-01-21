@@ -38,6 +38,26 @@ export interface IApiService {
     updateCalendar(id: string, data: Partial<CalendarAccount>): Promise<CalendarData>;
     deleteCalendar(id: string): Promise<CalendarData>;
 
+    // Tasks (Offline + Sync)
+    createTask(task: any): Promise<any>;
+    updateTask(id: string, task: any): Promise<any>;
+    deleteTask(id: string): Promise<any>;
+
+    // Groups
+    createGroup(group: any): Promise<any>;
+    updateGroup(id: string, group: any): Promise<any>;
+    deleteGroup(id: string): Promise<any>;
+
+    // Workspaces
+    createWorkspace(name: string, type: string, ownerId: string): Promise<any>;
+    getWorkspaces(): Promise<any[]>;
+
+    // Labels
+    getLabels(workspaceId?: string): Promise<any[]>;
+    createLabel(label: any): Promise<any>;
+    updateLabel(id: string, label: any): Promise<any>;
+    deleteLabel(id: string): Promise<any>;
+
     // Invitations & Notifications
     inviteUser(email: string, workspaceId: string): Promise<void>;
     getNotifications(): Promise<any[]>;

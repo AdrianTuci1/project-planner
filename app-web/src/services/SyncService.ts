@@ -24,6 +24,13 @@ const processQueue = async () => {
                 options.body = JSON.stringify(item.body);
             }
 
+            // [FIX] Add Authorization header if token exists
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                // @ts-ignore
+                options.headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const res = await fetch(item.url, options);
 
             if (res.ok) {

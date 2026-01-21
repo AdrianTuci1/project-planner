@@ -45,8 +45,19 @@ export class WorkspacesService {
     }
 
     public async createWorkspace(name: string, type: 'personal' | 'team', ownerId: string): Promise<Workspace> {
+        let workspaceId = uuidv4();
+
+        if (type === 'team') {
+            workspaceId = `team-${ownerId}`;
+            // Check if already exists to avoid overwriting or duplicates
+            const existing = await this.getWorkspaceById(workspaceId);
+            if (existing) {
+                return existing;
+            }
+        }
+
         const newWorkspace: Workspace = {
-            id: uuidv4(),
+            id: workspaceId,
             name,
             type: type,
             ownerId,

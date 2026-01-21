@@ -41,6 +41,8 @@ export interface ITask {
     recurrence?: RecurrenceType;
     priority: PriorityType;
     attachments: IAttachment[];
+    workspaceId?: string;
+    groupId?: string;
 }
 
 export interface IAttachment {
@@ -117,6 +119,8 @@ export class Task implements ITask {
     recurrence: RecurrenceType = 'none';
     priority: PriorityType = 'none';
     attachments: IAttachment[] = [];
+    workspaceId?: string = undefined;
+    groupId?: string = undefined;
 
     scheduledTime?: string = undefined; // Format "HH:mm"
 
@@ -184,6 +188,8 @@ export class Task implements ITask {
         newTask.recurrence = this.recurrence;
         newTask.priority = this.priority;
         newTask.attachments = this.attachments.map(a => ({ ...a }));
+        newTask.workspaceId = this.workspaceId;
+        newTask.groupId = this.groupId;
         return newTask;
     }
 
@@ -232,6 +238,10 @@ export class Group implements IGroup {
                 task.labels.push(this.defaultLabelId);
             }
         }
+        // Ensure workspaceId is set
+        if (!task.workspaceId) {
+            task.workspaceId = this.type;
+        }
         this.tasks.push(task);
     }
 
@@ -274,7 +284,7 @@ export class Workspace implements IWorkspace {
     dumpAreaTasks: Task[] = [];
 
     constructor(name: string, type: WorkspaceType) {
-        this.id = uuidv4();
+        this.id = type; // Use 'personal' or 'team' as ID directly
         this.name = name;
         this.type = type;
         makeAutoObservable(this);
@@ -293,6 +303,7 @@ export class Workspace implements IWorkspace {
 
     addTaskToDump(title: string) {
         const task = new Task(title);
+        task.workspaceId = this.id;
         this.dumpAreaTasks.push(task);
         return task;
     }

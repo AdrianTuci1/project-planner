@@ -26,6 +26,8 @@ export interface GeneralSettings {
     rolloverNextDay: boolean;
     rolloverRecurring: boolean;
     rolloverTo: string;
+    teamId?: string; // ID of the team this user belongs to
+    teamMembers?: string[]; // If THIS user is the owner, list of members
 }
 
 

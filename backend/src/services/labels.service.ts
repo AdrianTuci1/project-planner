@@ -10,13 +10,26 @@ export class LabelsService {
         this.tableName = process.env.TABLE_LABELS || 'labels';
     }
 
-    public async getLabels() {
+    public async getLabels(workspaceId?: string) {
         const command = new ScanCommand({
             TableName: this.tableName,
         });
 
         const result = await this.docClient.send(command);
-        return result.Items || [];
+        let labels = result.Items || [];
+
+        if (workspaceId) {
+            labels = labels.filter((l: any) => l.workspaceId === workspaceId || !l.workspaceId); // Allow global labels? Or strict? 
+            // "Strict separation" implies strict. But standard labels might be global.
+            // Let's allow global (no workspaceId) + specific workspaceId.
+            // If workspaceId is 'personal', we might want only personal labels.
+        } else {
+            // If no workspaceId, maybe return only globals?
+            // Or defaults?
+            labels = labels.filter((l: any) => !l.workspaceId || l.workspaceId === 'personal');
+        }
+
+        return labels;
     }
 
     public async createLabel(label: any) {
