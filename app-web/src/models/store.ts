@@ -93,10 +93,11 @@ export class ProjectStore {
 
     createTaskInGroup(title: string, group: any) { return this.taskStore.createTaskInGroup(title, group); }
     saveNewTask(task: Task) { return this.taskStore.saveNewTask(task); }
-    addTaskToDump(title: string) { this.taskStore.addTaskToDump(title); }
+    addTaskToDump(title: string) { return this.taskStore.addTaskToDump(title); }
     moveTaskToGroup(taskId: string, groupId: string) { this.taskStore.moveTaskToGroup(taskId, groupId); }
     deleteTask(taskId: string) { this.taskStore.deleteTask(taskId); }
     duplicateTask(task: Task) { return this.taskStore.duplicateTask(task); }
+    moveTaskToInbox(taskId: string) { this.taskStore.moveTaskToInbox(taskId); }
     getTaskById(taskId: string) { return this.taskStore.getTaskById(taskId); }
 
     // --- Delegation to UIStore ---

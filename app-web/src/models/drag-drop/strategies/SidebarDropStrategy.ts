@@ -35,41 +35,8 @@ export class SidebarDropStrategy implements DragStrategy {
             return;
         }
 
-        // Moving between lists or from Calendar
-        if (groupId === null) {
-            // Moving to Brain Dump
-            if (!store.dumpAreaTasks.find(t => t.id === task.id)) {
-                runInAction(() => {
-                    // Remove from old group
-                    const oldGroup = store.groups.find(g => g.tasks.includes(task));
-                    if (oldGroup) oldGroup.removeTask(task.id);
+        // Group moves and Inbox normalization are now handled centrally in DragDropManager.
 
-                    store.dumpAreaTasks.push(task);
-                });
-            }
-        } else {
-            // Moving to a specific group
-            const targetGroup = store.groups.find(g => g.id === groupId);
-            if (targetGroup && !targetGroup.tasks.find(t => t.id === task.id)) {
-                runInAction(() => {
-                    // Remove from dump if there
-                    const dumpIndex = store.dumpAreaTasks.findIndex(t => t.id === task.id);
-                    if (dumpIndex > -1) store.dumpAreaTasks.splice(dumpIndex, 1);
-
-                    // Remove from old group
-                    const oldGroup = store.groups.find(g => g.id !== groupId && g.tasks.includes(task));
-                    if (oldGroup) oldGroup.removeTask(task.id);
-
-                    targetGroup.addTask(task);
-                });
-            }
-        }
-
-        // Ensure the task is visible in the sidebar by clearing the schedule
-        // Sidebar filters out tasks that have a scheduledDate
-        runInAction(() => {
-            task.scheduledDate = undefined;
-            task.scheduledTime = undefined;
-        });
+        // Schedule clearing is now handled centrally in DragDropManager for sidebar-list targets.
     }
 }

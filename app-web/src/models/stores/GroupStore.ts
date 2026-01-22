@@ -1,6 +1,8 @@
 import { makeAutoObservable } from "mobx";
 import { GroupType } from "../core";
 import { ProjectStore } from "../store";
+import { api } from "../../services/api";
+import { groupSyncStrategy } from "../strategies/GroupSyncStrategy";
 
 export class GroupStore {
     rootStore: ProjectStore;
@@ -10,9 +12,24 @@ export class GroupStore {
         makeAutoObservable(this);
     }
 
-    createGroup(name: string, icon?: string, type: GroupType = 'personal', defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
+    async createGroup(name: string, icon?: string, type: GroupType = 'personal', defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
         // Groups created in a workspace should match that workspace.
-        return this.rootStore.workspaceStore.activeWorkspace?.createGroup(name, icon, defaultLabelId, autoAddLabelEnabled);
+        const group = this.rootStore.workspaceStore.activeWorkspace?.createGroup(name, icon, defaultLabelId, autoAddLabelEnabled);
+
+        if (group) {
+            // Start monitoring immediately so subsequent changes are caught
+            groupSyncStrategy.monitor(group);
+
+            // Persist to backend
+            try {
+                await api.createGroup(group);
+            } catch (error) {
+                console.error("Failed to create group on backend", error);
+                // Optionally handle rollback or offline queue (api service handles queue if offline)
+            }
+        }
+
+        return group;
     }
 
     deleteGroup(groupId: string) {

@@ -108,6 +108,7 @@ export class DragDropManager {
                 // No, `useSortable` usage in component handles the transform, but the ITEM must be in the list for SortableContext to render a placeholder for it.
 
                 runInAction(() => {
+                    task.groupId = groupId; // Update groupId (might be null for Inbox)
                     targetList.push(task);
                 });
             }
@@ -336,6 +337,55 @@ export class DragDropManager {
 
         // No restriction for Sidebar/Kanban/TasksView dropping on Calendar/Timebox
 
+        // Centralized GroupId & List Management
+        runInAction(() => {
+            const currentOwner = store.groups.find(g => g.tasks.find(t => t.id === taskId)) ||
+                (store.dumpAreaTasks.find(t => t.id === taskId) ? { tasks: store.dumpAreaTasks } : null);
+
+            let targetGroupId: string | null | undefined = undefined;
+
+            if (dropType === 'kanban-column' || dropType === 'calendar-cell' || dropType === 'timebox-slot' || dropType === 'tasks-list') {
+                targetGroupId = null; // Always move to Inbox/Null when dropped on a view
+            } else if (dropType === 'sidebar-list') {
+                targetGroupId = overData!.groupId;
+            }
+
+            if (targetGroupId !== undefined) {
+                // Determine target list
+                const targetList = targetGroupId === null ? store.dumpAreaTasks : store.groups.find(g => g.id === targetGroupId)?.tasks;
+
+                if (targetList && currentOwner && (currentOwner.tasks !== targetList)) {
+                    // Remove from old
+                    if ('removeTask' in currentOwner) {
+                        (currentOwner as any).removeTask(taskId);
+                    } else if (Array.isArray(currentOwner.tasks)) {
+                        const idx = currentOwner.tasks.findIndex((t: Task) => t.id === taskId);
+                        if (idx > -1) currentOwner.tasks.splice(idx, 1);
+                    }
+
+                    // Add to new
+                    task.groupId = targetGroupId;
+                    targetList.push(task);
+
+                    // Clear schedule when moving to the sidebar (lists are unscheduled)
+                    if (dropType === 'sidebar-list') {
+                        task.scheduledDate = null;
+                        task.scheduledTime = null;
+                    }
+
+                    console.log(`[DragDropManager] Moved task ${taskId} to group ${targetGroupId}`);
+                } else if (targetGroupId !== undefined) {
+                    // Even if already in the list (or list not found), ensure groupId is sync'd
+                    task.groupId = targetGroupId;
+
+                    // Also clear schedule if dropped back onto its own list in the sidebar (for safety)
+                    if (dropType === 'sidebar-list') {
+                        task.scheduledDate = null;
+                        task.scheduledTime = null;
+                    }
+                }
+            }
+        });
 
         const strategy = this.strategies.get(dropType);
         if (strategy) {

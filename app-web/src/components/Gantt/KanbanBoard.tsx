@@ -34,7 +34,7 @@ export const KanbanColumn = observer(({
         data: {
             type: 'kanban-column',
             date: date,
-            groupId: groupId // Pass group ID for identification
+            groupId: undefined // Views should generally not enforce group membership on drop
         }
     });
 
@@ -162,7 +162,7 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
     };
 
     const getTargetGroup = () => {
-        if (groupId === null) return null; // Brain Dump
+        if (groupId === null) return null; // Inbox
         if (groupId) return store.groups.find(g => g.id === groupId); // Specific group
         return store.activeGroup; // Fallback to active group (though ideally should not be used if props are correct)
     };
@@ -173,9 +173,9 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
         const targetGroup = getTargetGroup();
 
         if (groupId === null) {
-            // Brain dump logic if needed, though usually this view is for groups?
-            // If Kanban is used for Brain Dump, we might need store.addTaskToDump(title) and set scheduledDate?
-            // Assuming for now Brain Dump items in Kanban behave like tasks
+            // Inbox logic if needed, though usually this view is for groups?
+            // If Kanban is used for Inbox, we might need store.addTaskToDump(title) and set scheduledDate?
+            // Assuming for now Inbox items in Kanban behave like tasks
             const newTask = new Task(title);
             newTask.scheduledDate = date;
             newTask.scheduledTime = undefined;

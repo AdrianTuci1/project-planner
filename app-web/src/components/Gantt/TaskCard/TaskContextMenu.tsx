@@ -11,6 +11,7 @@ interface TaskContextMenuProps {
     onMarkAsComplete: () => void;
     onDuplicate: () => void;
     onRemoveFromTimebox: () => void;
+    onRemoveFromList?: () => void;
     onDelete: () => void;
 }
 
@@ -22,6 +23,7 @@ export const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
     onMarkAsComplete,
     onDuplicate,
     onRemoveFromTimebox,
+    onRemoveFromList,
     onDelete,
 }) => {
     if (!isOpen) return null;
@@ -80,6 +82,22 @@ export const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
                     onClose();
                 }}
             />
+
+            {task.groupId && (
+                <MenuItem
+                    icon={
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    }
+                    label="Remove from list"
+                    onClick={() => {
+                        onRemoveFromList?.();
+                        onClose();
+                    }}
+                />
+            )}
 
             <MenuSeparator />
 

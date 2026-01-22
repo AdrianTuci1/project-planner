@@ -28,8 +28,7 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
             if (store.activeGroupId === null) {
                 store.addTaskToDump(title);
             } else if (activeGroup) {
-                const newTask = new Task(title);
-                activeGroup.addTask(newTask);
+                store.createTaskInGroup(title, activeGroup);
             }
             sidebarUI.setAddingTask(false);
         }

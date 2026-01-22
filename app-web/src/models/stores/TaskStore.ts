@@ -53,7 +53,11 @@ export class TaskStore {
     }
 
     addTaskToDump(title: string) {
-        return this.rootStore.workspaceStore.activeWorkspace?.addTaskToDump(title);
+        const task = this.rootStore.workspaceStore.activeWorkspace?.addTaskToDump(title);
+        if (task) {
+            taskSyncStrategy.monitor(task);
+        }
+        return task;
     }
 
     moveTaskToGroup(taskId: string, groupId: string) {
@@ -69,6 +73,21 @@ export class TaskStore {
                 activeWorkspace.dumpAreaTasks.splice(dumpTaskIndex, 1);
             }
         }
+    }
+
+    // ... existing deleteTask ...
+
+    // ... existing duplicateTask ...
+
+    // ... existing getTaskById ...
+
+    // ... existing saveNewTask ...
+
+    createTaskInGroup(title: string, group: any) {
+        const task = new Task(title);
+        group.addTask(task);
+        taskSyncStrategy.monitor(task);
+        return task;
     }
 
     deleteTask(taskId: string) {
@@ -141,12 +160,29 @@ export class TaskStore {
 
     // Missing methods from delegation in store.ts that were not in TaskStore.ts?
     // createTaskInGroup? 
-    createTaskInGroup(title: string, group: any) {
-        const task = new Task(title);
-        group.addTask(task);
-        return task;
-    }
 
+
+    moveTaskToInbox(taskId: string) {
+        const activeWorkspace = this.rootStore.workspaceStore.activeWorkspace;
+        if (!activeWorkspace) return;
+
+        // Check if already in dump
+        if (activeWorkspace.dumpAreaTasks.find(t => t.id === taskId)) return;
+
+        // Find in groups
+        for (const group of activeWorkspace.groups) {
+            const taskIndex = group.tasks.findIndex(t => t.id === taskId);
+            if (taskIndex > -1) {
+                const task = group.tasks[taskIndex];
+                group.removeTask(taskId);
+
+                // Update groupId to null explicitly for sync
+                task.groupId = null;
+                activeWorkspace.dumpAreaTasks.push(task);
+                return;
+            }
+        }
+    }
     removeLabelFromTasks(labelId: string) {
         this.allTasks.forEach(task => {
             if (task.labelId === labelId) {

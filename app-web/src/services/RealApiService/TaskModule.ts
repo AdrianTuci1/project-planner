@@ -86,11 +86,37 @@ export class TaskModule extends BaseApiService {
 
         const workspaceParam = workspaceId ? `&workspaceId=${workspaceId}` : '';
 
-        const [dumpTasks, availableLabels, groups] = await Promise.all([
+        const [allTasks, availableLabels, fetchedGroups] = await Promise.all([
             fetchItem<any>(`${this.baseUrl}/tasks?startDate=${startStr}&endDate=${endStr}${workspaceParam}`, 'tasks_req', 'tasks'),
             this.labelModule.getLabels(workspaceId),
             this.groupModule.getGroups(workspaceId)
         ]);
+
+        // Distribute tasks
+        const groups = fetchedGroups.map(g => ({ ...g, tasks: [] }));
+        const dumpTasks: any[] = [];
+
+        if (allTasks && Array.isArray(allTasks)) {
+            allTasks.forEach(task => {
+                if (task.groupId) {
+                    const group = groups.find(g => g.id === task.groupId);
+                    if (group) {
+                        group.tasks.push(task);
+                    } else {
+                        // Group not found? Maybe belongs to another workspace or deleted?
+                        // Fallback to dump or ignore?
+                        // If we are strictly filtering by workspace via param, this shouldn't happen often.
+                        // Let's safe-guard by putting in dump if group missing? 
+                        // Or maybe it's safest to obey groupId existence = group task.
+                        // But if group is missing, UI won't show it.
+                        // Let's put in dumpTasks as fallback so user doesn't lose visibility.
+                        dumpTasks.push(task);
+                    }
+                } else {
+                    dumpTasks.push(task);
+                }
+            });
+        }
 
         return { groups, dumpTasks, availableLabels, templates: [] };
     }

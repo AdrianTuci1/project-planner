@@ -79,8 +79,8 @@ export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResize
                 const width = 94;
 
                 // Determine background color for the ghost card
-                const backgroundColor = draggedTask.labels.length > 0
-                    ? store.getLabelColor(draggedTask.labels[0])
+                const backgroundColor = draggedTask.labelId
+                    ? store.getLabelColor(draggedTask.labelId)
                     : '#e6c581ff';
 
                 return (

@@ -42,7 +42,7 @@ export interface ITask {
     priority: PriorityType;
     attachments: IAttachment[];
     workspaceId?: string;
-    groupId?: string;
+    groupId?: string | null;
 }
 
 export interface IAttachment {
@@ -120,7 +120,7 @@ export class Task implements ITask {
     priority: PriorityType = 'none';
     attachments: IAttachment[] = [];
     workspaceId?: string = undefined;
-    groupId?: string = undefined;
+    groupId?: string | null = undefined;
 
     scheduledTime?: string | null = undefined; // Format "HH:mm"
 
@@ -165,7 +165,7 @@ export class Task implements ITask {
         }
     }
 
-    setScheduling(date?: Date, time?: string) {
+    setScheduling(date?: Date | null, time?: string | null) {
         this.scheduledDate = date;
         this.scheduledTime = time;
     }
@@ -251,6 +251,10 @@ export class Group implements IGroup {
     }
 
     removeTask(taskId: string) {
+        const task = this.tasks.find(t => t.id === taskId);
+        if (task) {
+            task.groupId = null;
+        }
         this.tasks = this.tasks.filter(t => t.id !== taskId);
     }
 
@@ -309,7 +313,7 @@ export class Workspace implements IWorkspace {
     addTaskToDump(title: string) {
         const task = new Task(title);
         task.workspaceId = this.id;
-        task.groupId = undefined; // Ensure no group
+        task.groupId = null; // Ensure no group, explicitly null for sync
         this.dumpAreaTasks.push(task);
         return task;
     }

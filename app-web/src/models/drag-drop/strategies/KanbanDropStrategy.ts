@@ -53,12 +53,12 @@ export class KanbanDropStrategy implements DragStrategy {
             // Default to start of day if no previous time
             runInAction(() => {
                 task.scheduledDate = setHours(startOfDay(date), 0);
-                task.includeTime = false;
+                task.scheduledTime = null;
             });
         } else {
             // Keep existing time, just change date
             // ONLY if includeTime is true
-            if (task.includeTime) {
+            if (task.scheduledTime) {
                 const hour = task.scheduledDate.getHours();
                 const minute = task.scheduledDate.getMinutes();
                 runInAction(() => {
@@ -67,43 +67,11 @@ export class KanbanDropStrategy implements DragStrategy {
             } else {
                 runInAction(() => {
                     task.scheduledDate = setHours(startOfDay(date), 0);
-                    task.includeTime = false;
+                    task.scheduledTime = null;
                 });
             }
         }
 
-        // Check if we need to move the task to a different group (if dropped on an empty column for a different group)
-        // This is handled optimistically in DragDropManager for reordering, but key for "empty list" drops
-        const { groupId } = overData;
-        if (groupId !== undefined) { // groupId can be null (brain dump)
-            const currentGroup = store.groups.find(g => g.tasks.find(t => t.id === task.id));
-            const isBrainDump = store.dumpAreaTasks.find(t => t.id === task.id);
-
-            let needsMove = false;
-            if (groupId === null) {
-                if (!isBrainDump) needsMove = true;
-            } else {
-                if (!currentGroup || currentGroup.id !== groupId) needsMove = true;
-            }
-
-            if (needsMove) {
-                runInAction(() => {
-                    // Remove from old
-                    if (currentGroup) currentGroup.removeTask(task.id);
-                    if (isBrainDump) {
-                        const idx = store.dumpAreaTasks.findIndex(t => t.id === task.id);
-                        if (idx > -1) store.dumpAreaTasks.splice(idx, 1);
-                    }
-
-                    // Add to new
-                    if (groupId === null) {
-                        store.dumpAreaTasks.push(task);
-                    } else {
-                        const targetGroup = store.groups.find(g => g.id === groupId);
-                        if (targetGroup) targetGroup.addTask(task);
-                    }
-                });
-            }
-        }
+        // Group moves are now handled centrally in DragDropManager.
     }
 }

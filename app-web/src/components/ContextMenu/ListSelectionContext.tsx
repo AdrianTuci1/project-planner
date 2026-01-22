@@ -29,10 +29,17 @@ export const ListSelectionContext = observer(({
         if (currentGroup) {
             currentGroup.removeTask(task.id);
         } else if (isDump) {
-            store.dumpAreaTasks = store.dumpAreaTasks.filter(t => t !== task);
+            const index = store.dumpAreaTasks.indexOf(task);
+            if (index > -1) store.dumpAreaTasks.splice(index, 1);
         }
 
         // Add to new
+        task.groupId = groupId; // Ensure groupId is set (null for Inbox)
+
+        // Clear schedule when moving to a group/inbox (lists are unscheduled)
+        task.scheduledDate = null;
+        task.scheduledTime = null;
+
         if (groupId === null) {
             store.dumpAreaTasks.push(task);
         } else {
