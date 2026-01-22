@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { MainApp } from './MainApp';
 import { Login } from './components/Auth/Login';
 import { SignupPage } from './pages/SignupPage';
@@ -6,24 +6,14 @@ import { observer } from 'mobx-react-lite';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import { store } from './models/store';
+import { Loading } from './components/Shared/Loading';
 
 const AuthWrapper = observer(() => {
   // Use MobX store state instead of local state
   const { isAuthenticated, isLoading } = store.authStore;
 
   if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: 'var(--bg-primary)',
-        color: 'var(--text-primary)'
-      }}>
-        Loading...
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
