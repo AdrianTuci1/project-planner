@@ -39,7 +39,7 @@ export const SidebarTaskList = observer(({
         <div
             ref={isSortable ? setNodeRef : undefined}
             className={`sidebar-tasks-list`}
-            style={{ minHeight: '200px' }}
+            style={{ minHeight: isSortable ? '200px' : '0px' }}
         >
             {isSortable ? (
                 <SortableContext

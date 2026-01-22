@@ -14,6 +14,8 @@ import { NotificationContext } from '../ContextMenu/NotificationContext';
 import { WorkspaceSwitcher } from '../Sidebar/WorkspaceSwitcher';
 
 
+import { DueDateContent } from '../Sidebar/DueDateContent';
+
 interface SidebarProps {
     hideHeader?: boolean;
 }
@@ -92,54 +94,14 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
 
             {/* Due Date Content */}
             {sidebarUI.sidebarView === 'due' && (
-                <div className="sidebar-tasks-container">
-                    <div className="sidebar-section-header" style={{ padding: '0 10px 10px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
-                        UPCOMING
-                    </div>
-                    {(() => {
-                        const dueTasks = store.allTasks.filter(t => t.dueDate).sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
-
-                        if (dueTasks.length === 0) {
-                            return (
-                                <div style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'flex-start',
-                                    opacity: 1,
-                                    marginTop: '20px'
-                                }}>
-                                    <img
-                                        src="/due-date.png"
-                                        alt="No upcoming tasks"
-                                        style={{
-                                            maxWidth: '80%', // Slightly larger for this view if needed, but 80% is safe
-                                            height: 'auto',
-                                            marginBottom: '10px'
-                                        }}
-                                    />
-                                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>You have no upcoming tasks</span>
-                                </div>
-                            );
-                        }
-
-                        return (
-                            <SidebarTaskList
-                                tasks={dueTasks}
-                                activeGroup={null} // No group context for flat list
-                                onDuplicate={(t: Task) => store.dumpAreaTasks.push(t.clone())} // Fallback or implement specific logic
-                                onDelete={(t: Task) => store.deleteTask(t.id)}
-                                isSortable={false}
-                            />
-                        );
-                    })()}
-                </div>
+                <DueDateContent />
             )}
 
             {/* Templates Content */}
             {sidebarUI.sidebarView === 'templates' && (
                 <TemplatesView />
             )}
+
 
             {/* Sidebar Footer - Personal/Team Switch */}
             <div className="sidebar-footer">
