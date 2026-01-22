@@ -43,6 +43,11 @@ export class TaskUIModel {
         position: { x: 0, y: 0 }
     };
 
+    recurrenceWarningContext = {
+        isOpen: false,
+        position: { x: 0, y: 0 }
+    };
+
     isContextMenuOpen: boolean = false;
     contextPosition = { x: 0, y: 0 };
 
@@ -118,6 +123,18 @@ export class TaskUIModel {
 
     closeRecurrenceContext() {
         this.recurrenceContext.isOpen = false;
+    }
+
+    openRecurrenceWarning(e: React.MouseEvent, pos?: { x: number; y: number }) {
+        e.stopPropagation();
+        this.recurrenceWarningContext = {
+            isOpen: true,
+            position: pos || { x: e.clientX, y: e.clientY }
+        };
+    }
+
+    closeRecurrenceWarning() {
+        this.recurrenceWarningContext.isOpen = false;
     }
 
     priorityContext = {

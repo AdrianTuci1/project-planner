@@ -24,6 +24,7 @@ import { TaskUIModel } from '../../../models/TaskUIModel';
 import { store } from '../../../models/store';
 import { SubtaskList } from '../../Shared/SubtaskList';
 import { TaskContextMenu } from './TaskContextMenu';
+import { RecurrenceWarningContext } from '../../ContextMenu/RecurrenceWarningContext';
 import './TaskCard.css';
 
 
@@ -264,8 +265,16 @@ export const TaskCardBase = observer(({
                                     size={14}
                                     className={`tc-action-icon ${task.recurrence && task.recurrence !== 'none' ? 'active' : ''}`}
                                     style={task.recurrence && task.recurrence !== 'none' ? { color: 'var(--accent-primary)' } : undefined}
+                                    onMouseEnter={(e) => {
+                                        if (!task.scheduledDate) {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            ui.openRecurrenceWarning(e, { x: rect.left, y: rect.bottom + 8 });
+                                        }
+                                    }}
+                                    onMouseLeave={() => ui.closeRecurrenceWarning()}
                                     onClick={(e) => {
                                         e.stopPropagation();
+                                        if (!task.scheduledDate) return;
                                         if (task.recurrence && task.recurrence !== 'none') {
                                             ui.openRecurrenceContext(e, 'actions');
                                         } else {
@@ -400,6 +409,8 @@ export const TaskCardBase = observer(({
                 onRemoveFromList={() => store.moveTaskToInbox(task.id)}
                 onDelete={() => onDelete?.(task)}
             />
+
+            <RecurrenceWarningContext ui={ui} />
 
         </>
     );

@@ -28,6 +28,7 @@ import { PriorityContext } from '../ContextMenu/PriorityContext';
 import { SubtaskList } from '../Shared/SubtaskList';
 import './TaskModal.css';
 import { AttachmentsSection } from './Attachments/AttachmentsSection';
+import { RecurrenceWarningContext } from '../ContextMenu/RecurrenceWarningContext';
 
 interface TaskModalProps {
     task: Task;
@@ -265,6 +266,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         <div
                             className="meta-row"
                             onClick={(e) => {
+                                if (!task.scheduledDate) return;
                                 const valueEl = e.currentTarget.querySelector('.meta-row-value');
                                 const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
                                 ui.openRecurrenceContext(
@@ -276,9 +278,18 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         >
                             <div className="meta-row-label">
                                 <RotateCw size={18} />
-                                <span>Repeats</span>
+                                <span>Recurrence</span>
                             </div>
-                            <div className="meta-row-value">
+                            <div
+                                className="meta-row-value"
+                                onMouseEnter={(e) => {
+                                    if (!task.scheduledDate) {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        ui.openRecurrenceWarning(e, { x: rect.left, y: rect.bottom + 8 });
+                                    }
+                                }}
+                                onMouseLeave={() => ui.closeRecurrenceWarning()}
+                            >
                                 <span className="value-placeholder">
                                     {task.recurrence && task.recurrence !== 'none' ? task.recurrence : 'Does not repeat'}
                                 </span>
@@ -420,7 +431,8 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
 
             {/* List Selection Context */}
             <ListSelectionContext ui={ui} task={task} />
+
+            <RecurrenceWarningContext ui={ui} />
         </div>
     );
 });
-

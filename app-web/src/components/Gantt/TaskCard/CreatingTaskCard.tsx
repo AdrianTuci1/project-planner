@@ -10,6 +10,7 @@ import './TaskCard.css';
 import { ContextMenu } from '../../ContextMenu/ContextMenu';
 import { LabelPickerContent } from '../../ContextMenu/LabelPickerContent';
 import { RecurrencePickerContent } from '../../ContextMenu/RecurrencePickerContent';
+import { RecurrenceWarningContext } from '../../ContextMenu/RecurrenceWarningContext';
 
 interface CreatingTaskCardProps {
     onCreate?: (title: string, labelId?: string | null) => void;
@@ -137,9 +138,16 @@ export const CreatingTaskCard = observer(({
                     <RotateCw
                         size={14}
                         className="tc-action-icon"
+                        onMouseEnter={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            ui.openRecurrenceWarning(e, { x: rect.left, y: rect.bottom + 8 });
+                        }}
+                        onMouseLeave={() => ui.closeRecurrenceWarning()}
                         onClick={(e) => {
                             e.stopPropagation();
-                            ui.openRecurrenceContext(e, 'set');
+                            // In Sidebar (where CreatingTaskCard is used), recurrence is disabled
+                            // as tasks are not associated with a date yet.
+                            // ui.openRecurrenceContext(e, 'set');
                         }}
                     />
                 </div>
@@ -184,6 +192,8 @@ export const CreatingTaskCard = observer(({
                     baseDate={new Date()}
                 />
             </ContextMenu>
+
+            <RecurrenceWarningContext ui={ui} />
         </div>
     );
 });
