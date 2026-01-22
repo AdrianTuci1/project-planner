@@ -118,6 +118,12 @@
     color: #e0e0e0;
 }
 
+.filter-btn.active {
+    background: #FF2D55;
+    border-color: #FF2D55;
+    color: #fff;
+}
+
 .analytics-content {
     display: flex;
     flex-direction: column;
@@ -243,8 +249,7 @@
     padding-top: 20px;
     padding-bottom: 40px;
     /* Space for rotated labels */
-    gap: 8px;
-    /* Reduce gap for many bars */
+    /* Remove fixed gap, will be handled dynamically or by flex */
     position: relative;
     width: 100%;
 }
@@ -294,13 +299,12 @@
 }
 
 .bar {
-    width: 80%;
-    /* Relative width */
-    max-width: 40px;
+    width: 100%;
+    /* Take full width of bar-group */
     background: linear-gradient(180deg, #ff2d55 0%, #d41c40 100%);
-    border-radius: 6px 6px 0 0;
+    border-radius: 4px 4px 0 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 6px;
+    min-height: 4px;
     position: relative;
 }
 
@@ -333,14 +337,14 @@
 .bar-label {
     position: absolute;
     bottom: -35px;
+    left: 50%;
     font-size: 10px;
     color: #888;
     font-weight: 500;
-    transform: rotate(-45deg);
+    transform: translateX(-50%) rotate(-45deg);
     transform-origin: center top;
     white-space: nowrap;
-    width: 100%;
-    text-align: center;
+    pointer-events: none;
 }
 
 /* Table Styles */

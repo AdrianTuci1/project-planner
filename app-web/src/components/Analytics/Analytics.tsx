@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { analyticsModel, TimeRange } from '../../models/AnalyticsModel';
 import { BarChart, Clock, CheckCircle, X, ChevronDown, Filter } from 'lucide-react';
 import './Analytics.css';
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
+import { FilterContext } from '../ContextMenu/FilterContext';
 
 const TimeRangeSelector = observer(() => {
     const ranges: { id: TimeRange; label: string }[] = [
@@ -57,8 +58,14 @@ const SimpleBarChart = ({
     // Create grid lines (0%, 25%, 50%, 75%, 100%)
     const gridLines = [1, 0.75, 0.5, 0.25, 0];
 
+    const dataLength = data.length;
+    // Dynamic container gap: tight for many days, spacious for few
+    const containerGap = dataLength > 45 ? '1px' : dataLength > 20 ? '2px' : '6px';
+    // Dynamic gap between bars in comparison mode
+    const comparisonGap = dataLength > 30 ? '0px' : '2px';
+
     return (
-        <div className="bar-chart-container">
+        <div className="bar-chart-container" style={{ gap: containerGap }}>
             <div className="chart-grid-lines">
                 {gridLines.map(percent => (
                     <div key={percent} className="grid-line">
@@ -71,7 +78,7 @@ const SimpleBarChart = ({
                 <div key={idx} className="bar-group" style={{
                     flexDirection: 'row',
                     alignItems: 'flex-end',
-                    gap: showComparison ? '4px' : '0'
+                    gap: showComparison ? comparisonGap : '0'
                 }}>
                     {showComparison ? (
                         <>
@@ -82,7 +89,8 @@ const SimpleBarChart = ({
                                     height: `${((item.value2 || 0) / maxValue) * 100}%`,
                                     background: item.color,
                                     opacity: 0.3,
-                                    width: '14px'
+                                    flex: 1,
+                                    minWidth: dataLength > 60 ? '1px' : '2px'
                                 }}
                             >
                                 <div className="bar-tooltip">Est: {formatHours(item.value2 || 0)}</div>
@@ -93,7 +101,8 @@ const SimpleBarChart = ({
                                 style={{
                                     height: `${(item.value / maxValue) * 100}%`,
                                     background: item.color,
-                                    width: '14px'
+                                    flex: 1,
+                                    minWidth: dataLength > 60 ? '1px' : '2px'
                                 }}
                             >
                                 <div className="bar-tooltip">Act: {formatHours(item.value)}</div>
@@ -117,7 +126,7 @@ const SimpleBarChart = ({
                                 display: 'flex',
                                 flexDirection: 'column-reverse',
                                 overflow: 'hidden',
-                                borderRadius: '6px 6px 0 0'
+                                borderRadius: '4px 4px 0 0'
                             }}>
                                 {item.stackedValues.map((seg, sIdx) => (
                                     <div
@@ -134,8 +143,8 @@ const SimpleBarChart = ({
                             {/* Tooltip outside of overflow:hidden wrapper */}
                             <div className="bar-tooltip">
                                 <div style={{ fontWeight: 600, marginBottom: '4px' }}>Total: {formatHours(item.value)}</div>
-                                {item.stackedValues.map(s => (
-                                    <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                {item.stackedValues.map((s, idx) => (
+                                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: s.color }}></span>
                                         {s.label}: {formatHours(s.value)}
                                     </div>
@@ -155,7 +164,7 @@ const SimpleBarChart = ({
                             <div className="bar-tooltip">{formatHours(item.value)}</div>
                         </div>
                     )}
-                    <span className="bar-label">{item.label}</span>
+                    {item.label && <span className="bar-label">{item.label}</span>}
                 </div>
             ))}
         </div>
@@ -163,7 +172,16 @@ const SimpleBarChart = ({
 };
 
 export const Analytics = observer(() => {
+    const [filterMenuOpen, setFilterMenuOpen] = useState(false);
+    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+
     if (!store.isAnalyticsOpen) return null;
+
+    const handleFilterClick = (e: React.MouseEvent) => {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        setMenuPosition({ x: rect.left, y: rect.bottom + 5 });
+        setFilterMenuOpen(true);
+    };
 
     const stats = analyticsModel.completionStats;
     const estVsAct = analyticsModel.actualVsEstimated;
@@ -174,10 +192,12 @@ export const Analytics = observer(() => {
 
     // Determine label skip interval
     let skipInterval = 1;
-    if (analyticsModel.selectedRange === 'last-month') {
+    if (analyticsModel.selectedRange === 'last-2-weeks') {
         skipInterval = 2;
+    } else if (analyticsModel.selectedRange === 'last-month') {
+        skipInterval = 4;
     } else if (analyticsModel.selectedRange === 'last-3-months') {
-        skipInterval = 5;
+        skipInterval = 7;
     }
 
     // Function to process data with skipping logic
@@ -236,9 +256,9 @@ export const Analytics = observer(() => {
 
                 <div className="analytics-controls">
                     <TimeRangeSelector />
-                    <button className="filter-btn">
+                    <button className={`filter-btn ${store.filterLabelIds.length > 0 ? 'active' : ''}`} onClick={handleFilterClick}>
                         <Filter size={14} />
-                        Filter
+                        Filter {store.filterLabelIds.length > 0 && `(${store.filterLabelIds.length})`}
                     </button>
                 </div>
 
@@ -318,7 +338,7 @@ export const Analytics = observer(() => {
                                         <tr key={stat.label}>
                                             <td>
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                    <span className="label-dot" style={{ backgroundColor: stat.label === 'Unlabeled' ? '#E4D0AA' : store.getLabelColor(stat.label) }}></span>
+                                                    <span className="label-dot" style={{ backgroundColor: stat.color }}></span>
                                                     {stat.label}
                                                 </div>
                                             </td>
@@ -330,7 +350,7 @@ export const Analytics = observer(() => {
                                                             className="progress-bar-fill"
                                                             style={{
                                                                 width: `${stat.percentage}%`,
-                                                                backgroundColor: stat.label === 'Unlabeled' ? '#E4D0AA' : store.getLabelColor(stat.label)
+                                                                backgroundColor: stat.color
                                                             }}
                                                         />
                                                     </div>
@@ -418,6 +438,25 @@ export const Analytics = observer(() => {
                     </div>
                 </div>
             </div>
+
+            <FilterContext
+                isOpen={filterMenuOpen}
+                onClose={() => setFilterMenuOpen(false)}
+                position={menuPosition}
+                labels={store.availableLabels}
+                selectedLabels={store.filterLabelIds}
+                showComplete={store.showCompletedTasks}
+                showTimeboxed={store.showTimeboxedTasks}
+                onToggleLabel={(id) => store.toggleFilterLabel(id)}
+                onToggleComplete={(val) => store.toggleShowCompleted(val)}
+                onToggleTimeboxed={(val) => store.toggleShowTimeboxed(val)}
+                onSelectAll={() => store.filterLabelIds = store.availableLabels.map(l => l.id)}
+                onClearAll={() => store.filterLabelIds = []}
+                onEditLabels={() => {
+                    setFilterMenuOpen(false);
+                    store.openSettings('labels');
+                }}
+            />
         </div>
     );
 });

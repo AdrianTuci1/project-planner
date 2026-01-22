@@ -57,16 +57,24 @@ export class AnalyticsModel {
 
     get tasksInPeriod(): Task[] {
         const { start, end } = this.dateRange;
+        const filterLabelIds = store.filterLabelIds;
+
         return this.allTasks.filter(task => {
-            // If task is done, use completion date if available (we might need to add completedAt to Task)
-            // For now, let's assume we filter by scheduledDate if present, or createdAt if not?
-            // "Tasks completed" usually implies we check if they were completed IN this period.
-            // Since we don't have completedAt, we might need to rely on scheduledDate or add completedAt.
-            // Let's assume scheduledDate for now as per "Tasks by Label" chart which seems time-based.
+            // 1. Time range filtering
+            let inPeriod = false;
             if (task.scheduledDate) {
-                return isWithinInterval(task.scheduledDate, { start, end });
+                inPeriod = isWithinInterval(task.scheduledDate, { start, end });
             }
-            return false;
+            if (!inPeriod) return false;
+
+            // 2. Label filtering
+            if (filterLabelIds.length > 0) {
+                if (!task.labelId || !filterLabelIds.includes(task.labelId)) {
+                    return false;
+                }
+            }
+
+            return true;
         });
     }
 
@@ -155,29 +163,39 @@ export class AnalyticsModel {
                 t.scheduledDate && isWithinInterval(t.scheduledDate, { start: dayStart, end: dayEnd })
             );
 
-            const labelDurations = new Map<string, number>();
+            // Group by label ID to preserve colors correctly
+            const labelGroupData = new Map<string, { label: string, color: string, duration: number }>();
+
             tasks.forEach(t => {
-                // Use single labelId
+                let labelId = 'unlabeled';
                 let labelName = 'Unlabeled';
+                let labelColor = '#E4D0AA';
+
                 if (t.labelId) {
                     const l = store.getLabel(t.labelId);
-                    if (l) labelName = l.name;
+                    if (l) {
+                        labelId = l.id;
+                        labelName = l.name;
+                        labelColor = l.color;
+                    }
                 }
-                const label = labelName;
-                // Fallback to estimated duration if actual is 0, so the chart isn't empty for non-timer users
+
+                // Use actualDuration or fallback to estimated duration
                 const duration = t.actualDuration || t.duration || 0;
                 if (duration > 0) {
-                    labelDurations.set(label, (labelDurations.get(label) || 0) + duration);
+                    if (!labelGroupData.has(labelId)) {
+                        labelGroupData.set(labelId, { label: labelName, color: labelColor, duration: 0 });
+                    }
+                    labelGroupData.get(labelId)!.duration += duration;
                 }
             });
 
             const segments: { label: string, color: string, value: number }[] = [];
-            labelDurations.forEach((duration, label) => {
+            labelGroupData.forEach((data) => {
                 segments.push({
-                    label,
-                    color: label === 'Unlabeled' ? '#E4D0AA' : store.getLabelColor(label),
-                    value: duration / 60 // convert to hours for consistency with other charts? Or maybe keep minutes?
-                    // The other chart uses hours. Let's use hours.
+                    label: data.label,
+                    color: data.color,
+                    value: data.duration / 60 // convert to hours for chart consistency
                 });
             });
 
@@ -203,28 +221,34 @@ export class AnalyticsModel {
             const estimated = tasks.reduce((acc, t) => acc + (t.duration || 0), 0) / 60; // hours
             const actual = tasks.reduce((acc, t) => acc + (t.actualDuration || 0), 0) / 60; // hours
 
-            // Find dominant label
-            const labelCounts = new Map<string, number>();
+            // Find dominant label by duration
+            const labelDurations = new Map<string, { color: string, duration: number }>();
             tasks.forEach(t => {
-                let labelName = 'Unlabeled';
+                let labelId = 'unlabeled';
+                let labelColor = '#E4D0AA';
+
                 if (t.labelId) {
                     const l = store.getLabel(t.labelId);
-                    if (l) labelName = l.name;
+                    if (l) {
+                        labelId = l.id;
+                        labelColor = l.color;
+                    }
                 }
-                const label = labelName;
-                labelCounts.set(label, (labelCounts.get(label) || 0) + (t.actualDuration || t.duration || 0));
+                const duration = t.actualDuration || t.duration || 0;
+                if (!labelDurations.has(labelId)) {
+                    labelDurations.set(labelId, { color: labelColor, duration: 0 });
+                }
+                labelDurations.get(labelId)!.duration += duration;
             });
 
-            let dominantLabel = 'Unlabeled';
+            let dominantColor = '#E4D0AA';
             let maxDuration = -1;
-            labelCounts.forEach((duration, label) => {
-                if (duration > maxDuration) {
-                    maxDuration = duration;
-                    dominantLabel = label;
+            labelDurations.forEach((data) => {
+                if (data.duration > maxDuration) {
+                    maxDuration = data.duration;
+                    dominantColor = data.color;
                 }
             });
-
-            const dominantColor = dominantLabel === 'Unlabeled' ? '#E4D0AA' : store.getLabelColor(dominantLabel);
 
             days.push({ date: current, estimated, actual, dominantColor });
             current = new Date(current.getTime() + 24 * 60 * 60 * 1000);
@@ -233,21 +257,26 @@ export class AnalyticsModel {
     }
 
     get tasksByLabel() {
-        const labelStats = new Map<string, { count: number, completed: number, estimated: number, actual: number }>();
+        const labelStats = new Map<string, { label: string, color: string, count: number, completed: number, estimated: number, actual: number }>();
 
         this.tasksInPeriod.forEach(t => {
+            let labelId = 'unlabeled';
             let labelName = 'Unlabeled';
+            let labelColor = '#E4D0AA';
+
             if (t.labelId) {
                 const l = store.getLabel(t.labelId);
-                if (l) labelName = l.name;
+                if (l) {
+                    labelId = l.id;
+                    labelName = l.name;
+                    labelColor = l.color;
+                }
             }
 
-            const label = labelName;
-
-            if (!labelStats.has(label)) {
-                labelStats.set(label, { count: 0, completed: 0, estimated: 0, actual: 0 });
+            if (!labelStats.has(labelId)) {
+                labelStats.set(labelId, { label: labelName, color: labelColor, count: 0, completed: 0, estimated: 0, actual: 0 });
             }
-            const stat = labelStats.get(label)!;
+            const stat = labelStats.get(labelId)!;
             stat.count++;
             if (t.status === 'done') stat.completed++;
             stat.estimated += t.duration || 0;
@@ -256,12 +285,13 @@ export class AnalyticsModel {
 
         const totalTasks = this.tasksInPeriod.length;
 
-        return Array.from(labelStats.entries()).map(([label, stats]) => ({
-            label,
-            percentage: totalTasks > 0 ? (stats.count / totalTasks) * 100 : 0,
-            completedCount: stats.completed,
-            estimatedTime: stats.estimated,
-            actualTime: stats.actual
+        return Array.from(labelStats.values()).map(stat => ({
+            label: stat.label,
+            color: stat.color,
+            percentage: totalTasks > 0 ? (stat.count / totalTasks) * 100 : 0,
+            completedCount: stat.completed,
+            estimatedTime: stat.estimated,
+            actualTime: stat.actual
         }));
     }
 }
