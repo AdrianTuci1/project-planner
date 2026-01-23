@@ -38,13 +38,7 @@ interface TaskModalProps {
 }
 
 export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
-    const [ui] = useState(() => new TaskUIModel()); // Local UI model for the modal? 
-    // Actually main UIStore has the state. 
-    // But this 'ui' variable seems to be a local TaskUIModel instance based on line 37.
-    // Let's check imports.
-    // Access global 'store.ui' for isTemplateCreationMode.
-
-    // We need to check if it's a template OR if we are in template creation mode.
+    const [ui] = useState(() => new TaskUIModel());
     const isTemplate = store.templates.some(t => t.id === task.id) || store.isTemplateCreationMode;
 
     return (
@@ -179,6 +173,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                             <div
                                 className="meta-row"
                                 onClick={(e) => {
+                                    if (task.status === 'done') return;
                                     const valueEl = e.currentTarget.querySelector('.meta-row-value');
                                     const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
                                     ui.openDatePicker(e, 'due', pos);
@@ -190,7 +185,15 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                                 </div>
                                 <div className="meta-row-value chip-style">
                                     <span className="value-main">
-                                        {task.dueDate ? format(task.dueDate, 'd MMM yyyy') : 'Set due date'}
+                                        {task.status === 'done' ? (
+                                            <span style={{ color: 'var(--accent-primary)', fontWeight: 500 }}>
+                                                Already complete ✅
+                                            </span>
+                                        ) : task.dueDate ? (
+                                            format(task.dueDate, 'd MMM yyyy')
+                                        ) : (
+                                            'Set due date'
+                                        )}
                                     </span>
                                 </div>
                             </div>

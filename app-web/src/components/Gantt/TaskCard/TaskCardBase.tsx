@@ -293,7 +293,7 @@ export const TaskCardBase = observer(({
                             )}
 
                             {/* Due Date */}
-                            {task.dueDate && (
+                            {task.dueDate && task.status !== 'done' && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '11px' }}>
                                     <Target size={12} />
                                     <span>

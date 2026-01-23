@@ -6,7 +6,9 @@ import { SidebarTaskList } from './SidebarTaskList';
 import { Calendar, AlertCircle } from 'lucide-react';
 
 export const DueDateContent = observer(() => {
-    const allDueTasks = store.allTasks.filter(t => t.dueDate).sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
+    const allDueTasks = store.allTasks
+        .filter(t => t.dueDate && t.status !== 'done')
+        .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
