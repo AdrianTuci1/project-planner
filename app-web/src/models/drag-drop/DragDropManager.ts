@@ -321,6 +321,7 @@ export class DragDropManager {
         if (isTemplate) {
             if (dropType === 'kanban-column' || dropType === 'calendar-cell' || dropType === 'timebox-slot') {
                 const clone = task.clone();
+                clone.isTemplate = false;
                 runInAction(() => {
                     if (store.activeGroup) {
                         store.activeGroup.addTask(clone);

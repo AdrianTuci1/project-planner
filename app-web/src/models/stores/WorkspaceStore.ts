@@ -141,6 +141,11 @@ export class WorkspaceStore {
                     personal.dumpAreaTasks = data.dumpTasks.map((t: any) => this.hydrateTask(t));
                 }
 
+                // Hydrate Templates
+                if (this.rootStore.taskStore.templates.length === 0 && data.templates) {
+                    this.rootStore.taskStore.templates = data.templates.map((t: any) => this.hydrateTask(t));
+                }
+
                 // Load Labels via LabelStore
                 if (this.rootStore.labelStore.availableLabels.length === 0 && data.availableLabels) {
                     this.rootStore.labelStore.setAvailableLabels(data.availableLabels);
@@ -213,6 +218,7 @@ export class WorkspaceStore {
 
         task.workspaceId = data.workspaceId;
         task.groupId = data.groupId;
+        task.isTemplate = !!data.isTemplate;
 
         if (data.subtasks) {
             task.subtasks = data.subtasks.map((s: any) => {

@@ -59,7 +59,8 @@ export class TaskSyncStrategy {
                 priority: task.priority,
                 recurrence: task.recurrence,
                 workspaceId: task.workspaceId,
-                groupId: task.groupId
+                groupId: task.groupId,
+                isTemplate: task.isTemplate
             }),
             (data) => {
                 this.scheduleUpdate(task.id, task);

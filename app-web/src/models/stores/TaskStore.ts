@@ -37,11 +37,13 @@ export class TaskStore {
     // Template Methods
     createTemplate(title: string) {
         const task = new Task(title);
+        task.isTemplate = true;
         this.templates.push(task);
         return task;
     }
 
     addTemplate(task: Task) {
+        task.isTemplate = true;
         this.templates.push(task);
     }
 
@@ -115,6 +117,17 @@ export class TaskStore {
     }
 
     duplicateTask(task: Task) {
+        // Handle Template Duplication
+        const templateIndex = this.templates.findIndex(t => t.id === task.id);
+        if (templateIndex > -1) {
+            const clone = task.clone();
+            clone.title = `${task.title} (Copy)`;
+            clone.isTemplate = true;
+            this.templates.push(clone);
+            taskSyncStrategy.monitor(clone);
+            return clone;
+        }
+
         const activeWorkspace = this.rootStore.workspaceStore.activeWorkspace;
         if (!activeWorkspace) return;
 

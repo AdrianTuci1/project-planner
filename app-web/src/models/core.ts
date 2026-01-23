@@ -43,6 +43,7 @@ export interface ITask {
     attachments: IAttachment[];
     workspaceId?: string;
     groupId?: string | null;
+    isTemplate: boolean;
 }
 
 export interface IAttachment {
@@ -121,6 +122,7 @@ export class Task implements ITask {
     attachments: IAttachment[] = [];
     workspaceId?: string = undefined;
     groupId?: string | null = undefined;
+    isTemplate: boolean = false;
 
     scheduledTime?: string | null = undefined; // Format "HH:mm"
 
@@ -190,6 +192,7 @@ export class Task implements ITask {
         newTask.attachments = this.attachments.map(a => ({ ...a }));
         newTask.workspaceId = this.workspaceId;
         newTask.groupId = this.groupId;
+        newTask.isTemplate = this.isTemplate;
         return newTask;
     }
 

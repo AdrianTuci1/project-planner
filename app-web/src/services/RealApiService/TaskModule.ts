@@ -96,20 +96,18 @@ export class TaskModule extends BaseApiService {
         const groups = fetchedGroups.map(g => ({ ...g, tasks: [] }));
         const dumpTasks: any[] = [];
 
+        const templates: any[] = [];
+
         if (allTasks && Array.isArray(allTasks)) {
             allTasks.forEach(task => {
-                if (task.groupId) {
+                if (task.isTemplate) {
+                    templates.push(task);
+                } else if (task.groupId) {
                     const group = groups.find(g => g.id === task.groupId);
                     if (group) {
                         group.tasks.push(task);
                     } else {
-                        // Group not found? Maybe belongs to another workspace or deleted?
-                        // Fallback to dump or ignore?
-                        // If we are strictly filtering by workspace via param, this shouldn't happen often.
-                        // Let's safe-guard by putting in dump if group missing? 
-                        // Or maybe it's safest to obey groupId existence = group task.
-                        // But if group is missing, UI won't show it.
-                        // Let's put in dumpTasks as fallback so user doesn't lose visibility.
+                        // Group not found? Fallback to dump
                         dumpTasks.push(task);
                     }
                 } else {
@@ -118,7 +116,7 @@ export class TaskModule extends BaseApiService {
             });
         }
 
-        return { groups, dumpTasks, availableLabels, templates: [] };
+        return { groups, dumpTasks, availableLabels, templates };
     }
 
     async createTask(taskData: any): Promise<any> {

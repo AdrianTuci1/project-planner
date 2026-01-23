@@ -158,7 +158,10 @@ export const TaskCardBase = observer(({
                 onMouseEnter={() => ui.setHovered(true)}
                 onMouseLeave={() => ui.setHovered(false)}
                 onClick={() => onTaskClick?.(task)}
-                onContextMenu={(e) => ui.openActionContext(e)}
+                onContextMenu={(e) => {
+                    if (isTemplate) return;
+                    ui.openActionContext(e);
+                }}
             >
                 <div className="tc-header">
                     <div className="tc-checkbox-wrapper" onClick={(e) => { e.stopPropagation(); task.toggleStatus(); }}>
@@ -268,7 +271,7 @@ export const TaskCardBase = observer(({
                                     className={`tc-action-icon ${task.recurrence && task.recurrence !== 'none' ? 'active' : ''}`}
                                     style={task.recurrence && task.recurrence !== 'none' ? { color: 'var(--accent-primary)' } : undefined}
                                     onMouseEnter={(e) => {
-                                        if (!task.scheduledDate) {
+                                        if (!task.scheduledDate || isTemplate) {
                                             const rect = e.currentTarget.getBoundingClientRect();
                                             ui.openRecurrenceWarning(e, { x: rect.left, y: rect.bottom + 8 });
                                         }
@@ -276,7 +279,7 @@ export const TaskCardBase = observer(({
                                     onMouseLeave={() => ui.closeRecurrenceWarning()}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        if (!task.scheduledDate) return;
+                                        if (!task.scheduledDate || isTemplate) return;
                                         if (task.recurrence && task.recurrence !== 'none') {
                                             ui.openRecurrenceContext(e, 'actions');
                                         } else {
