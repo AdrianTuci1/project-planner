@@ -8,12 +8,13 @@ import { ResizableTaskCard, ResizableTaskCardView } from '../TaskCard/ResizableT
 import { CalendarSlot } from './CalendarSlot';
 import { CalendarEventPopover } from './CalendarEventPopover';
 
-export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart, className, slotPrefix }: {
+export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart, onSlotClick, className, slotPrefix }: {
     date: Date,
     hour: number,
     tasks: Task[],
     onTaskClick: (task: Task, e?: React.MouseEvent) => void,
     onResizeStart: (e: React.MouseEvent | React.TouchEvent, task: Task) => void,
+    onSlotClick?: (date: Date, hour: number, minute: number) => void,
     className?: string,
     slotPrefix?: string
 }) => {
@@ -87,7 +88,7 @@ export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResize
                     <td className={`hour-cell ${isToday ? 'today-cell' : ''} ${className || ''}`}>
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', zIndex: 0 }}>
                             {[0, 15, 30, 45].map(m => (
-                                <CalendarSlot key={m} date={date} hour={hour} minute={m} prefix={slotPrefix} />
+                                <CalendarSlot key={m} date={date} hour={hour} minute={m} prefix={slotPrefix} onClick={onSlotClick} />
                             ))}
                         </div>
 
@@ -150,7 +151,7 @@ export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResize
             {/* Background Slots Layer */}
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', zIndex: 0 }}>
                 {[0, 15, 30, 45].map(m => (
-                    <CalendarSlot key={m} date={date} hour={hour} minute={m} prefix={slotPrefix} />
+                    <CalendarSlot key={m} date={date} hour={hour} minute={m} prefix={slotPrefix} onClick={onSlotClick} />
                 ))}
             </div>
 

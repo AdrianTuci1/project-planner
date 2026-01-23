@@ -69,6 +69,25 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
         store.openTaskModal(task);
     };
 
+    const handleSlotClick = (date: Date, hour: number, minute: number) => {
+        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        let newTask: Task | undefined;
+
+        if (group) {
+            newTask = store.createTaskInGroup('', group);
+        } else {
+            newTask = store.addTaskToDump('');
+        }
+
+        if (newTask) {
+            runInAction(() => {
+                newTask!.scheduledDate = date;
+                newTask!.scheduledTime = timeStr;
+            });
+            store.openTaskModal(newTask, false, true);
+        }
+    };
+
     if (isMobile) {
         return (
             <div className="group-view-wrapper mobile">
@@ -134,6 +153,7 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                             <CalendarView
                                 tasks={globalTasks}
                                 onTaskClick={handleTaskClick}
+                                onSlotClick={handleSlotClick}
                             />
                         )
                     ) : (
@@ -148,6 +168,7 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                             <CalendarView
                                 tasks={store.applyGlobalFilters(store.dumpAreaTasks)}
                                 onTaskClick={handleTaskClick}
+                                onSlotClick={handleSlotClick}
                             />
                         )
                     )}

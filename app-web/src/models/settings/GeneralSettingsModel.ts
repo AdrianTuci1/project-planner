@@ -20,6 +20,7 @@ export class GeneralSettingsModel {
     showDeclinedEvents: boolean = true;
     startDayAt: string = '12:00 AM';
     calendarIncrements: string = '15 minute';
+    calendarViewDays: number = 7;
     timeFormat: string = '12 hour';
 
     // Appearance

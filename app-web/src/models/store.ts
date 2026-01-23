@@ -179,7 +179,7 @@ export class ProjectStore {
     toggleDailyShutdown() { this.uiStore.toggleDailyShutdown(); }
     openSettings(tab?: string) { this.uiStore.openSettings(tab); }
     closeSettings() { this.uiStore.closeSettings(); }
-    openTaskModal(task: Task, isCreationMode: boolean = false) { this.uiStore.openTaskModal(task, isCreationMode); }
+    openTaskModal(task: Task, isCreationMode: boolean = false, isNewTask: boolean = false) { this.uiStore.openTaskModal(task, isCreationMode, isNewTask); }
     closeTaskModal() { this.uiStore.closeTaskModal(); }
     startTimer(taskId: string) { this.uiStore.startTimer(taskId); }
     pauseTimer() { this.uiStore.pauseTimer(); }

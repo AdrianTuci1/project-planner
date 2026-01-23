@@ -28,7 +28,7 @@ export const CalendarViewMenu = observer(({ isOpen, onClose, position }: Calenda
     const handleMouseLeave = () => {
         timeoutRef.current = setTimeout(() => {
             setIsDaysMenuOpen(false);
-        }, 100);
+        }, 300);
     };
 
     return (
@@ -53,17 +53,19 @@ export const CalendarViewMenu = observer(({ isOpen, onClose, position }: Calenda
             <MenuSeparator />
 
             {/* Submenu Trigger */}
-            <div
-                ref={itemRef}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-            >
-                <MenuItem
-                    label="Number of days"
-                    arrow
-                    onClick={() => { }}
-                />
-            </div>
+            {store.calendarViewType === 'week' && (
+                <div
+                    ref={itemRef}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                >
+                    <MenuItem
+                        label="Number of days"
+                        arrow
+                        onClick={() => { }}
+                    />
+                </div>
+            )}
 
             {/* Portal for Submenu */}
             {isDaysMenuOpen && submenuPosition && ReactDOM.createPortal(
@@ -75,7 +77,7 @@ export const CalendarViewMenu = observer(({ isOpen, onClose, position }: Calenda
                         top: submenuPosition.y,
                         width: '120px',
                         marginLeft: '4px',
-                        zIndex: 1001, // Higher than parent (1000)
+                        zIndex: 10001, // Higher than parent (9999)
                     }}
                     onMouseEnter={() => {
                         if (timeoutRef.current) clearTimeout(timeoutRef.current);

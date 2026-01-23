@@ -13,6 +13,8 @@ export class UIStore {
     isFocusMode: boolean = false;
     viewMode: 'calendar' | 'tasks' = 'tasks';
     calendarViewType: 'day' | 'week' | 'month' = 'week';
+
+
     viewDate: Date = new Date();
     timeboxDate: Date = new Date();
 
@@ -21,7 +23,7 @@ export class UIStore {
     showCompletedTasks: boolean = true;
     showTimeboxedTasks: boolean = true;
     showDeclinedEvents: boolean = false;
-    daysToShow: number = 7;
+
 
     // Analytics State
     isAnalyticsOpen: boolean = false;
@@ -39,6 +41,7 @@ export class UIStore {
     // Task Modal State
     activeTask: Task | null = null;
     isTemplateCreationMode: boolean = false;
+    isNewTaskInteraction: boolean = false;
 
     // Guest Update Modal State
     isGuestUpdateModalOpen: boolean = false;
@@ -81,8 +84,7 @@ export class UIStore {
         const savedCalendarView = localStorage.getItem('calendarViewType') as 'day' | 'week' | 'month';
         if (savedCalendarView) this.calendarViewType = savedCalendarView;
 
-        const savedDaysToShow = localStorage.getItem('daysToShow');
-        if (savedDaysToShow) this.daysToShow = parseInt(savedDaysToShow, 10);
+
 
         const savedShowDeclined = localStorage.getItem('showDeclinedEvents');
         if (savedShowDeclined) this.showDeclinedEvents = savedShowDeclined === 'true';
@@ -107,10 +109,7 @@ export class UIStore {
             (type) => localStorage.setItem('calendarViewType', type)
         );
 
-        reaction(
-            () => this.daysToShow,
-            (days) => localStorage.setItem('daysToShow', days.toString())
-        );
+
 
         reaction(
             () => this.showDeclinedEvents,
@@ -184,6 +183,14 @@ export class UIStore {
         this.calendarViewType = type;
     }
 
+    get daysToShow() {
+        return this.settings.general.calendarViewDays;
+    }
+
+    set daysToShow(days: number) {
+        this.settings.general.setSetting('calendarViewDays', days);
+    }
+
     setDaysToShow(days: number) {
         this.daysToShow = days;
     }
@@ -233,14 +240,21 @@ export class UIStore {
         this.isSettingsOpen = false;
     }
 
-    openTaskModal(task: Task, isCreationMode: boolean = false) {
+    openTaskModal(task: Task, isCreationMode: boolean = false, isNewTask: boolean = false) {
         this.activeTask = task;
         this.isTemplateCreationMode = isCreationMode;
+        this.isNewTaskInteraction = isNewTask;
     }
 
     closeTaskModal() {
+        if (this.isNewTaskInteraction && this.activeTask && !this.activeTask.title.trim()) {
+            console.log(`[UIStore] Cleaning up empty new task: ${this.activeTask.id}`);
+            this.rootStore.taskStore.deleteTask(this.activeTask.id);
+        }
+
         this.activeTask = null;
         this.isTemplateCreationMode = false;
+        this.isNewTaskInteraction = false;
     }
 
     // Timer Actions

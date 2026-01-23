@@ -30,9 +30,7 @@ export const GeneralSettings = observer(() => {
     const { settings } = store;
     const general = settings.general;
 
-    useEffect(() => {
-        general.loadSettings();
-    }, []);
+
 
     return (
         <div className="general-settings-container">

@@ -60,7 +60,8 @@ export class SettingsSyncStrategy {
                 defaultEstimatedTime: settings.general.defaultEstimatedTime,
                 rolloverNextDay: settings.general.rolloverNextDay,
                 rolloverRecurring: settings.general.rolloverRecurring,
-                rolloverTo: settings.general.rolloverTo
+                rolloverTo: settings.general.rolloverTo,
+                calendarViewDays: settings.general.calendarViewDays
             }),
             (data) => {
                 this.scheduleUpdate('general', data);

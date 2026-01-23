@@ -10,9 +10,10 @@ import { CalendarCell } from './CalendarCell';
 interface CalendarViewProps {
     tasks: Task[];
     onTaskClick: (task: Task) => void;
+    onSlotClick?: (date: Date, hour: number, minute: number) => void;
 }
 
-export const CalendarView = observer(({ tasks, onTaskClick }: CalendarViewProps) => {
+export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: CalendarViewProps) => {
     // Resize Logic
     const handleResizeStart = (e: React.MouseEvent | React.TouchEvent, task: Task) => {
         e.preventDefault();
@@ -70,8 +71,37 @@ export const CalendarView = observer(({ tasks, onTaskClick }: CalendarViewProps)
     if (store.calendarViewType === 'day') {
         days = [store.viewDate];
     } else if (store.calendarViewType === 'week') {
-        const weekStart = startOfWeek(store.viewDate, { weekStartsOn: 0 }); // Sunday start
+        // Map string setting to 0-6 index
+        const weekStartsOnMap: Record<string, 0 | 1 | 6> = {
+            'Sunday': 0,
+            'Monday': 1,
+            'Saturday': 6
+        };
+        const weekStartIdx = weekStartsOnMap[store.settings.general.startWeekOn] ?? 0;
+
+        const weekStart = startOfWeek(store.viewDate, { weekStartsOn: weekStartIdx });
         days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+        // Use daysToShow ONLY if we are using the default "Sunday" start and showing 7 days isn't forced by the "Week" view concept
+        // ACTUALLY: The previous requirement was "configurable number of days".
+        // Usually "Week View" implies a full week or 5 days (work week).
+        // BUT the user asked for configurable days (2-7).
+        // Interaction:
+        // If daysToShow < 7, we probably just show N days starting from weekStart?
+        // OR does "Week Start On" only matter for full 7-day weeks?
+        // Let's assume:
+        // 1. Calculate the start of the week based on setting.
+        // 2. Generate 'store.daysToShow' days from that start date.
+
+        days = Array.from({ length: store.daysToShow }, (_, i) => addDays(weekStart, i));
+
+        // Filter weekends if needed
+        if (!store.settings.general.showWeekends) {
+            days = days.filter(d => {
+                const day = d.getDay();
+                return day !== 0 && day !== 6;
+            });
+        }
     } else {
         // Month view - Placeholder logic for now, will implement MonthGrid next
         // For now, allow it to render a week or just return null/different component
@@ -133,6 +163,7 @@ export const CalendarView = observer(({ tasks, onTaskClick }: CalendarViewProps)
                                         tasks={tasks}
                                         onTaskClick={onTaskClick}
                                         onResizeStart={handleResizeStart}
+                                        onSlotClick={onSlotClick}
                                     />
                                 ))}
                             </tr>

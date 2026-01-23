@@ -2,7 +2,7 @@ import React from 'react';
 import { observer } from 'mobx-react-lite';
 import { useDroppable } from '@dnd-kit/core';
 
-export const CalendarSlot = observer(({ date, hour, minute, prefix = 'calendar' }: { date: Date, hour: number, minute: number, prefix?: string }) => {
+export const CalendarSlot = observer(({ date, hour, minute, prefix = 'calendar', onClick }: { date: Date, hour: number, minute: number, prefix?: string, onClick?: (date: Date, hour: number, minute: number) => void }) => {
     const cellId = `${prefix}-slot-${date.toISOString()}-${hour}-${minute}`;
     const { isOver, setNodeRef } = useDroppable({
         id: cellId,
@@ -18,12 +18,18 @@ export const CalendarSlot = observer(({ date, hour, minute, prefix = 'calendar' 
         <div
             ref={setNodeRef}
             className={`calendar-slot ${isOver ? 'is-over' : ''}`}
+            onClick={(e) => {
+                // Prevent bubbling if needed, though usually slot is lowest
+                // e.stopPropagation(); 
+                onClick?.(date, hour, minute);
+            }}
             style={{
                 height: '25%', // 15 mins
                 width: '100%',
                 borderBottom: minute !== 45 ? '1px dashed rgba(0,0,0,0.05)' : 'none', // Subtle guide lines
                 backgroundColor: isOver ? 'rgba(139, 92, 246, 0.1)' : 'transparent', // Highlight color
-                transition: 'background-color 0.1s'
+                transition: 'background-color 0.1s',
+                cursor: onClick ? 'pointer' : 'default'
             }}
         />
     );
