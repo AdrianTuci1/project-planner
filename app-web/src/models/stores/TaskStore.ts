@@ -66,13 +66,26 @@ export class TaskStore {
         const activeWorkspace = this.rootStore.workspaceStore.activeWorkspace;
         if (!activeWorkspace) return;
 
-        const dumpTaskIndex = activeWorkspace.dumpAreaTasks.findIndex(t => t.id === taskId);
-        if (dumpTaskIndex > -1) {
-            const task = activeWorkspace.dumpAreaTasks[dumpTaskIndex];
-            const group = activeWorkspace.groups.find(g => g.id === groupId);
-            if (group) {
-                group.addTask(task);
-                activeWorkspace.dumpAreaTasks.splice(dumpTaskIndex, 1);
+        const targetGroup = activeWorkspace.groups.find(g => g.id === groupId);
+        if (!targetGroup) return;
+
+        // 1. Check dump area
+        const dumpIndex = activeWorkspace.dumpAreaTasks.findIndex(t => t.id === taskId);
+        if (dumpIndex > -1) {
+            const task = activeWorkspace.dumpAreaTasks[dumpIndex];
+            activeWorkspace.dumpAreaTasks.splice(dumpIndex, 1);
+            targetGroup.addTask(task);
+            return;
+        }
+
+        // 2. Check all groups
+        for (const group of activeWorkspace.groups) {
+            const taskIndex = group.tasks.findIndex(t => t.id === taskId);
+            if (taskIndex > -1) {
+                const task = group.tasks[taskIndex];
+                group.tasks.splice(taskIndex, 1);
+                targetGroup.addTask(task);
+                return;
             }
         }
     }

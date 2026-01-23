@@ -45,7 +45,22 @@ export class TaskModule extends BaseApiService {
             try {
                 if (!navigator.onLine) {
                     console.log(`[FetchItem] ${key} - Offline. Returning cached.`);
-                    if (storeName) return await dbService.getAll(storeName) as unknown as T[];
+                    if (storeName) {
+                        const cached = await dbService.getAll(storeName) as unknown as T[];
+                        // If it's tasks, filter by workspaceId
+                        if (storeName === 'tasks' && workspaceId) {
+                            return cached.filter((t: any) =>
+                                t.workspaceId === workspaceId ||
+                                (workspaceId === 'personal' && !t.workspaceId)
+                            );
+                        }
+                        // If it's groups, filter by type (as a proxy for workspace)
+                        if (storeName === 'groups' && workspaceId) {
+                            const workspaceType = workspaceId === 'personal' ? 'personal' : 'team';
+                            return cached.filter((g: any) => g.type === workspaceType);
+                        }
+                        return cached;
+                    }
                     return [];
                 }
 

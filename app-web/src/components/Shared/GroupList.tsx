@@ -13,13 +13,16 @@ import { ContextMenu, MenuItem, MenuSeparator } from '../ContextMenu/ContextMenu
 import { CreateListModal } from '../Sidebar/CreateListModal';
 
 
+import { Task, Workspace } from '../../models/core';
+
 interface GroupListProps {
+    workspace: Workspace;
     activeGroupId: string | null;
     onSelectGroup?: (groupId: string | null) => void;
     className?: string;
 }
 
-export const GroupList = observer(({ activeGroupId, onSelectGroup, className }: GroupListProps) => {
+export const GroupList = observer(({ workspace, activeGroupId, onSelectGroup, className }: GroupListProps) => {
     // Local state for menus to ensure independence
     const [isMenuOpen, setMenuOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -30,7 +33,7 @@ export const GroupList = observer(({ activeGroupId, onSelectGroup, className }: 
     const [showCreateList, setShowCreateList] = useState(false);
     const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
-    const activeGroup = store.groups.find(g => g.id === activeGroupId);
+    const activeGroup = workspace.groups.find(g => g.id === activeGroupId);
 
     const handleListClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -95,7 +98,7 @@ export const GroupList = observer(({ activeGroupId, onSelectGroup, className }: 
                     onClick={() => handleSelect('default')}
                 />
                 <MenuSeparator />
-                {store.groups.map(group => (
+                {workspace.groups.map(group => (
                     <MenuItem
                         key={group.id}
                         label={group.name}
@@ -138,6 +141,12 @@ export const GroupList = observer(({ activeGroupId, onSelectGroup, className }: 
                     onClick={() => {
                         if (activeGroupId) {
                             store.deleteGroup(activeGroupId);
+                            // Reset to Inbox after deletion
+                            if (onSelectGroup) {
+                                onSelectGroup('default');
+                            } else {
+                                store.activeGroupId = 'default';
+                            }
                         }
                         setActionsMenuOpen(false);
                     }}

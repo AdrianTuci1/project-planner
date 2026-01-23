@@ -83,6 +83,35 @@ export class WorkspacesService {
         return result.Item as Workspace | undefined;
     }
 
+    public async updateWorkspace(id: string, updates: Partial<Workspace>): Promise<Workspace | undefined> {
+        const workspace = await this.getWorkspaceById(id);
+        if (!workspace) throw new Error("Workspace not found");
+
+        const updateExpressionParts: string[] = [];
+        const expressionAttributeNames: { [key: string]: string } = {};
+        const expressionAttributeValues: { [key: string]: any } = {};
+
+        if (updates.name) {
+            updateExpressionParts.push("#name = :name");
+            expressionAttributeNames["#name"] = "name";
+            expressionAttributeValues[":name"] = updates.name;
+        }
+
+        if (updateExpressionParts.length === 0) return workspace;
+
+        const command = new UpdateCommand({
+            TableName: this.tableName,
+            Key: { id },
+            UpdateExpression: "SET " + updateExpressionParts.join(", "),
+            ExpressionAttributeNames: expressionAttributeNames,
+            ExpressionAttributeValues: expressionAttributeValues,
+            ReturnValues: "ALL_NEW"
+        });
+
+        const result = await this.docClient.send(command);
+        return result.Attributes as Workspace;
+    }
+
     public async addMember(workspaceId: string, userId: string) {
         // Use SET to append to list, checking if not exists ideally.
         // DynamoDB List append: list_append(members, :u)

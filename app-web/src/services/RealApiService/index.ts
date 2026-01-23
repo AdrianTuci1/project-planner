@@ -50,6 +50,7 @@ export class RealApiService implements IApiService {
     // Workspaces delegates
     createWorkspace(name: string, type: string, ownerId: string): Promise<any> { return this.workspaceModule.createWorkspace(name, type, ownerId); }
     getWorkspaces(): Promise<any[]> { return this.workspaceModule.getWorkspaces(); }
+    updateWorkspace(id: string, data: any): Promise<any> { return this.workspaceModule.updateWorkspace(id, data); }
 
     // Labels delegates
     getLabels(workspaceId?: string): Promise<any[]> { return this.labelModule.getLabels(workspaceId); }

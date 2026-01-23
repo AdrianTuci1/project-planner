@@ -5,7 +5,7 @@ import { labelSyncStrategy } from "../strategies/LabelSyncStrategy";
 
 export class LabelStore {
     rootStore: ProjectStore;
-    availableLabels: { id: string; name: string; color: string }[] = [];
+    availableLabels: { id: string; name: string; color: string; workspaceId?: string }[] = [];
 
     constructor(rootStore: ProjectStore) {
         this.rootStore = rootStore;
@@ -13,7 +13,7 @@ export class LabelStore {
         labelSyncStrategy.monitorStore(this);
     }
 
-    setAvailableLabels(labels: { id: string; name: string; color: string }[]) {
+    setAvailableLabels(labels: { id: string; name: string; color: string; workspaceId?: string }[]) {
         this.availableLabels = labels;
         // Strategy listens to observable array changes now
     }
@@ -28,10 +28,12 @@ export class LabelStore {
     }
 
     addLabel(name: string, color: string) {
+        const workspaceId = this.rootStore.workspaceStore.activeWorkspaceId;
         const newLabel = {
             id: uuidv4(),
             name,
-            color
+            color,
+            workspaceId: workspaceId || undefined
         };
         this.availableLabels.push(newLabel);
         return newLabel;

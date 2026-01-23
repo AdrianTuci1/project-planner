@@ -68,6 +68,7 @@ export interface IApiService {
     // Workspaces
     createWorkspace(name: string, type: string, ownerId: string): Promise<any>;
     getWorkspaces(): Promise<any[]>;
+    updateWorkspace(id: string, data: any): Promise<any>;
 
     // Labels
     getLabels(workspaceId?: string): Promise<any[]>;

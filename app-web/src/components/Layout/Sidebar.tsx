@@ -55,6 +55,7 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
             {sidebarUI.sidebarView === 'main' && (
                 <>
                     <GroupList
+                        workspace={store.activeWorkspace}
                         activeGroupId={store.activeGroupId}
                     />
 

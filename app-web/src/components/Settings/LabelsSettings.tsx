@@ -73,9 +73,14 @@ export const LabelsSettings = observer(() => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [colorPickerPos, setColorPickerPos] = useState<{ x: number, y: number } | null>(null);
 
-    const filteredLabels = store.availableLabels.filter(label =>
-        label.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const activeWorkspace = store.workspaceStore.activeWorkspace;
+    const activeWorkspaceId = store.workspaceStore.activeWorkspaceId;
+
+    const filteredLabels = store.availableLabels.filter(label => {
+        const matchesSearch = label.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const isCorrectWorkspace = label.workspaceId === activeWorkspaceId || (!label.workspaceId && activeWorkspaceId === 'personal');
+        return matchesSearch && isCorrectWorkspace;
+    });
 
     const handleCreateStart = () => {
         setIsCreating(true);
@@ -134,6 +139,11 @@ export const LabelsSettings = observer(() => {
 
     return (
         <div className="labels-settings-container">
+            <div className="workspace-header-row">
+                <div className={`workspace-chip ${activeWorkspace?.type || 'personal'}`}>
+                    {activeWorkspace?.type === 'team' ? 'Team' : 'Personal'}
+                </div>
+            </div>
             {/* Header: Search and Create Button */}
             <div className="labels-header">
                 <div style={{ position: 'relative', flex: 1 }}>

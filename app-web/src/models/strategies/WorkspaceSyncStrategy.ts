@@ -99,9 +99,8 @@ export class WorkspaceSyncStrategy {
             debounced = debounce(async () => {
                 console.log(`[WorkspaceSyncStrategy] Syncing workspace ${workspaceId}...`);
                 try {
-                    // Assuming API implementation or skip if not implemented
-                    // await api.updateWorkspace(workspaceId, workspace);
-                    console.log("[WorkspaceSyncStrategy] Update via API not fully implemented yet in Module.");
+                    await api.updateWorkspace(workspaceId, { name: workspace.name });
+                    console.log(`[WorkspaceSyncStrategy] Workspace ${workspaceId} synced.`);
                 } catch (err) {
                     console.error(`[WorkspaceSyncStrategy] Failed to sync workspace ${workspaceId}`, err);
                 } finally {

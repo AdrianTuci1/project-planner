@@ -79,6 +79,7 @@ export interface IGroup {
     name: string;
     icon: string;
     type: GroupType;
+    workspaceId?: string;
     defaultLabelId?: string;
     autoAddLabelEnabled: boolean;
     tasks: ITask[];
@@ -219,16 +220,18 @@ export class Group implements IGroup {
     name: string;
     icon: string;
     type: GroupType;
+    workspaceId?: string = undefined;
     defaultLabelId?: string;
     autoAddLabelEnabled: boolean = false;
     tasks: Task[] = [];
     participants: IParticipant[] = [];
 
-    constructor(name: string, icon: string = '📝', type: GroupType = 'personal', defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
+    constructor(name: string, icon: string = '📝', type: GroupType = 'personal', workspaceId?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
         this.id = uuidv4();
         this.name = name;
         this.icon = icon;
         this.type = type;
+        this.workspaceId = workspaceId;
         this.defaultLabelId = defaultLabelId;
         this.autoAddLabelEnabled = autoAddLabelEnabled;
         makeAutoObservable(this);
@@ -247,7 +250,7 @@ export class Group implements IGroup {
         }
         // Ensure workspaceId is set
         if (!task.workspaceId) {
-            task.workspaceId = this.type;
+            task.workspaceId = this.workspaceId;
         }
         task.groupId = this.id; // Assign group ID
         this.tasks.push(task);
@@ -286,6 +289,8 @@ export interface IWorkspace {
     type: WorkspaceType;
     groups: Group[];
     dumpAreaTasks: Task[];
+    members?: string[];
+    ownerId?: string;
 }
 
 export class Workspace implements IWorkspace {
@@ -294,9 +299,11 @@ export class Workspace implements IWorkspace {
     type: WorkspaceType;
     groups: Group[] = [];
     dumpAreaTasks: Task[] = [];
+    members: string[] = [];
+    ownerId: string = "";
 
-    constructor(name: string, type: WorkspaceType) {
-        this.id = type; // Use 'personal' or 'team' as ID directly
+    constructor(name: string, type: WorkspaceType, id?: string) {
+        this.id = id || type;
         this.name = name;
         this.type = type;
         makeAutoObservable(this);
@@ -304,11 +311,8 @@ export class Workspace implements IWorkspace {
 
     // Proxy methods for easier access, but logic can remain in Store or move here fully later
     createGroup(name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
-        // GroupType is inferred from Workspace type? Or independent?
-        // User request implies workspace is container. Let's make groups inherent to workspace.
-        const group = new Group(name, icon || '📝', this.type as any, defaultLabelId, autoAddLabelEnabled);
-        // Note: casting type because GroupType in previous step matches WorkspaceType values but we might want flexibility.
-        // Actually, let's keep GroupType on Group aligned with WorkspaceType for now.
+        // GroupType is inferred from Workspace type
+        const group = new Group(name, icon || '📝', this.type as any, this.id, defaultLabelId, autoAddLabelEnabled);
         this.groups.push(group);
         return group;
     }

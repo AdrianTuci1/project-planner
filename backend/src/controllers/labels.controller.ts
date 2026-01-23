@@ -7,7 +7,9 @@ export class LabelsController {
     public getLabels = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const workspaceId = req.query.workspaceId as string;
-            const labels = await this.labelsService.getLabels(workspaceId);
+            const user = (req as any).user;
+            const userId = user?.sub || user?.username;
+            const labels = await this.labelsService.getLabels(workspaceId, userId);
             res.status(200).json(labels);
         } catch (error) {
             next(error);
@@ -17,6 +19,10 @@ export class LabelsController {
     public createLabel = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const label = req.body;
+            const user = (req as any).user;
+            if (user) {
+                label.createdBy = user.sub || user.username;
+            }
             const result = await this.labelsService.createLabel(label);
             res.status(201).json(result);
         } catch (error) {

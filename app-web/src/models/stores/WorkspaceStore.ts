@@ -23,20 +23,71 @@ export class WorkspaceStore {
 
         // Pre-set active workspace from default or storage immediately
         if (typeof window !== 'undefined') {
+            // 1. Hydrate Workspace Metadata (ids, names, types)
+            // Note: Deep data (tasks/groups) comes from IndexedDB via api.getInitialData
+            const savedWorkspaces = localStorage.getItem('persisted_workspaces');
+            if (savedWorkspaces) {
+                try {
+                    const parsed = JSON.parse(savedWorkspaces);
+                    this.workspaces = parsed.map((w: any) => {
+                        const ws = new Workspace(w.name, w.type, w.id);
+                        ws.ownerId = w.ownerId;
+                        ws.members = w.members || [];
+                        return ws;
+                    });
+                } catch (e) {
+                    console.error("[WorkspaceStore] Failed to parse persisted workspaces", e);
+                }
+            }
+
+            // 2. Hydrate Active Workspace ID
+            const savedId = localStorage.getItem('activeWorkspaceId');
             const savedType = localStorage.getItem('activeWorkspaceType');
-            if (savedType === 'team') {
-                // We'll set it properly after initialization if team workspace exists
+
+            if (savedId && this.workspaces.some(w => w.id === savedId)) {
+                this.activeWorkspaceId = savedId;
+            } else if (savedType) {
+                const match = this.workspaces.find(w => w.type === savedType);
+                this.activeWorkspaceId = match?.id || this.workspaces[0].id;
             } else {
-                // Ensure ID is set for the default workspace
                 this.activeWorkspaceId = this.workspaces[0].id;
             }
 
-            // Start reaction for persistence
+            // Persistence Reactions
             reaction(
-                () => this.activeWorkspace?.type,
-                (type) => {
-                    if (type) {
-                        localStorage.setItem('activeWorkspaceType', type);
+                () => this.workspaces.map(w => ({
+                    id: w.id,
+                    name: w.name,
+                    type: w.type,
+                    ownerId: w.ownerId,
+                    members: w.members
+                })),
+                (simplified) => {
+                    localStorage.setItem('persisted_workspaces', JSON.stringify(simplified));
+                }
+            );
+
+            reaction(
+                () => this.activeWorkspaceId,
+                (id) => {
+                    if (id) {
+                        localStorage.setItem('activeWorkspaceId', id);
+                        const ws = this.workspaces.find(w => w.id === id);
+                        if (ws) {
+                            localStorage.setItem('activeWorkspaceType', ws.type);
+                        }
+                    }
+                }
+            );
+
+            // Data Fetching Reaction (Crucial: always call, api handles offline/IndexedDB)
+            reaction(
+                () => this.activeWorkspaceId,
+                (id) => {
+                    if (id) {
+                        this.fetchActiveWorkspaceData();
+                        // Reset active group to Inbox when switching workspaces
+                        this.rootStore.activeGroupId = 'default';
                     }
                 }
             );
@@ -66,14 +117,15 @@ export class WorkspaceStore {
             // Use sub or username as ownerId
             const ownerId = user.sub || user.username;
 
-            await api.createWorkspace("My Team", "team", ownerId);
+            const newWS = await api.createWorkspace("My Team", "team", ownerId);
 
             // Re-initialize to fetch the new workspace
             await this.initializeData();
 
             // Switch to it
             runInAction(() => {
-                const team = this.workspaces.find(w => w.type === 'team');
+                // Prefer the ID from the server response if available, otherwise find by type
+                const team = this.workspaces.find(w => (newWS?.id && w.id === newWS.id) || w.type === 'team');
                 if (team) {
                     this.activeWorkspaceId = team.id;
                     workspaceSyncStrategy.monitor(team);
@@ -92,97 +144,82 @@ export class WorkspaceStore {
         }
     }
 
+    async updateWorkspace(id: string, data: { name?: string }) {
+        this.isLoading = true;
+        try {
+            await api.updateWorkspace(id, data);
+            runInAction(() => {
+                const workspace = this.workspaces.find(w => w.id === id);
+                if (workspace) {
+                    if (data.name) workspace.name = data.name;
+                    // Trigger reaction/sync if needed, though monitoring should catch it
+                }
+            });
+        } catch (err: any) {
+            runInAction(() => {
+                this.error = "Failed to update workspace: " + err.message;
+            });
+            throw err;
+        } finally {
+            runInAction(() => {
+                this.isLoading = false;
+            });
+        }
+    }
+
     async initializeData() {
         this.isLoading = true;
         this.error = null;
         try {
-            const today = new Date();
-            const start = startOfDay(subMonths(today, 1));
-            const end = endOfDay(addMonths(today, 1));
-            this.lastFetchRange = { start, end };
-
-            // Mock Data or API call
-            const data = await api.getInitialData(start, end, this.activeWorkspaceId || undefined);
+            // 1. Fetch Real Workspaces first (if online)
+            let fetchedWorkspaces = [];
+            if (typeof window !== 'undefined' && !navigator.onLine) {
+                console.log("[WorkspaceStore] Offline. Skipping workspace list fetch.");
+            } else {
+                fetchedWorkspaces = await api.getWorkspaces();
+            }
 
             runInAction(() => {
-                // Initialize default workspaces if they don't exist
-                let personal = this.workspaces.find(w => w.type === 'personal');
-                let team = this.workspaces.find(w => w.type === 'team');
-
-                if (!personal) {
-                    personal = new Workspace("Personal", 'personal');
-                    this.workspaces.unshift(personal);
-                }
-
-                if (!team) {
-                    team = new Workspace("Team", 'team');
-                    this.workspaces.push(team);
-                }
-
-                // If workspaces were just created or are empty, seed them
-                if (personal.groups.length === 0) {
-                    // Hydrate legacy/mock data into Personal workspace
-                    if (data.groups && data.groups.length > 0) {
-                        personal.groups = data.groups.map((g: any) => {
-                            const group = new Group(g.name, g.icon, 'personal', g.defaultLabelId, g.autoAddLabelEnabled);
-                            group.id = g.id;
-                            group.tasks = g.tasks.map((t: any) => this.hydrateTask(t));
-                            groupSyncStrategy.monitor(group);
-                            return group;
-                        });
+                // Map fetched to instances
+                const newWorkspaces = fetchedWorkspaces.map((fw: any) => {
+                    const id = fw.type === 'personal' ? 'personal' : fw.id;
+                    const existing = this.workspaces.find(w => w.id === id);
+                    if (existing) {
+                        existing.name = fw.name;
+                        existing.members = fw.members;
+                        existing.ownerId = fw.ownerId;
+                        return existing;
                     }
+
+                    const w = new Workspace(fw.name, fw.type, id);
+                    w.ownerId = fw.ownerId;
+                    w.members = fw.members;
+                    return w;
+                });
+
+                this.workspaces = newWorkspaces;
+
+                // Ensure Personal Exists locally
+                if (!this.workspaces.some(w => w.type === 'personal')) {
+                    const p = new Workspace("Personal", 'personal');
+                    this.workspaces.unshift(p);
+                }
+
+                // If activeWorkspaceId is no longer valid, fallback
+                if (!this.activeWorkspaceId || !this.workspaces.some(w => w.id === this.activeWorkspaceId)) {
+                    const personal = this.workspaces.find(w => w.type === 'personal');
+                    this.activeWorkspaceId = personal?.id || this.workspaces[0].id;
+                } else {
+                    // Force refresh data for the valid active workspace
+                    this.fetchActiveWorkspaceData();
                 }
 
                 // Monitor workspaces
                 this.workspaces.forEach(w => workspaceSyncStrategy.monitor(w));
-
-                // Hydrate Dump Tasks into Personal
-                if (personal.dumpAreaTasks.length === 0 && data.dumpTasks) {
-                    personal.dumpAreaTasks = data.dumpTasks.map((t: any) => this.hydrateTask(t));
-                }
-
-                // Hydrate Templates
-                if (this.rootStore.taskStore.templates.length === 0 && data.templates) {
-                    this.rootStore.taskStore.templates = data.templates.map((t: any) => this.hydrateTask(t));
-                }
-
-                // Load Labels via LabelStore
-                if (this.rootStore.labelStore.availableLabels.length === 0 && data.availableLabels) {
-                    this.rootStore.labelStore.setAvailableLabels(data.availableLabels);
-                } else if (this.rootStore.labelStore.availableLabels.length === 0) {
-                    this.rootStore.labelStore.setAvailableLabels([
-                        { id: 'l1', name: 'Urgent', color: '#EF4444' },
-                        { id: 'l2', name: 'Work', color: '#3B82F6' }
-                    ]);
-                }
-
-                // Determine active workspace from persistence or default
-                const savedType = localStorage.getItem('activeWorkspaceType');
-                let targetWorkspace = personal; // Default to Personal
-
-                if (savedType === 'team' && team) {
-                    targetWorkspace = team;
-                } else if (savedType === 'personal' && personal) {
-                    targetWorkspace = personal;
-                }
-
-                if (targetWorkspace) {
-                    this.activeWorkspaceId = targetWorkspace.id;
-                }
-
-                // Ensure activeGroupId is valid for the current workspace
-                const uiStore = this.rootStore.uiStore;
-                if (uiStore && uiStore.activeGroupId) {
-                    const currentGroups = this.activeWorkspace.groups;
-                    const exists = currentGroups.some(g => g.id === uiStore.activeGroupId);
-                    if (!exists && uiStore.activeGroupId !== 'default') {
-                        uiStore.activeGroupId = 'default';
-                    }
-                }
             });
-        } catch (err) {
+        } catch (err: any) {
             runInAction(() => {
-                this.error = "Failed to load tasks";
+                this.error = "Failed to load workspaces: " + err.message;
                 console.error(err);
             });
         } finally {
@@ -190,6 +227,71 @@ export class WorkspaceStore {
                 this.isLoading = false;
             });
         }
+    }
+
+    private async fetchActiveWorkspaceData() {
+        if (!this.activeWorkspaceId) return;
+
+        console.log(`[WorkspaceStore] Fetching data for workspace: ${this.activeWorkspaceId}`);
+        this.isLoading = true;
+
+        try {
+            const today = new Date();
+            const start = startOfDay(subMonths(today, 1));
+            const end = endOfDay(addMonths(today, 1));
+            this.lastFetchRange = { start, end };
+
+            const data = await api.getInitialData(start, end, this.activeWorkspaceId);
+
+            runInAction(() => {
+                const targetWorkspace = this.activeWorkspace;
+                if (!targetWorkspace) return;
+
+                // Hydrate Groups into Target Workspace
+                if (data.groups) {
+                    targetWorkspace.groups = data.groups.map((g: any) => this.hydrateGroup(g));
+                }
+
+                // Hydrate Dump Tasks
+                if (data.dumpTasks) {
+                    targetWorkspace.dumpAreaTasks = data.dumpTasks.map((t: any) => this.hydrateTask(t));
+                }
+
+                // Hydrate Templates
+                if (data.templates) {
+                    this.rootStore.taskStore.templates = data.templates.map((t: any) => this.hydrateTask(t));
+                }
+
+                // Load Labels
+                if (data.availableLabels) {
+                    const mappedLabels = data.availableLabels.map((l: any) => ({
+                        ...l,
+                        workspaceId: l.workspaceId || this.activeWorkspaceId
+                    }));
+                    this.rootStore.labelStore.setAvailableLabels(mappedLabels);
+                }
+            });
+        } catch (err: any) {
+            runInAction(() => {
+                this.error = "Failed to load tasks: " + err.message;
+                console.error(err);
+            });
+        } finally {
+            runInAction(() => {
+                this.isLoading = false;
+            });
+        }
+    }
+
+    private hydrateGroup(g: any): Group {
+        const group = new Group(g.name, g.icon, g.type || 'personal', g.workspaceId, g.defaultLabelId, g.autoAddLabelEnabled);
+        group.id = g.id;
+        group.workspaceId = g.workspaceId;
+        if (g.tasks) {
+            group.tasks = g.tasks.map((t: any) => this.hydrateTask(t));
+        }
+        groupSyncStrategy.monitor(group);
+        return group;
     }
 
     private hydrateTask(data: any): Task {

@@ -76,12 +76,12 @@ export class ProjectStore {
     deleteLabel(id: string) { this.labelStore.deleteLabel(id); }
 
     // GroupStore Delegations
-    createGroup(name: string, icon?: string, type: GroupType = 'personal', defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
-        return this.groupStore.createGroup(name, icon, type, defaultLabelId, autoAddLabelEnabled);
+    createGroup(name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
+        return this.groupStore.createGroup(name, icon, defaultLabelId, autoAddLabelEnabled);
     }
     deleteGroup(groupId: string) { this.groupStore.deleteGroup(groupId); }
-    updateGroup(groupId: string, name: string, icon?: string, type?: GroupType, defaultLabelId?: string, autoAddLabelEnabled?: boolean) {
-        this.groupStore.updateGroup(groupId, name, icon, type, defaultLabelId, autoAddLabelEnabled);
+    updateGroup(groupId: string, name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled?: boolean) {
+        this.groupStore.updateGroup(groupId, name, icon, defaultLabelId, autoAddLabelEnabled);
     }
 
     // TaskStore Delegations (and accessors via activeWorkspace)

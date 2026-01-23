@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
-import { api } from '../../services/api';
+import './TeamSettings.css';
 
 export const TeamSettings = observer(() => {
     const { settings, authStore } = store;
     const user = authStore.user;
-    const teamId = user?.teamId || null;
+    const teamWorkspace = store.workspaceStore.workspaces.find(w => w.type === 'team');
+    const teamId = teamWorkspace?.id;
     const [isCreating, setIsCreating] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [teamName, setTeamName] = useState(teamWorkspace?.name || 'My Team');
 
     const handleCreateTeam = async () => {
         setIsCreating(true);
         setError(null);
         try {
-            // Create the real team workspace via store action
             await store.workspaceStore.createTeamWorkspace();
-
-            // Refresh data to ensure UI updates
             await store.workspaceStore.initializeData();
-            // authStore.checkAuth(); 
+            await authStore.checkAuth();
         } catch (err: any) {
             setError("Failed to create team: " + err.message);
         } finally {
@@ -27,42 +27,61 @@ export const TeamSettings = observer(() => {
         }
     };
 
-    const handleInvite = () => {
-        // Use resolved team ID
-        const workspaceId = store.workspaceStore.activeWorkspaceId;
-        if (workspaceId) settings.inviteUser(workspaceId);
+    const handleUpdateName = async () => {
+        if (!teamId || !teamName.trim()) return;
+        setIsUpdating(true);
+        setError(null);
+        try {
+            await store.workspaceStore.updateWorkspace(teamId, { name: teamName });
+        } catch (err: any) {
+            setError("Failed to update name: " + err.message);
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
-    const isOwner = teamId && teamId === `team-${user?.sub}`; // Or user.username if sub not available, but usually sub is ID.
+    const handleInvite = () => {
+        if (teamId) settings.inviteUser(teamId);
+    };
 
-    if (!teamId) {
+    const isOwner = teamWorkspace && (teamWorkspace.ownerId === user?.sub || teamWorkspace.ownerId === user?.username);
+
+    if (!teamWorkspace) {
         return (
-            <div>
-                <h3>Team Workspace</h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: 20 }}>
+            <div className="team-settings-container">
+                <p className="team-settings-description">
                     Collaborate with your team in a shared workspace.
                 </p>
 
-                <div style={{
-                    padding: 20,
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 8,
-                    background: 'var(--bg-surface-hover)'
-                }}>
-                    <div style={{ marginBottom: 15, fontWeight: 500 }}>You don't have any team workspace yet.</div>
-
-                    <div className="alert alert-warning" style={{ fontSize: 13, marginBottom: 20, backgroundColor: '#fff3cd', color: '#856404', padding: 10, borderRadius: 6 }}>
-                        Example: You can have only one public team workspace. If you want to join another workspace later, you must delete or leave your current workspace.
+                {/* Create Team Section */}
+                <div className="create-team-section">
+                    <div className="section-label">
+                        Create a new team
                     </div>
 
-                    <button
-                        className="btn-primary"
-                        onClick={handleCreateTeam}
-                        disabled={isCreating}
-                    >
-                        {isCreating ? 'Creating...' : 'Create Team Workspace'}
-                    </button>
-                    {error && <div style={{ color: 'red', marginTop: 10, fontSize: 13 }}>{error}</div>}
+                    <div style={{ display: 'flex', gap: 12 }}>
+                        <button
+                            className="create-team-btn"
+                            onClick={handleCreateTeam}
+                            disabled={isCreating}
+                        >
+                            <span style={{ fontSize: 16 }}>+</span>
+                            {isCreating ? 'Creating...' : 'Create Team Workspace'}
+                        </button>
+                    </div>
+
+                    <div className="team-warning-alert">
+                        <span>⚠️</span>
+                        <div>
+                            <strong>Note:</strong> You can have only one public team workspace. If you want to join another workspace later, you must delete or leave your current workspace.
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="error-message">
+                            {error}
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -70,26 +89,25 @@ export const TeamSettings = observer(() => {
 
     return (
         <div>
-            <h3>Your Team</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: 20 }}>
-                Manage members of your workspace.
+                Manage members and settings of your workspace.
             </p>
 
-            {/* Team Card */}
+            {/* Team Card with Edit */}
             <div style={{
                 padding: 16, border: '1px solid var(--border-subtle)', borderRadius: 8, marginBottom: 30
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: isOwner ? 16 : 0 }}>
                     <div style={{
                         width: 40, height: 40, borderRadius: 6,
                         background: 'var(--primary)', color: 'white',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontWeight: 'bold'
                     }}>
-                        T
+                        {teamName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <div style={{ fontWeight: 600 }}>My Team</div>
+                        <div style={{ fontWeight: 600 }}>{teamWorkspace.name}</div>
                         <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                             {isOwner ? 'Owner' : 'Member'}
                         </div>
@@ -100,12 +118,32 @@ export const TeamSettings = observer(() => {
                         </button>
                     )}
                 </div>
+
+                {isOwner && (
+                    <div className="rename-section" style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                        <input
+                            className="form-input"
+                            style={{ margin: 0 }}
+                            value={teamName}
+                            onChange={(e) => setTeamName(e.target.value)}
+                            placeholder="Team Name"
+                        />
+                        <button
+                            className="btn-secondary"
+                            style={{ whiteSpace: 'nowrap' }}
+                            onClick={handleUpdateName}
+                            disabled={isUpdating || !teamName.trim() || teamName === teamWorkspace.name}
+                        >
+                            {isUpdating ? 'Saving...' : 'Rename'}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {isOwner && (
                 <>
                     <div className="invite-section">
-                        <label className="form-label" style={{ marginBottom: 0 }}>Invite new member</label>
+                        <label className="form-label" style={{ marginBottom: 4 }}>Invite new member</label>
                         <div className="invite-row">
                             <input
                                 className="form-input"
@@ -127,10 +165,10 @@ export const TeamSettings = observer(() => {
                             <div style={{ fontSize: 14 }}>{user?.name || 'You'}</div>
                             <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>Owner</div>
                         </div>
-                        {/* List other members here */}
                     </div>
                 </>
             )}
+            {error && <div className="error-message" style={{ marginTop: 10 }}>{error}</div>}
         </div>
     );
 });

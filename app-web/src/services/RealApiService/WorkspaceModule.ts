@@ -11,6 +11,10 @@ export class WorkspaceModule extends BaseApiService {
         return this.syncAndFetch(`${this.baseUrl}/workspaces`, 'POST', { name, type, ownerId }, 'createWorkspace');
     }
 
+    async updateWorkspace(id: string, data: any): Promise<any> {
+        return this.syncAndFetch(`${this.baseUrl}/workspaces/${id}`, 'PUT', data, 'updateWorkspace');
+    }
+
     private async syncAndFetch(url: string, method: string, body: any, context: string, fallbackValue: any = undefined) {
         if (navigator.onLine) {
             try {

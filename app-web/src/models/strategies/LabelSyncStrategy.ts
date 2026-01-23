@@ -94,7 +94,7 @@ export class LabelSyncStrategy {
         this.pendingUpdates.clear();
     }
 
-    monitor(label: { id: string, name: string, color: string }) {
+    monitor(label: { id: string, name: string, color: string, workspaceId?: string }) {
         if (this.isMonitoring.has(label.id)) return;
         this.isMonitoring.add(label.id);
 
