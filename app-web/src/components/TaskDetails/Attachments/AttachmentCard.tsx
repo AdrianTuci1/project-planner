@@ -90,8 +90,8 @@ export const AttachmentCard: React.FC<AttachmentCardProps> = ({ attachment, onDe
 
                 {/* Info */}
                 <div className="attachment-info">
-                    <div className="attachment-name">
-                        {attachment.name}
+                    <div className="attachment-name" title={attachment.name}>
+                        {attachment.name.length > 24 ? `${attachment.name.substring(0, 24)}...` : attachment.name}
                     </div>
                     <div className="attachment-size">
                         {formatSize(attachment.size)}

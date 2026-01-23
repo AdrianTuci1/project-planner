@@ -3,34 +3,39 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    gap: 48px;
-    margin-top: 8px;
+    align-items: center;
+    gap: 40px;
 }
 
 .attachments-header {
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
+    align-self: flex-start;
+    padding: 8px 8px 8px 0px;
     justify-content: flex-start;
     gap: 8px;
     color: var(--text-secondary);
     font-size: 14px;
     font-weight: 600;
-    margin-bottom: 12px;
 }
 
 .add-attachment-placeholder {
-    padding: 12px;
     border-radius: 6px;
     border: 1px dashed var(--border);
-    color: var(--text-secondary);
-    font-size: 13px;
+    color: var(--text-muted);
+    font-size: 15px;
     text-align: center;
     cursor: pointer;
     transition: background 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 8px;
+    margin-left: 2px;
+}
+
+.add-attachment-placeholder:hover {
+    background-color: var(--bg-card-hover);
 }
 
 .add-attachment-icon {
@@ -42,9 +47,6 @@
     border-radius: 8px;
 }
 
-.add-attachment-placeholder:hover {
-    background: var(--bg-secondary);
-}
 
 .attachments-list {
     display: flex;

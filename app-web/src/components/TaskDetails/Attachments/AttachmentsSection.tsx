@@ -31,24 +31,33 @@ export const AttachmentsSection = observer(({ task }: AttachmentsSectionProps) =
             setUploading(true);
             setProgress(0);
 
+            // Simulate progress (since actual upload might be too fast or we want smooth UX)
+            const progressInterval = setInterval(() => {
+                setProgress(prev => {
+                    if (prev >= 90) return prev;
+                    return prev + 10;
+                });
+            }, 300);
+
             try {
                 // 2. Get Presigned URL
                 const { url, key, publicUrl } = await api.getUploadUrl(file.type, file.name);
 
                 // 3. Upload to S3
-                const xhr = new XMLHttpRequest();
-                xhr.open('PUT', url, true);
-                xhr.setRequestHeader('Content-Type', file.type);
-
-                xhr.upload.onprogress = (event) => {
-                    if (event.lengthComputable) {
-                        const percentComplete = (event.loaded / event.total) * 100;
-                        setProgress(percentComplete);
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    body: file,
+                    headers: {
+                        'Content-Type': file.type
                     }
-                };
+                });
 
-                xhr.onload = () => {
-                    if (xhr.status === 200) {
+                if (response.ok) {
+                    clearInterval(progressInterval);
+                    setProgress(100);
+
+                    // Small delay to show 100%
+                    setTimeout(() => {
                         // 4. Add to Task
                         task.addAttachment({
                             name: file.name,
@@ -57,27 +66,21 @@ export const AttachmentsSection = observer(({ task }: AttachmentsSectionProps) =
                             url: publicUrl,
                             key: key
                         });
+
                         setUploading(false);
+                        setProgress(0);
                         if (fileInputRef.current) fileInputRef.current.value = '';
-                    } else {
-                        console.error("Upload failed", xhr.statusText);
-                        alert("Upload failed. Please try again.");
-                        setUploading(false);
-                    }
-                };
-
-                xhr.onerror = () => {
-                    console.error("Upload error");
-                    alert("Upload error. Please check your connection.");
-                    setUploading(false);
-                };
-
-                xhr.send(file);
+                    }, 500);
+                } else {
+                    throw new Error(response.statusText);
+                }
 
             } catch (err) {
-                console.error(err);
-                alert("Failed to initiate upload.");
+                clearInterval(progressInterval);
+                console.error("Upload failed", err);
+                alert("Upload failed. Please try again.");
                 setUploading(false);
+                setProgress(0);
             }
         }
     };
@@ -94,7 +97,7 @@ export const AttachmentsSection = observer(({ task }: AttachmentsSectionProps) =
                     className="add-attachment-placeholder"
                     onClick={() => fileInputRef.current?.click()}
                 >
-                    <Plus size={16} /> Click to add attachment
+                    Click to add
                 </div>
             ) : (
                 <>
