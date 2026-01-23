@@ -162,7 +162,7 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
     };
 
     const getTargetGroup = () => {
-        if (groupId === null) return null; // Inbox
+        if (groupId === 'default') return null; // Inbox
         if (groupId) return store.groups.find(g => g.id === groupId); // Specific group
         return store.activeGroup; // Fallback to active group (though ideally should not be used if props are correct)
     };
@@ -172,14 +172,12 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
 
         const targetGroup = getTargetGroup();
 
-        if (groupId === null) {
-            // Inbox logic if needed, though usually this view is for groups?
-            // If Kanban is used for Inbox, we might need store.addTaskToDump(title) and set scheduledDate?
-            // Assuming for now Inbox items in Kanban behave like tasks
-            const newTask = new Task(title);
-            newTask.scheduledDate = date;
-            newTask.scheduledTime = undefined;
-            store.dumpAreaTasks.push(newTask);
+        if (groupId === 'default') {
+            const newTask = store.addTaskToDump(title);
+            if (newTask) {
+                newTask.scheduledDate = date;
+                newTask.scheduledTime = undefined;
+            }
             return;
         }
 
@@ -195,7 +193,7 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
     const handleDuplicateTask = (task: Task) => {
         const targetGroup = getTargetGroup();
 
-        if (groupId === null) {
+        if (groupId === 'default') {
             const clone = task.clone();
             store.dumpAreaTasks.push(clone);
             return;
@@ -207,7 +205,7 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
     };
 
     const handleDeleteTask = (task: Task) => {
-        if (groupId === null) {
+        if (groupId === 'default') {
             store.deleteTask(task.id);
             return;
         }

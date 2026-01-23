@@ -62,17 +62,17 @@ export const GroupList = observer(({ activeGroupId, onSelectGroup, className }: 
                 onClick={handleListClick}
             >
                 <div className="active-list-icon">
-                    {activeGroupId === null ? <span>📪</span> : activeGroup?.icon}
+                    {activeGroupId === 'default' ? <span>📪</span> : activeGroup?.icon}
                 </div>
                 <div className="active-list-info">
                     <span className="active-list-name">
-                        {activeGroupId === null ? 'Inbox' : activeGroup?.name || 'Unknown List'}
+                        {activeGroupId === 'default' ? 'Inbox' : activeGroup?.name || 'Unknown List'}
                     </span>
                 </div>
                 <ChevronDown size={16} className="active-list-chevron" />
             </div>
 
-            {activeGroupId !== null && (
+            {activeGroupId !== 'default' && (
                 <div
                     className="active-list-actions-trigger"
                     onClick={handleActionsClick}
@@ -90,9 +90,9 @@ export const GroupList = observer(({ activeGroupId, onSelectGroup, className }: 
                 <MenuItem
                     label="Inbox"
                     icon={<span>📪</span>}
-                    selected={activeGroupId === null}
-                    checkmark={activeGroupId === null}
-                    onClick={() => handleSelect(null)}
+                    selected={activeGroupId === 'default'}
+                    checkmark={activeGroupId === 'default'}
+                    onClick={() => handleSelect('default')}
                 />
                 <MenuSeparator />
                 {store.groups.map(group => (

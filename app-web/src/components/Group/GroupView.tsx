@@ -142,7 +142,7 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
                             <KanbanBoard
                                 tasks={store.applyGlobalFilters(store.dumpAreaTasks)}
                                 onTaskClick={handleTaskClick}
-                                groupId={null}
+                                groupId="default"
                             />
                         ) : (
                             <CalendarView

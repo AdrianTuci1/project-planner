@@ -14,8 +14,10 @@ import {
     Link,
     Trash2,
     Flag,
-    Target
+    Target,
+    Folder
 } from 'lucide-react';
+
 import { format, startOfDay } from 'date-fns';
 
 import { DateTimePickerContext } from '../ContextMenu/DateTimePickerContext';
@@ -90,13 +92,6 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         {/* Task Date */}
                         <div
                             className="meta-row"
-                            // Remove onClick from parent to avoid conflict with "Move to List" specifically?
-                            // Or keep it as general context menu for the row.
-                            // The user said: "Apasand pe (Move to list)". So specific click.
-                            // But let's keep the general click for now or adjust.
-                            // If we click "Move to List", we open the list selector.
-                            // If we click elsewhere in the row, maybe date picker?
-                            // The original code opened date picker on row click.
                             onClick={(e) => {
                                 const valueEl = e.currentTarget.querySelector('.meta-row-value');
                                 const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
@@ -107,7 +102,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                                 <Calendar size={18} />
                                 <span>Task date</span>
                             </div>
-                            <div className="meta-row-value chip-style"> {/* Added chip-style class */}
+                            <div className="meta-row-value chip-style">
                                 <span className="value-main">
                                     {task.scheduledDate ? (() => {
                                         const dateStr = format(task.scheduledDate, 'EEEE, d MMM');
@@ -120,24 +115,64 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                                         return dateStr;
                                     })() : 'No date set'}
                                 </span>
-                                <span
-                                    className="value-sub clickable-sub" // Added clickable-sub class
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // Prevent opening date picker
-                                        // Open GroupList popover
-                                        // We need state for this in TaskUIModel or local state.
-                                        // Since TaskUIModel isn't updated yet, let's use a local state wrapper or
-                                        // ideally update TaskUIModel if we could.
-                                        // But TaskModal is observer.
-                                        // Let's use TaskUIModel for state.
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        ui.openListContext(e, { x: rect.left, y: rect.bottom + 4 });
-                                    }}
-                                >
-                                    (Move to List)
-                                </span>
+                                {task.scheduledDate && (
+                                    <span
+                                        className="value-sub clickable-sub"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            ui.openListContext(e, { x: rect.left, y: rect.bottom + 4 });
+                                        }}
+                                    >
+                                        (Move to List)
+                                    </span>
+                                )}
                             </div>
                         </div>
+
+                        {/* List Row - Only shown if no scheduled date */}
+                        {!task.scheduledDate && (
+                            <div
+                                className="meta-row"
+                                onClick={(e) => {
+                                    const valueEl = e.currentTarget.querySelector('.meta-row-value');
+                                    const pos = valueEl ? { x: valueEl.getBoundingClientRect().left, y: valueEl.getBoundingClientRect().bottom + 4 } : undefined;
+                                    ui.openListContext(e, pos);
+                                }}
+                            >
+                                <div className="meta-row-label">
+                                    <Folder size={18} />
+                                    <span>List</span>
+                                </div>
+                                <div className="meta-row-value chip-style">
+                                    <span className="value-main">
+                                        {(() => {
+                                            const group = store.groups.find(g => g.tasks.some(t => t.id === task.id));
+                                            if (group) {
+                                                return (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span>{group.icon}</span>
+                                                        <span>{group.name}</span>
+                                                    </div>
+                                                );
+                                            }
+                                            const isInInbox = store.dumpAreaTasks.some(t => t.id === task.id);
+                                            if (isInInbox) {
+                                                return (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span>📪</span>
+                                                        <span>Inbox</span>
+                                                    </div>
+                                                );
+                                            }
+                                            return <span className="value-placeholder">None</span>;
+                                        })()}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+
 
                         {/* Due Date - Conditional */}
                         {store.settings.powerFeatures.dueDatesEnabled && (

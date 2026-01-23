@@ -170,8 +170,8 @@ export class WorkspaceStore {
                 if (uiStore && uiStore.activeGroupId) {
                     const currentGroups = this.activeWorkspace.groups;
                     const exists = currentGroups.some(g => g.id === uiStore.activeGroupId);
-                    if (!exists) {
-                        uiStore.activeGroupId = null;
+                    if (!exists && uiStore.activeGroupId !== 'default') {
+                        uiStore.activeGroupId = 'default';
                     }
                 }
             });

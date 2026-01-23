@@ -7,7 +7,7 @@ export class UIStore {
     rootStore: ProjectStore;
 
     // UI State
-    activeGroupId: string | null = null;
+    activeGroupId: string | null = 'default';
     isSidebarOpen: boolean = true;
     isRightSidebarOpen: boolean = true;
     isFocusMode: boolean = false;
@@ -74,7 +74,9 @@ export class UIStore {
         if (savedViewMode) this.viewMode = savedViewMode;
 
         const savedGroupId = localStorage.getItem('activeGroupId');
-        if (savedGroupId) this.activeGroupId = savedGroupId;
+        if (savedGroupId) {
+            this.activeGroupId = savedGroupId === 'null' ? 'default' : savedGroupId;
+        }
 
         const savedCalendarView = localStorage.getItem('calendarViewType') as 'day' | 'week' | 'month';
         if (savedCalendarView) this.calendarViewType = savedCalendarView;
@@ -119,7 +121,7 @@ export class UIStore {
             () => this.viewDate,
             (newDate) => {
                 // Check if newDate is outside lastFetchRange
-                if (this.rootStore.taskStore.lastFetchRange) {
+                if (this.rootStore.workspaceStore.lastFetchRange) {
                     // Implementation deferred
                 }
             }
@@ -140,7 +142,7 @@ export class UIStore {
         // 1. Filter by Labels
         if (this.filterLabelIds.length > 0) {
             filtered = filtered.filter(t =>
-                t.labels.some(labelId => this.filterLabelIds.includes(labelId))
+                !!(t.labelId && this.filterLabelIds.includes(t.labelId))
             );
         }
 

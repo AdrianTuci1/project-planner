@@ -30,7 +30,7 @@ export const SidebarTaskList = observer(({
         id: id,
         data: containerData || {
             type: 'sidebar-list',
-            groupId: store.activeGroupId
+            groupId: store.activeGroupId === 'default' ? null : store.activeGroupId
         },
         disabled: !isSortable
     });
@@ -54,7 +54,7 @@ export const SidebarTaskList = observer(({
                             onDuplicate={onDuplicate}
                             onDelete={onDelete}
                             onTaskClick={(t) => store.openTaskModal(t)}
-                            containerData={containerData || { type: 'sidebar-list', groupId: store.activeGroupId }}
+                            containerData={containerData || { type: 'sidebar-list', groupId: store.activeGroupId === 'default' ? null : store.activeGroupId }}
                         />
                     ))}
                 </SortableContext>

@@ -49,7 +49,7 @@ export const DailyShutdown = observer(() => {
     const [activeId, setActiveId] = useState<string | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [addingColumn, setAddingColumn] = useState<string | null>(null);
-    const [shutdownSourceGroupId, setShutdownSourceGroupId] = useState<string | null>(null);
+    const [shutdownSourceGroupId, setShutdownSourceGroupId] = useState<string | null>('default');
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -75,7 +75,7 @@ export const DailyShutdown = observer(() => {
 
     // Calculate source tasks based on selected group
     const sourceTasks = (() => {
-        if (shutdownSourceGroupId === null) {
+        if (shutdownSourceGroupId === 'default') {
             return store.dumpAreaTasks;
         }
         const group = store.groups.find(g => g.id === shutdownSourceGroupId);
@@ -150,7 +150,7 @@ export const DailyShutdown = observer(() => {
                     activeTask.scheduledDate = undefined;
                     activeTask.scheduledTime = undefined;
 
-                    if (shutdownSourceGroupId === null) {
+                    if (shutdownSourceGroupId === 'default') {
                         // Check if it's in a group. If so, remove from group?
                         const currentGroup = store.groups.find(g => g.tasks.find(t => t.id === activeTask.id));
                         if (currentGroup) {
@@ -190,7 +190,7 @@ export const DailyShutdown = observer(() => {
             // Find list to splice
             let list: Task[] | undefined;
             if (overContainer === 'source-list') {
-                if (shutdownSourceGroupId === null) list = store.dumpAreaTasks;
+                if (shutdownSourceGroupId === 'default') list = store.dumpAreaTasks;
                 else list = store.groups.find(g => g.id === shutdownSourceGroupId)?.tasks;
             } else {
                 // Tomorrow list. Derived from `tomorrowTasks`.
@@ -263,7 +263,7 @@ export const DailyShutdown = observer(() => {
                 currentGroup = undefined; // effectively removed
             }
 
-            if (shutdownSourceGroupId === null) {
+            if (shutdownSourceGroupId === 'default') {
                 // Move to Brain Dump
                 // Ensure not in dump already
                 if (!store.dumpAreaTasks.find(t => t.id === activeTask.id)) {
@@ -299,8 +299,8 @@ export const DailyShutdown = observer(() => {
                 else store.dumpAreaTasks.push(newTask);
                 break;
             case 'source-list':
-                if (shutdownSourceGroupId === null) {
-                    store.dumpAreaTasks.push(newTask);
+                if (shutdownSourceGroupId === 'default') {
+                    store.addTaskToDump(title);
                 } else {
                     const group = store.groups.find(g => g.id === shutdownSourceGroupId);
                     if (group) group.addTask(newTask);
@@ -318,7 +318,9 @@ export const DailyShutdown = observer(() => {
                 } else if (store.groups.length > 0) {
                     store.groups[0].addTask(newTask);
                 } else {
-                    store.dumpAreaTasks.push(newTask);
+                    store.addTaskToDump(title);
+                    const task = store.dumpAreaTasks[store.dumpAreaTasks.length - 1];
+                    if (task) task.scheduledDate = tomorrow;
                 }
                 break;
         }

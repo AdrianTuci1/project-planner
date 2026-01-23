@@ -27,7 +27,7 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
 
     const handleCreateTask = (title: string) => {
         if (title) {
-            if (store.activeGroupId === null) {
+            if (store.activeGroupId === 'default') {
                 store.addTaskToDump(title);
             } else if (activeGroup) {
                 store.createTaskInGroup(title, activeGroup);
@@ -76,10 +76,10 @@ export const Sidebar = observer(({ hideHeader = false }: SidebarProps) => {
                         </div>
 
                         <SidebarTaskList
-                            tasks={store.applyGlobalFilters((store.activeGroupId === null ? store.dumpAreaTasks : activeGroup?.tasks || [])).filter(t => !t.scheduledDate)}
+                            tasks={store.applyGlobalFilters((store.activeGroupId === 'default' ? store.dumpAreaTasks : activeGroup?.tasks || [])).filter(t => !t.scheduledDate)}
                             activeGroup={activeGroup}
                             onDuplicate={(t: Task) => {
-                                if (store.activeGroupId === null) {
+                                if (store.activeGroupId === 'default') {
                                     const clone = t.clone();
                                     store.dumpAreaTasks.push(clone);
                                 } else {

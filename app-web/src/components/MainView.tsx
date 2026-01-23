@@ -8,12 +8,12 @@ export const MainView = observer(() => {
     const mainGroupId = store.activeGroupId;
 
     // Ensure activeGroupId is set if not already
-    // Ensure activeGroupId is valid. If not found in current groups, reset to null (Brain Dump).
+    // Ensure activeGroupId is valid. If not found in current groups, reset to 'default' (Brain Dump).
     React.useEffect(() => {
-        if (store.activeGroupId) {
+        if (store.activeGroupId && store.activeGroupId !== 'default') {
             const group = store.groups.find(g => g.id === store.activeGroupId);
             if (!group) {
-                store.activeGroupId = null;
+                store.activeGroupId = 'default';
             }
         }
     }, [store.groups, store.activeGroupId]);
