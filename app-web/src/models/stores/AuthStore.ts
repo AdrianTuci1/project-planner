@@ -237,8 +237,12 @@ export class AuthStore {
                 AccessToken: data.access_token,
                 RefreshToken: data.refresh_token,
                 IdToken: data.id_token,
-                ExpiresIn: data.expires_in
+                ExpiresIn: data.expires_in || 3600 // Default to 1h if missing
             };
+
+            if (!authResult.RefreshToken) {
+                console.warn("No Refresh Token returned from OAuth2 exchange. Session will not auto-refresh.");
+            }
 
             this.handleAuthSuccess(authResult);
             if (authResult.AccessToken) {
@@ -264,7 +268,8 @@ export class AuthStore {
             const response = await this.client.send(command);
             if (response.AuthenticationResult) {
                 this.handleAuthSuccess(response.AuthenticationResult);
-                await this.fetchUserAttributes(response.AuthenticationResult.AccessToken!);
+                // Also fetch attributes to ensure user data is up to date? 
+                // Usually not strictly needed for just token refresh, but good practice.
             } else {
                 throw new Error("Refresh failed");
             }
@@ -294,20 +299,25 @@ export class AuthStore {
             localStorage.setItem("idToken", authResult.IdToken);
         }
 
-        if (authResult.ExpiresIn) {
-            const expiresInMs = authResult.ExpiresIn * 1000;
-            const refreshTime = expiresInMs - (5 * 60 * 1000);
+        // Use provided ExpiresIn or default to 3600 (1 hour)
+        const expiresIn = authResult.ExpiresIn || 3600;
+        const expiresInMs = expiresIn * 1000;
+        // Refresh 5 minutes before expiry
+        const refreshTime = expiresInMs - (5 * 60 * 1000);
 
-            if (this.refreshTimer) clearTimeout(this.refreshTimer);
+        if (this.refreshTimer) clearTimeout(this.refreshTimer);
 
-            if (refreshTime > 0) {
-                this.refreshTimer = setTimeout(() => {
-                    const refreshToken = localStorage.getItem("refreshToken");
-                    if (refreshToken) {
-                        this.refreshSession(refreshToken);
-                    }
-                }, refreshTime);
-            }
+        if (refreshTime > 0) {
+            console.log(`[AuthStore] Scheduling refresh in ${refreshTime / 1000}s`);
+            this.refreshTimer = setTimeout(() => {
+                const refreshToken = localStorage.getItem("refreshToken");
+                if (refreshToken) {
+                    console.log("[AuthStore] Auto-refreshing session...");
+                    this.refreshSession(refreshToken);
+                } else {
+                    console.warn("[AuthStore] Cannot refresh, no refresh token.");
+                }
+            }, refreshTime);
         }
     }
 
@@ -394,7 +404,7 @@ export class AuthStore {
     }
 
     loginWithGoogle() {
-        const url = `${COGNITO_DOMAIN}/oauth2/authorize?identity_provider=Google&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&client_id=${CLIENT_ID}&scope=email+openid+phone+profile`;
+        const url = `${COGNITO_DOMAIN}/oauth2/authorize?identity_provider=Google&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&client_id=${CLIENT_ID}&scope=email+openid+phone+profile+aws.cognito.signin.user.admin`;
         window.location.href = url;
     }
 }

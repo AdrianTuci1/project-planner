@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import './ContextMenu.css';
 
 interface ContextMenuProps {
@@ -57,7 +58,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 
     if (!isOpen) return null;
 
-    return (
+    return ReactDOM.createPortal(
         <>
             <div
                 className="context-menu-backdrop"
@@ -74,7 +75,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             >
                 {children}
             </div>
-        </>
+        </>,
+        document.body
     );
 };
 

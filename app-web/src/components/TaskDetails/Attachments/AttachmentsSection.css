@@ -1,0 +1,108 @@
+.attachments-section {
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 48px;
+    margin-top: 8px;
+}
+
+.attachments-header {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.add-attachment-placeholder {
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px dashed var(--border);
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-attachment-icon {
+    outline: 1px dashed var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.add-attachment-placeholder:hover {
+    background: var(--bg-secondary);
+}
+
+.attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.add-attachment-button {
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 6px 16px;
+    cursor: pointer;
+    background: transparent;
+    transition: background 0.2s;
+    min-height: 60px;
+    /* Match roughly with card height */
+}
+
+.add-attachment-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+}
+
+.add-attachment-button:hover {
+    background: var(--bg-secondary);
+}
+
+.add-attachment-button span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.upload-progress-container {
+    margin-top: 8px;
+    height: 4px;
+    background: var(--bg-secondary);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.upload-progress-bar {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.1s linear;
+}
+
+/* Match attachment card hover style */
+.add-attachment-button:hover {
+    background: var(--bg-primary-hover, rgba(255, 255, 255, 0.05));
+    border-color: var(--border, rgba(255, 255, 255, 0.1));
+}

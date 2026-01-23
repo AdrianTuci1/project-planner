@@ -4,6 +4,7 @@ import { Task } from '../../../models/core';
 import { Paperclip, Plus } from 'lucide-react';
 import { AttachmentCard } from './AttachmentCard';
 import { api } from '../../../services/api';
+import './AttachmentsSection.css';
 
 interface AttachmentsSectionProps {
     task: Task;
@@ -18,10 +19,12 @@ export const AttachmentsSection = observer(({ task }: AttachmentsSectionProps) =
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0];
 
-            // 1. Validation (25MB)
-            const MAX_SIZE = 25 * 1024 * 1024;
-            if (file.size > MAX_SIZE) {
-                alert("File is too large. Max 25MB allowed.");
+            // 1. Validation (25MB total per task)
+            const MAX_TOTAL_SIZE = 25 * 1024 * 1024;
+            const currentTotalSize = task.attachments.reduce((sum, att) => sum + att.size, 0);
+
+            if (currentTotalSize + file.size > MAX_TOTAL_SIZE) {
+                alert(`Total attachments size exceeds ${MAX_TOTAL_SIZE / (1024 * 1024)}MB. Currently: ${(currentTotalSize / (1024 * 1024)).toFixed(2)}MB.`);
                 return;
             }
 
@@ -80,97 +83,51 @@ export const AttachmentsSection = observer(({ task }: AttachmentsSectionProps) =
     };
 
     return (
-        <div style={{
-            marginTop: '24px',
-            paddingTop: '16px',
-            borderTop: '1px solid var(--border)'
-        }}>
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: 'var(--text-secondary)',
-                fontSize: '14px',
-                fontWeight: 600,
-                marginBottom: '12px'
-            }}>
+        <div className="attachments-section">
+            <div className="attachments-header">
                 <Paperclip size={16} />
                 <span>Attachments</span>
             </div>
 
             {task.attachments.length === 0 ? (
                 <div
+                    className="add-attachment-placeholder"
                     onClick={() => fileInputRef.current?.click()}
-                    style={{
-                        padding: '12px',
-                        borderRadius: '6px',
-                        border: '1px dashed var(--border)',
-                        color: 'var(--text-secondary)',
-                        fontSize: '13px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
                     <Plus size={16} /> Click to add attachment
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    {task.attachments.map(attachment => (
-                        <AttachmentCard
-                            key={attachment.id}
-                            attachment={attachment}
-                            onDelete={async () => {
-                                if (window.confirm("Delete this attachment?")) {
-                                    if (attachment.key) {
-                                        await api.deleteFile(attachment.key);
+                <>
+                    <div className="attachments-list">
+                        {task.attachments.map(attachment => (
+                            <AttachmentCard
+                                key={attachment.id}
+                                attachment={attachment}
+                                onDelete={async () => {
+                                    if (window.confirm("Delete this attachment?")) {
+                                        if (attachment.key) {
+                                            await api.deleteFile(attachment.key);
+                                        }
+                                        task.removeAttachment(attachment.id);
                                     }
-                                    task.removeAttachment(attachment.id);
-                                }
-                            }}
-                        />
-                    ))}
+                                }}
+                            />
+                        ))}
 
-                    <div
-                        onClick={() => fileInputRef.current?.click()}
-                        style={{
-                            border: '1px dashed var(--border)',
-                            borderRadius: '6px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '8px 12px',
-                            cursor: 'pointer',
-                            background: 'transparent',
-                            transition: 'background 0.2s',
-                            height: '56px' // Match roughly with card height including padding
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                    >
-                        <div style={{
-                            width: '40px',
-                            height: '40px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'var(--bg-secondary)',
-                            borderRadius: '4px'
-                        }}>
-                            <Plus size={20} color="var(--text-secondary)" />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>Add more</span>
-                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Max 25 MB</span>
+                        <div
+                            className="add-attachment-button"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <div className="add-attachment-icon">
+                                <Plus size={20} />
+                            </div>
+                            <div className="add-attachment-text">
+                                <span className="add-attachment-primary">Add more</span>
+                                <span className="add-attachment-secondary">Max 25 MB</span>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </>
             )}
 
             <input
@@ -181,13 +138,11 @@ export const AttachmentsSection = observer(({ task }: AttachmentsSectionProps) =
             />
 
             {uploading && (
-                <div style={{ marginTop: '8px', height: '4px', background: 'var(--bg-secondary)', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{
-                        width: `${progress}%`,
-                        height: '100%',
-                        background: 'var(--accent)',
-                        transition: 'width 0.1s linear'
-                    }} />
+                <div className="upload-progress-container">
+                    <div
+                        className="upload-progress-bar"
+                        style={{ width: `${progress}%` }}
+                    />
                 </div>
             )}
         </div>

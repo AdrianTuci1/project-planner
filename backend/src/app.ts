@@ -20,15 +20,18 @@ export class App {
     }
 
     private initializeMiddlewares() {
-        this.app.use(helmet());
+        this.app.use(helmet({
+            crossOriginResourcePolicy: { policy: "cross-origin" }
+        }));
         this.app.use(cors());
         this.app.use(morgan('dev'));
         this.app.use(express.json({
+            limit: '25mb',
             verify: (req: any, res, buf) => {
                 req.rawBody = buf;
             }
         }));
-        this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(express.urlencoded({ limit: '25mb', extended: true }));
     }
 
     private initializeRoutes(routes: Routes[]) {

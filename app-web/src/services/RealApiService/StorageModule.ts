@@ -21,4 +21,8 @@ export class StorageModule extends BaseApiService {
         });
         if (!res.ok) throw new Error(`Failed to delete file: ${res.statusText}`);
     }
+
+    getFileUrl(key: string): string {
+        return `${this.baseUrl}/storage/files/${encodeURIComponent(key)}`;
+    }
 }

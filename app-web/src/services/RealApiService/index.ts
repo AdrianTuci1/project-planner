@@ -80,6 +80,7 @@ export class RealApiService implements IApiService {
     getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }> { return this.storageModule.getUploadUrl(contentType, fileName); }
 
     deleteFile(key: string): Promise<void> { return this.storageModule.deleteFile(key); }
+    getFileUrl(key: string): string { return this.storageModule.getFileUrl(key); }
 
     // Subscription delegates
     createCheckoutSession(priceId: string): Promise<{ url: string }> { return this.subscriptionModule.createCheckoutSession(priceId); }

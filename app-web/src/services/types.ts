@@ -88,6 +88,7 @@ export interface IApiService {
     // Storage
     getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }>;
     deleteFile(key: string): Promise<void>;
+    getFileUrl(key: string): string; // Synchronous URL builder
     // Subscription
     createCheckoutSession(priceId: string): Promise<{ url: string }>;
     createCustomerPortalSession(): Promise<{ url: string }>;

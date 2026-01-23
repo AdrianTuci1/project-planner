@@ -259,6 +259,17 @@ export class MockApiService implements IApiService {
     async deleteFile(key: string): Promise<void> {
         console.log("Mock deleteFile", key);
     }
+    getFileUrl(key: string): string {
+        return `https://via.placeholder.com/150?text=${key}`;
+    }
+
+    // Calendar Extra
+    async exchangeGoogleCode(code: string): Promise<any> { return { accounts: [] }; }
+    async syncSubCalendars(id: string): Promise<any> { return { accounts: [] }; }
+
+    // Subscription
+    async createCheckoutSession(priceId: string): Promise<{ url: string }> { return { url: '' }; }
+    async createCustomerPortalSession(): Promise<{ url: string }> { return { url: '' }; }
 
     async createTask(task: any): Promise<any> {
         console.log("Mock createTask", task);

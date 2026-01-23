@@ -333,6 +333,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                                 </span>
                             </div>
                         </div>
+                        <AttachmentsSection task={task} />
                     </div>
 
                     <div className="tc-spacer-line" />
@@ -366,9 +367,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         <SubtaskList task={task} autoFocusNew={ui.isSubtaskMode} />
                     </div>
 
-                    {store.settings.powerFeatures.attachmentsEnabled && (
-                        <AttachmentsSection task={task} />
-                    )}
+
 
                     {isTemplate && (
                         <div style={{
