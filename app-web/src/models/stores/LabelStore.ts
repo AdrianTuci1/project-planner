@@ -27,13 +27,13 @@ export class LabelStore {
         return label ? label.color : '#60A5FA';
     }
 
-    addLabel(name: string, color: string) {
-        const workspaceId = this.rootStore.workspaceStore.activeWorkspaceId;
+    addLabel(name: string, color: string, workspaceId?: string) {
+        const targetWorkspaceId = workspaceId || this.rootStore.workspaceStore.activeWorkspaceId;
         const newLabel = {
             id: uuidv4(),
             name,
             color,
-            workspaceId: workspaceId || undefined
+            workspaceId: targetWorkspaceId || undefined
         };
         this.availableLabels.push(newLabel);
         return newLabel;

@@ -202,7 +202,20 @@ export const TopBar = observer(() => {
                         className="avatar-button"
                         onClick={handleUserClick}
                     >
-                        {store.currentUser?.initials[0] || 'T'}
+                        {store.currentUser?.avatarUrl ? (
+                            <img
+                                src={store.currentUser.avatarUrl}
+                                alt="Avatar"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: '50%',
+                                    objectFit: 'cover',
+                                }}
+                            />
+                        ) : (
+                            store.currentUser?.initials[0] || 'T'
+                        )}
                     </div>
                 </div>
 

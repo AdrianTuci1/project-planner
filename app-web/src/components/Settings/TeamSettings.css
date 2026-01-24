@@ -13,7 +13,44 @@
 .team-settings-description {
     font-size: 14px;
     color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
+/* Connected Account Card (Shared Look) */
+.connected-account-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 32px;
+}
+
+.account-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.manage-btn {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.manage-btn:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 /* Create Team Section */
@@ -77,18 +114,178 @@
     border-radius: 6px;
 }
 
+/* Manage View Styles */
+.manage-view-header {
+    margin-bottom: 20px;
+}
+
+.back-btn {
+    background: transparent;
+    border: none;
+    color: #8b5cf6;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    margin-bottom: 24px;
+}
+
+.back-btn:hover {
+    text-decoration: underline;
+}
+
+.manage-header-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.manage-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.manage-divider {
+    height: 1px;
+    background-color: var(--border-subtle);
+    margin-bottom: 32px;
+    margin-top: 32px;
+}
+
+.manage-section-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.manage-section-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+/* Member List */
+.member-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.member-row {
+    background-color: var(--bg-elevated);
+    padding: 12px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background-color 0.2s;
+}
+
+.member-row:hover {
+    background-color: var(--bg-hover);
+}
+
+.member-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    object-fit: cover;
+    background-color: var(--bg-input);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.member-info {
+    flex: 1;
+}
+
+.member-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.member-email {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.member-role {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+}
+
+/* Invite Section */
+.invite-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 32px;
+}
+
+.invite-input {
+    flex: 1;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.invite-input:focus {
+    outline: none;
+    border-color: #8b5cf6;
+}
+
+.invite-btn {
+    background-color: #8b5cf6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.invite-btn:hover {
+    background-color: #7c3aed;
+}
+
 /* Logo Upload Overlay */
 .team-logo-upload-trigger {
     cursor: pointer;
     overflow: hidden;
+    position: relative;
 }
 
 .logo-upload-overlay {
     position: absolute;
     top: 0;
     left: 0;
-    width: 64px;
-    height: 64px;
+    width: 100%;
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
@@ -101,4 +298,22 @@
 
 .team-logo-upload-trigger:hover .logo-upload-overlay {
     opacity: 1;
+}
+
+/* Danger Zone */
+.disconnect-btn {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    float: right;
+    transition: background-color 0.2s;
+}
+
+.disconnect-btn:hover {
+    background-color: #dc2626;
 }

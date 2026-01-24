@@ -29,7 +29,8 @@ export const LabelPickerContent = observer(({ onSelect, onClose, selectedLabelId
 
     const handleCreate = () => {
         if (newLabelName.trim()) {
-            const newLabel = store.addLabel(newLabelName.trim(), selectedColor);
+            const activeWorkspaceId = store.workspaceStore.activeWorkspaceId;
+            const newLabel = store.addLabel(newLabelName.trim(), selectedColor, activeWorkspaceId || undefined);
             onSelect(newLabel.id);
             setNewLabelName('');
             setIsCreating(false);

@@ -75,7 +75,7 @@ export class ProjectStore {
     get availableLabels() { return this.labelStore.availableLabels; }
     getLabel(labelId: string) { return this.labelStore.getLabel(labelId); }
     getLabelColor(labelId: string) { return this.labelStore.getLabelColor(labelId); }
-    addLabel(name: string, color: string) { return this.labelStore.addLabel(name, color); }
+    addLabel(name: string, color: string, workspaceId?: string) { return this.labelStore.addLabel(name, color, workspaceId); }
     updateLabel(id: string, name: string, color: string) { this.labelStore.updateLabel(id, name, color); }
     deleteLabel(id: string) { this.labelStore.deleteLabel(id); }
 
@@ -92,7 +92,18 @@ export class ProjectStore {
     get groups() { return this.workspaceStore.activeWorkspace?.groups || []; }
     get dumpAreaTasks() { return this.workspaceStore.activeWorkspace?.dumpAreaTasks || []; }
     get templates() { return this.taskStore.templates; }
-    get currentUser() { return this.taskStore.currentUser; }
+    get currentUser() {
+        if (this.authStore.isAuthenticated && this.authStore.user) {
+            const name = this.settings.account.displayName || this.authStore.user.name || this.authStore.user.username || 'User';
+            return {
+                id: this.authStore.user.sub || this.authStore.user.username || 'current-user',
+                name: name,
+                avatarUrl: this.settings.account.avatarUrl,
+                initials: name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'U'
+            };
+        }
+        return this.taskStore.currentUser;
+    }
     get allTasks() { return this.taskStore.allTasks; }
 
     createTaskInGroup(title: string, group: any) { return this.taskStore.createTaskInGroup(title, group); }

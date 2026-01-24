@@ -2,8 +2,8 @@ import { makeAutoObservable } from "mobx";
 
 export class AccountSettingsModel {
     // Profile
-    displayName: string = 'Tuci';
-    email: string = 'adrian.tucicovenco@gmail.com';
+    displayName: string = '';
+    email: string = '';
     avatarUrl: string = '';
 
     // Change Email State

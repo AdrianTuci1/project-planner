@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { api } from '../../services/api';
-import { ArrowLeft, Users, ChevronRight, Crown, Camera } from 'lucide-react';
+import { ArrowLeft, Users, ChevronRight, Crown, Camera, Mail, Plus } from 'lucide-react';
 import { ContextMenu, MenuItem } from '../ContextMenu/ContextMenu';
 import './TeamSettings.css';
 
@@ -93,7 +93,7 @@ export const TeamSettings = observer(() => {
 
     const isOwner = teamWorkspace && (teamWorkspace.ownerId === user?.sub || teamWorkspace.ownerId === user?.username);
 
-    // If no team exists, show create UI (same as before)
+    // If no team exists, show create UI
     if (!teamWorkspace) {
         return (
             <div className="team-settings-container">
@@ -138,46 +138,25 @@ export const TeamSettings = observer(() => {
     // MANAGE VIEW
     if (settings.teamView === 'manage') {
         return (
-            <div className="settings-fade-in">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="team-settings-container settings-fade-in">
+                <div className="manage-view-header">
                     <button className="back-btn" onClick={() => settings.setTeamView('summary')}>
                         <ArrowLeft size={16} /> Back
                     </button>
-                    {isOwner && (
-                        <button
-                            className="btn-danger-text"
-                            style={{ color: 'var(--accent-red)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer' }}
-                            onClick={async () => {
-                                if (confirm("Are you sure you want to delete this team? This action cannot be undone.")) {
-                                    if (teamWorkspace?.id) {
-                                        try {
-                                            await store.workspaceStore.deleteTeamWorkspace(teamWorkspace.id);
-                                            settings.setActiveTab('general'); // Or close modal?
-                                        } catch (e: any) {
-                                            alert(e.message);
-                                        }
-                                    }
-                                }
-                            }}
-                        >
-                            Delete Team
-                        </button>
-                    )}
                 </div>
 
-                <div className="form-group" style={{ marginBottom: 30 }}>
-                    <label className="form-label">Team Profile</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                {/* Team Profile Section */}
+                <div style={{ marginBottom: 40 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                         <div style={{ position: 'relative' }}>
                             <div
                                 style={{
-                                    width: 64, height: 64, borderRadius: 12,
-                                    background: 'var(--primary)', color: 'white',
+                                    width: 80, height: 80, borderRadius: 16,
+                                    background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontWeight: 'bold', fontSize: 24,
+                                    color: 'var(--text-secondary)',
                                     flexShrink: 0,
                                     cursor: isOwner ? 'pointer' : 'default',
-                                    position: 'relative',
                                     overflow: 'hidden'
                                 }}
                                 onClick={handleLogoClick}
@@ -186,14 +165,14 @@ export const TeamSettings = observer(() => {
                                 {teamWorkspace.avatarUrl ? (
                                     <img src={teamWorkspace.avatarUrl} alt="Team Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
-                                    <>
-                                        {isOwner && (
-                                            <div className="logo-upload-overlay">
-                                                <Camera size={20} color="white" />
-                                            </div>
-                                        )}
+                                    <div style={{ fontSize: 32, fontWeight: 600, color: 'var(--primary)' }}>
                                         {teamName.charAt(0).toUpperCase()}
-                                    </>
+                                    </div>
+                                )}
+                                {isOwner && (
+                                    <div className="logo-upload-overlay">
+                                        <Camera size={24} color="white" />
+                                    </div>
                                 )}
                             </div>
                             <input
@@ -205,54 +184,53 @@ export const TeamSettings = observer(() => {
                             />
                         </div>
 
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                                <input
-                                    className="form-input"
-                                    style={{ margin: 0, flex: 1, minWidth: 200 }}
-                                    value={teamName}
-                                    onChange={(e) => setTeamName(e.target.value)}
-                                    disabled={!isOwner}
-                                    placeholder="Team Name"
-                                />
-                                {isOwner && (
-                                    <button
-                                        className="btn-primary"
-                                        onClick={handleUpdateName}
-                                        disabled={isUpdating || !teamName.trim() || teamName === teamWorkspace.name}
-                                        style={{ whiteSpace: 'nowrap' }}
-                                    >
-                                        {isUpdating ? 'Saving...' : 'Rename'}
-                                    </button>
-                                )}
-                            </div>
+                        <div style={{ flex: 1, display: 'flex', gap: 12 }}>
+                            <input
+                                className="invite-input"
+                                value={teamName}
+                                onChange={(e) => setTeamName(e.target.value)}
+                                disabled={!isOwner}
+                                placeholder="Team Name"
+                            />
+                            {isOwner && (
+                                <button
+                                    className="invite-btn"
+                                    onClick={handleUpdateName}
+                                    disabled={isUpdating || !teamName.trim() || teamName === teamWorkspace.name}
+                                >
+                                    {isUpdating ? 'Saving...' : 'Rename'}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
 
+                <div className="manage-divider" />
+
                 {isOwner && (
                     <>
+                        {/* Invite Section (Restored Style) */}
                         <div className="invite-section" style={{ marginTop: 30 }}>
-                            <label className="form-label" style={{ marginBottom: 4 }}>Invite new member</label>
-                            <div className="invite-row">
+                            <label className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 14, fontWeight: 500 }}>Invite new member</label>
+                            <div className="invite-row" style={{ display: 'flex', gap: 10 }}>
                                 <input
                                     className="form-input"
                                     placeholder="colleague@example.com"
                                     value={settings.emailToInvite}
                                     onChange={(e) => settings.setEmailToInvite(e.target.value)}
+                                    style={{ flex: 1 }}
                                 />
                                 <button className="btn-primary" onClick={handleInvite}>Invite</button>
                             </div>
                         </div>
 
+                        {/* Members Section (Restored Style) */}
                         <div style={{ marginTop: 30 }}>
-                            <div className="form-label">Active Members</div>
-                            {/* Member Row - Needs iteration if real members existed. For now showing Self + Mock if needed or just Self */}
+                            <div className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 14, fontWeight: 500 }}>Active Members</div>
                             <div style={{
                                 display: 'flex', alignItems: 'center', gap: 10,
-                                padding: 10, borderBottom: '1px solid var(--border-subtle)'
+                                padding: 10
                             }}>
-                                {/* Use settings.account for current user to reflect latest changes */}
                                 {settings.account.avatarUrl ? (
                                     <img
                                         src={settings.account.avatarUrl}
@@ -260,8 +238,8 @@ export const TeamSettings = observer(() => {
                                         style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }}
                                     />
                                 ) : (
-                                    <div className="settings-avatar-sm" style={{ width: 32, height: 32, fontSize: 12 }}>
-                                        {settings.account.displayName?.charAt(0).toUpperCase() || user?.initials || 'U'}
+                                    <div className="settings-avatar-sm" style={{ width: 32, height: 32, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-input)', borderRadius: 6 }}>
+                                        {(settings.account.displayName?.charAt(0) || user?.name?.charAt(0) || 'U').toUpperCase()}
                                     </div>
                                 )}
 
@@ -277,8 +255,53 @@ export const TeamSettings = observer(() => {
                                 </div>
                             </div>
                         </div>
+
+                        <div className="manage-divider" />
                     </>
                 )}
+
+                {/* Danger Zone */}
+                <div style={{ marginBottom: 40 }}>
+
+                    <div className="member-row" style={{ justifyContent: 'space-between', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                        <div>
+                            <div className="member-name">{isOwner ? 'Delete Team Workspace' : 'Leave Team'}</div>
+                            <div className="member-email">{isOwner ? 'Permanently delete this team and all its data' : 'Leave this team workspace'}</div>
+                        </div>
+                        {isOwner ? (
+                            <button
+                                className="disconnect-btn"
+                                onClick={async () => {
+                                    if (confirm("Are you sure you want to delete this team? This action cannot be undone.")) {
+                                        if (teamWorkspace?.id) {
+                                            try {
+                                                await store.workspaceStore.deleteTeamWorkspace(teamWorkspace.id);
+                                                settings.setActiveTab('general');
+                                            } catch (e: any) {
+                                                alert(e.message);
+                                            }
+                                        }
+                                    }
+                                }}
+                            >
+                                Delete Team
+                            </button>
+                        ) : (
+                            <button
+                                className="disconnect-btn"
+                                onClick={() => {
+                                    if (confirm("Are you sure you want to leave this team?")) {
+                                        // TODO: Implement leave functionality
+                                        alert("Leave team functionality coming soon.");
+                                    }
+                                }}
+                            >
+                                Leave Team
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 {error && <div className="error-message" style={{ marginTop: 10 }}>{error}</div>}
 
                 {/* Context Menu */}
@@ -311,25 +334,25 @@ export const TeamSettings = observer(() => {
 
     // SUMMARY VIEW (Default)
     return (
-        <div>
-            <h2 className="calendar-settings-title">Your Team</h2>
-            <p className="calendar-settings-description">
+        <div className="team-settings-container">
+            <h2 className="team-settings-title">Your Team</h2>
+            <p className="team-settings-description">
                 Manage your team workspace and members.
             </p>
 
             <div className="connected-account-card">
                 <div className="account-info">
                     <div style={{
-                        width: 40, height: 40, borderRadius: 6,
+                        width: 40, height: 40, borderRadius: 8,
                         background: 'var(--primary)', color: 'white',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 'bold', marginRight: 12
+                        fontWeight: 'bold', fontSize: 18
                     }}>
                         {teamName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <div style={{ fontWeight: 600 }}>{teamWorkspace.name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        <div style={{ fontWeight: 600, fontSize: 15 }}>{teamWorkspace.name}</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                             {isOwner ? 'Owner' : 'Member'} • {teamWorkspace.members?.length || 1} members
                         </div>
                     </div>
@@ -337,6 +360,14 @@ export const TeamSettings = observer(() => {
                 <button className="manage-btn" onClick={() => settings.setTeamView('manage')}>
                     Manage <ChevronRight size={14} />
                 </button>
+            </div>
+
+            {/* Warning Alert - Always visible in summary view as requested */}
+            <div className="team-warning-alert">
+                <span>⚠️</span>
+                <div>
+                    <strong>Note:</strong> You can have only one public team workspace. If you want to join another workspace later, you must delete or leave your current workspace.
+                </div>
             </div>
         </div>
     );
