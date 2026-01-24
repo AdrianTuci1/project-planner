@@ -158,6 +158,12 @@ export const KanbanBoard = observer(({ tasks, onTaskClick, groupId }: KanbanBoar
         return tasks.filter(t => {
             if (!t.scheduledDate) return false;
             return isSameDay(t.scheduledDate, date);
+        }).sort((a, b) => {
+            if (store.settings.general.generalSettings.moveTasksBottom) {
+                if (a.status === 'done' && b.status !== 'done') return 1;
+                if (a.status !== 'done' && b.status === 'done') return -1;
+            }
+            return 0;
         });
     };
 

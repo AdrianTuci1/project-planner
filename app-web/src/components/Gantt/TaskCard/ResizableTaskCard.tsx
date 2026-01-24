@@ -75,7 +75,7 @@ export const ResizableTaskCardView = observer(({
                             className={`tc-checkbox ${task.status === 'done' ? 'checked' : ''}`}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                task.toggleStatus();
+                                store.taskStore.toggleTaskCompletion(task);
                             }}
                             onPointerDown={(e) => e.stopPropagation()}
                             style={{
@@ -288,7 +288,7 @@ export const ResizableTaskCard = observer(({
     };
 
     const handleMarkAsComplete = () => {
-        task.toggleStatus();
+        store.taskStore.toggleTaskCompletion(task);
     };
 
     const handleDuplicate = () => {

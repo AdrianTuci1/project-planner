@@ -14,6 +14,7 @@ import {
     Cloud,
     LogOut,
     Users,
+    Cable,
 } from 'lucide-react';
 import './SettingsModal.css';
 import { GeneralSettings } from './GeneralSettings';
@@ -24,6 +25,7 @@ import { CalendarSettings } from './CalendarSettings';
 import { DueDatesSettings } from './DueDatesSettings';
 import { AccountSettings } from './AccountSettings';
 import { SubscriptionSettings } from './SubscriptionSettings';
+import { ApiTokenSettings } from './ApiTokenSettings';
 
 interface SettingsModalProps {
     onClose: () => void;
@@ -95,6 +97,13 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                             <Calendar size={16} />Due dates
                         </div>
                     )}
+                    {settings.general.featuresSettings.apiTokenEnabled && (
+                        <div className={`settings-nav-item ${settings.activeTab === 'api_token' ? 'active' : ''}`} onClick={() => settings.setActiveTab('api_token')}>
+                            <div style={{ width: 16 }} /> {/* Indent */}
+                            <Cable size={16} />API Token
+                        </div>
+                    )}
+
 
                     <div className="settings-separator" />
 
@@ -121,6 +130,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                             {settings.activeTab === 'due_dates' && 'Due Dates Settings'}
                             {settings.activeTab === 'calendar' && 'Calendar Integration'}
                             {settings.activeTab === 'subscription' && 'Subscription'}
+                            {settings.activeTab === 'api_token' && 'API Token'}
                         </span>
                         <button className="icon-btn" onClick={onClose}>
                             <X size={20} />
@@ -140,6 +150,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                         {settings.activeTab === 'due_dates' && <DueDatesSettings />}
                         {settings.activeTab === 'calendar' && <CalendarSettings />}
                         {settings.activeTab === 'subscription' && <SubscriptionSettings />}
+                        {settings.activeTab === 'api_token' && <ApiTokenSettings />}
                     </div>
                 </div>
             </div>

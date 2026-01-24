@@ -81,6 +81,12 @@ export const TasksView = observer(({ tasks, onTaskClick, groupId }: TasksViewPro
     const tasksForDate = tasks.filter(t => {
         if (!t.scheduledDate) return false;
         return isSameDay(t.scheduledDate, currentDate);
+    }).sort((a, b) => {
+        if (store.settings.general.generalSettings.moveTasksBottom) {
+            if (a.status === 'done' && b.status !== 'done') return 1;
+            if (a.status !== 'done' && b.status === 'done') return -1;
+        }
+        return 0;
     });
 
     // Calculate total time for the day

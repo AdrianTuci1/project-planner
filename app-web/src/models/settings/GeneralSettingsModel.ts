@@ -53,10 +53,11 @@ export class GeneralSettingsModel {
         templatesEnabled: false,
         taskPriorityEnabled: false,
         attachmentsEnabled: false,
+        apiTokenEnabled: false,
     };
 
     constructor() {
-        makeAutoObservable(this);
+        makeAutoObservable(this, {}, { deep: true });
     }
 
     // Generic setter for boolean toggles in general settings
@@ -74,8 +75,21 @@ export class GeneralSettingsModel {
 
     // Feature toggles
     toggleFeature(key: keyof typeof this.featuresSettings) {
+        console.log('[GeneralSettingsModel] toggleFeature called with key:', key);
+        console.log('[GeneralSettingsModel] Current value:', this.featuresSettings[key]);
+
+        // Initialize to false if undefined
+        if (this.featuresSettings[key] === undefined) {
+            console.log('[GeneralSettingsModel] Value is undefined, initializing to false');
+            // @ts-ignore
+            this.featuresSettings[key] = false;
+        }
+
         if (typeof this.featuresSettings[key] === 'boolean') {
             (this.featuresSettings[key] as boolean) = !this.featuresSettings[key];
+            console.log('[GeneralSettingsModel] New value:', this.featuresSettings[key]);
+        } else {
+            console.log('[GeneralSettingsModel] Value is not boolean, type:', typeof this.featuresSettings[key]);
         }
     }
 
@@ -89,32 +103,47 @@ export class GeneralSettingsModel {
             const settings = await api.getGeneralSettings();
 
             if (settings) {
-                // Map flat or nested structure from backend to our nested structure
-                // Assuming backend might return nested 'generalSettings' and 'featuresSettings' 
-                // OR a flat list we need to migrate. For now, let's support both if possible or just assume flat -> nested transition.
+                console.log('[GeneralSettingsModel] Loading settings from backend:', settings);
 
-                // If backend returns the new nested structure:
+                // Handle generalSettings
                 if (settings.generalSettings) {
-                    Object.assign(this.generalSettings, settings.generalSettings);
+                    Object.keys(settings.generalSettings).forEach(key => {
+                        if (key in this.generalSettings) {
+                            // @ts-ignore
+                            this.generalSettings[key] = settings.generalSettings[key];
+                        }
+                    });
                 } else {
-                    // Fallback/Migration: Map flat properties to generalSettings
-                    // (This part depends on if we migrate backend data or just frontend mapping)
-                    // Let's iterate keys and assign if they exist in our defaults
+                    // Fallback: Map flat properties to generalSettings
                     Object.keys(this.generalSettings).forEach(k => {
                         // @ts-ignore
                         if (settings[k] !== undefined) this.generalSettings[k] = settings[k];
                     });
                 }
 
+                // Handle featuresSettings - ensure all properties are initialized
                 if (settings.featuresSettings) {
-                    Object.assign(this.featuresSettings, settings.featuresSettings);
+                    Object.keys(settings.featuresSettings).forEach(key => {
+                        if (key in this.featuresSettings) {
+                            // @ts-ignore
+                            this.featuresSettings[key] = settings.featuresSettings[key];
+                        }
+                    });
                 } else {
-                    // Fallback for features
+                    // Fallback for features - check flat properties
                     Object.keys(this.featuresSettings).forEach(k => {
                         // @ts-ignore
                         if (settings[k] !== undefined) this.featuresSettings[k] = settings[k];
                     });
                 }
+
+                console.log('[GeneralSettingsModel] After loading, featuresSettings:', {
+                    dueDatesEnabled: this.featuresSettings.dueDatesEnabled,
+                    templatesEnabled: this.featuresSettings.templatesEnabled,
+                    taskPriorityEnabled: this.featuresSettings.taskPriorityEnabled,
+                    attachmentsEnabled: this.featuresSettings.attachmentsEnabled,
+                    apiTokenEnabled: this.featuresSettings.apiTokenEnabled
+                });
             }
         } catch (error) {
             console.error("Failed to load general settings", error);

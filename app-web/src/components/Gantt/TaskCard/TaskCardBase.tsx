@@ -163,7 +163,7 @@ export const TaskCardBase = observer(({
                 }}
             >
                 <div className="tc-header">
-                    <div className="tc-checkbox-wrapper" onClick={(e) => { e.stopPropagation(); task.toggleStatus(); }}>
+                    <div className="tc-checkbox-wrapper" onClick={(e) => { e.stopPropagation(); store.taskStore.toggleTaskCompletion(task); }}>
                         <div className={`tc-checkbox ${task.status === 'done' ? 'checked' : ''}`}>
                             {task.status === 'done' && <Check size={12} />}
                         </div>
@@ -407,7 +407,7 @@ export const TaskCardBase = observer(({
                 onClose={() => ui.closeActionContext()}
                 position={ui.actionContext.position}
                 task={task}
-                onMarkAsComplete={() => task.toggleStatus()}
+                onMarkAsComplete={() => store.taskStore.toggleTaskCompletion(task)}
                 onDuplicate={() => onDuplicate?.(task)}
                 onRemoveFromTimebox={() => task.setScheduling(undefined, undefined)}
                 onRemoveFromList={() => store.moveTaskToInbox(task.id)}

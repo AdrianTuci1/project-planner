@@ -26,6 +26,14 @@ export const SidebarTaskList = observer(({
     id = 'sidebar-list',
     containerData
 }: SidebarTaskListProps) => {
+    const sortedTasks = [...tasks].sort((a, b) => {
+        if (store.settings.general.generalSettings.moveTasksBottom) {
+            if (a.status === 'done' && b.status !== 'done') return 1;
+            if (a.status !== 'done' && b.status === 'done') return -1;
+        }
+        return 0;
+    });
+
     const { isOver, setNodeRef } = useDroppable({
         id: id,
         data: containerData || {
@@ -44,10 +52,10 @@ export const SidebarTaskList = observer(({
             {isSortable ? (
                 <SortableContext
                     id={id}
-                    items={tasks.map((t: Task) => t.id)}
+                    items={sortedTasks.map((t: Task) => t.id)}
                     strategy={verticalListSortingStrategy}
                 >
-                    {tasks.map((task: Task) => (
+                    {sortedTasks.map((task: Task) => (
                         <SortableTaskCard
                             key={task.id}
                             task={task}
@@ -59,7 +67,7 @@ export const SidebarTaskList = observer(({
                     ))}
                 </SortableContext>
             ) : (
-                tasks.map((task: Task) => (
+                sortedTasks.map((task: Task) => (
                     // Use standard TaskCard for non-sortable list
                     <TaskCard
                         key={task.id}

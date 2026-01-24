@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
+import { store } from '../../models/store';
 import { Task } from '../../models/core';
 import { Check, Plus, GripVertical, Trash2 } from 'lucide-react';
 import './SubtaskList.css';
@@ -65,7 +66,7 @@ export const SubtaskList = observer(({ task, autoFocusNew = false }: SubtaskList
                     </div>
                     <div
                         className={`tc-subtask-check ${sub.isCompleted ? 'checked' : ''}`}
-                        onClick={() => sub.isCompleted = !sub.isCompleted}
+                        onClick={() => store.taskStore.toggleSubtaskCompletion(sub, task)}
                     >
                         {sub.isCompleted && <Check size={10} />}
                     </div>

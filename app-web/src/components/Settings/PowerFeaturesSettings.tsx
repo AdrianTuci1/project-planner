@@ -5,14 +5,17 @@ import {
     Paperclip,
     Copy,
     BarChart2,
-    Link,
     CalendarClock,
     Flag,
     Mail,
     Sun,
-    ExternalLink
+    ExternalLink,
+    Cable
 } from 'lucide-react';
 import './PowerFeaturesSettings.css';
+
+// Import images
+// Images are now loaded from public/power-features
 
 interface FeatureCardProps {
     title: string;
@@ -20,19 +23,27 @@ interface FeatureCardProps {
     icon: React.ReactNode;
     gradientClass: string;
     isEnabled?: boolean;
-    onToggle?: (enabled: boolean) => void;
+    onToggle?: () => void;
+    image?: string;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = observer(({ title, description, icon, gradientClass, isEnabled = false, onToggle }) => {
+const FeatureCard: React.FC<FeatureCardProps> = observer(({ title, description, icon, gradientClass, isEnabled = false, onToggle, image }) => {
     return (
         <div className="power-feature-card">
             <div className={`feature-preview ${gradientClass}`}>
                 <div className="feature-mock-ui">
-                    <div className="mock-line" style={{ width: '40%', marginBottom: 4 }} />
-                    <div className="mock-line" />
-                    <div className="mock-line" />
-                    <div className="mock-line short" />
+                    {image ? (
+                        <img src={image} alt={`${title} preview`} className="feature-image" />
+                    ) : (
+                        <div>
+                            <div className="mock-line" style={{ width: '40%', marginBottom: 4 }} />
+                            <div className="mock-line" />
+                            <div className="mock-line" />
+                            <div className="mock-line short" />
+                        </div>
+                    )}
                 </div>
+
             </div>
             <div className="feature-content">
                 <div className="feature-title-row">
@@ -47,7 +58,7 @@ const FeatureCard: React.FC<FeatureCardProps> = observer(({ title, description, 
                         <input
                             type="checkbox"
                             checked={isEnabled}
-                            onChange={(e) => onToggle && onToggle(e.target.checked)}
+                            onChange={() => onToggle && onToggle()}
                         />
                         <span className="slider" />
                     </label>
@@ -64,14 +75,14 @@ export const PowerFeaturesSettings = observer(() => {
     const { settings } = store;
 
     const features = [
-        // ... (other features remain similar but static for now, or we can migrate them later)
         {
             title: "Attachments",
             description: "Attach files (PDF, images, etc...) to your tasks.",
             icon: <Paperclip size={18} />,
             gradientClass: "gradient-1",
             isEnabled: settings.general.featuresSettings.attachmentsEnabled,
-            onToggle: () => settings.general.toggleFeature('attachmentsEnabled')
+            onToggle: () => settings.general.toggleFeature('attachmentsEnabled'),
+            image: '/power-features/attachments.png'
         },
         {
             title: "Task Templates",
@@ -79,21 +90,25 @@ export const PowerFeaturesSettings = observer(() => {
             icon: <Copy size={18} />,
             gradientClass: "gradient-2",
             isEnabled: settings.general.featuresSettings.templatesEnabled,
-            onToggle: () => settings.general.toggleFeature('templatesEnabled')
+            onToggle: () => settings.general.toggleFeature('templatesEnabled'),
+            image: '/power-features/template.png'
         },
         {
             title: "Analytics",
             description: "Visualize where you spend your time and how you're progressing.",
             icon: <BarChart2 size={18} />,
             gradientClass: "gradient-3",
-            isEnabled: true
+            isEnabled: true,
+            image: '/power-features/analytics.png'
         },
         {
             title: "API Token",
             description: "Enable this to allow third party apps (like Zapier) to connect to Simplu.",
-            icon: <Link size={18} />,
+            icon: <Cable size={18} />,
             gradientClass: "gradient-4",
-            isEnabled: false
+            isEnabled: settings.general.featuresSettings.apiTokenEnabled,
+            onToggle: () => settings.general.toggleFeature('apiTokenEnabled'),
+            image: '/power-features/api-token.png'
         },
         {
             title: "Due dates",
@@ -101,7 +116,8 @@ export const PowerFeaturesSettings = observer(() => {
             icon: <CalendarClock size={18} />,
             gradientClass: "gradient-5",
             isEnabled: settings.general.featuresSettings.dueDatesEnabled,
-            onToggle: () => settings.general.toggleFeature('dueDatesEnabled')
+            onToggle: () => settings.general.toggleFeature('dueDatesEnabled'),
+            image: '/power-features/duedate.png'
         },
         {
             title: "Task Priority",
@@ -109,7 +125,8 @@ export const PowerFeaturesSettings = observer(() => {
             icon: <Flag size={18} />,
             gradientClass: "gradient-6",
             isEnabled: settings.general.featuresSettings.taskPriorityEnabled,
-            onToggle: () => settings.general.toggleFeature('taskPriorityEnabled')
+            onToggle: () => settings.general.toggleFeature('taskPriorityEnabled'),
+            image: '/power-features/priority.png'
         },
         {
             title: "Email forwarding",
@@ -123,7 +140,8 @@ export const PowerFeaturesSettings = observer(() => {
             description: "Guided walkthroughs to help you plan & reflect on your day.",
             icon: <Sun size={18} />,
             gradientClass: "gradient-8",
-            isEnabled: true
+            isEnabled: true,
+            image: '/power-features/daily-planning.png'
         }
     ];
 

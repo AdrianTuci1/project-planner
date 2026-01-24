@@ -88,6 +88,12 @@ export class UIStore {
 
         const savedShowDeclined = localStorage.getItem('showDeclinedEvents');
         if (savedShowDeclined) this.showDeclinedEvents = savedShowDeclined === 'true';
+
+        const savedIsSidebarOpen = localStorage.getItem('isSidebarOpen');
+        if (savedIsSidebarOpen) this.isSidebarOpen = savedIsSidebarOpen === 'true';
+
+        const savedIsRightSidebarOpen = localStorage.getItem('isRightSidebarOpen');
+        if (savedIsRightSidebarOpen) this.isRightSidebarOpen = savedIsRightSidebarOpen === 'true';
     }
 
     setupReactions() {
@@ -114,6 +120,16 @@ export class UIStore {
         reaction(
             () => this.showDeclinedEvents,
             (show) => localStorage.setItem('showDeclinedEvents', show.toString())
+        );
+
+        reaction(
+            () => this.isSidebarOpen,
+            (open) => localStorage.setItem('isSidebarOpen', open.toString())
+        );
+
+        reaction(
+            () => this.isRightSidebarOpen,
+            (open) => localStorage.setItem('isRightSidebarOpen', open.toString())
         );
 
         reaction(

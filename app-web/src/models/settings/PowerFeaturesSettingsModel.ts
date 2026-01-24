@@ -25,6 +25,12 @@ export class PowerFeaturesSettingsModel {
         }
     }
 
+    apiTokenEnabled: boolean = false;
+
+    toggleApiToken() {
+        this.apiTokenEnabled = !this.apiTokenEnabled;
+    }
+
     taskPriorityEnabled: boolean = false;
 
     toggleTaskPriority() {

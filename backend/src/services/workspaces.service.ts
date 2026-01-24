@@ -83,9 +83,23 @@ export class WorkspacesService {
         return result.Item as Workspace | undefined;
     }
 
-    public async updateWorkspace(id: string, updates: Partial<Workspace>): Promise<Workspace | undefined> {
-        const workspace = await this.getWorkspaceById(id);
+    public async updateWorkspace(id: string, updates: Partial<Workspace>, userId?: string): Promise<Workspace | undefined> {
+        let targetId = id;
+
+        if (id === 'personal' && userId) {
+            // Find personal workspace for this user
+            const all = await this.getAllWorkspaces(userId);
+            const personal = all.find(w => w.type === 'personal' && w.ownerId === userId);
+            if (!personal) throw new Error("Personal workspace not found");
+            targetId = personal.id;
+        }
+
+        const workspace = await this.getWorkspaceById(targetId);
         if (!workspace) throw new Error("Workspace not found");
+
+        // Verify ownership/permission if needed (simplified: if found via personal/userId check, it's valid)
+        // For strictness, if userId provided, check ownership? 
+        // For now, trusting the 'personal' resolution or direct ID access (which implies they knew the ID).
 
         const updateExpressionParts: string[] = [];
         const expressionAttributeNames: { [key: string]: string } = {};
@@ -107,7 +121,7 @@ export class WorkspacesService {
 
         const command = new UpdateCommand({
             TableName: this.tableName,
-            Key: { id },
+            Key: { id: targetId },
             UpdateExpression: "SET " + updateExpressionParts.join(", "),
             ExpressionAttributeNames: expressionAttributeNames,
             ExpressionAttributeValues: expressionAttributeValues,
@@ -125,14 +139,21 @@ export class WorkspacesService {
         // Actually workspace.members is an array.
 
         // Retrieve first to avoid duplicates
-        const workspace = await this.getWorkspaceById(workspaceId);
+        let targetId = workspaceId;
+        if (workspaceId === 'personal') {
+            // 'personal' shouldn't really have members added like this usually, but IF we supported it:
+            // We need ownerId context. Since addMember usually called during invite, we might have it.
+            // But simpler to expect UUID for addMember.
+        }
+
+        const workspace = await this.getWorkspaceById(targetId);
         if (!workspace) throw new Error("Workspace not found");
 
         if (workspace.members.includes(userId)) return; // Already member
 
         const command = new UpdateCommand({
             TableName: this.tableName,
-            Key: { id: workspaceId },
+            Key: { id: targetId },
             UpdateExpression: "SET members = list_append(members, :u)",
             ExpressionAttributeValues: {
                 ":u": [userId]

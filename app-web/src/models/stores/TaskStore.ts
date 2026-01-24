@@ -228,4 +228,66 @@ export class TaskStore {
             }
         });
     }
+    toggleTaskCompletion(task: Task) {
+        // Toggle status
+        task.toggleStatus();
+
+        // 1. Check "Move to bottom" setting
+        const settings = this.rootStore.settings.general.generalSettings;
+
+        if (task.status === 'done' && settings.moveTasksBottom) {
+            // Move to bottom of its list
+            const activeWorkspace = this.rootStore.workspaceStore.activeWorkspace;
+            if (!activeWorkspace) return;
+
+            // Check dump area
+            const dumpIndex = activeWorkspace.dumpAreaTasks.findIndex(t => t.id === task.id);
+            if (dumpIndex > -1) {
+                activeWorkspace.dumpAreaTasks.splice(dumpIndex, 1);
+                activeWorkspace.dumpAreaTasks.push(task);
+                return;
+            }
+
+            // Check groups
+            for (const group of activeWorkspace.groups) {
+                const groupIndex = group.tasks.findIndex(t => t.id === task.id);
+                if (groupIndex > -1) {
+                    group.tasks.splice(groupIndex, 1);
+                    group.tasks.push(task);
+                    return;
+                }
+            }
+        }
+
+        // 2. Check "Auto set actual time" setting
+        if (task.status === 'done' && settings.autoSetActualTime) {
+            if ((task.actualDuration || 0) < 1 && task.duration && task.duration > 0) {
+                task.actualDuration = task.duration;
+            }
+        }
+    }
+
+    toggleSubtaskCompletion(subtask: any, parentTask: Task) {
+        subtask.isCompleted = !subtask.isCompleted;
+
+        const settings = this.rootStore.settings.general.generalSettings;
+
+        // Move subtask to bottom if completed and setting enabled
+        if (subtask.isCompleted && settings.moveTasksBottom) {
+            const index = parentTask.subtasks.findIndex(s => s.id === subtask.id);
+            if (index > -1) {
+                parentTask.subtasks.splice(index, 1);
+                parentTask.subtasks.push(subtask);
+            }
+        }
+
+        // Check "Mark task as complete" setting
+        if (settings.markCompleteSubtasks && subtask.isCompleted) {
+            // Check if ALL subtasks are complete
+            const allComplete = parentTask.subtasks.every(s => s.isCompleted);
+            if (allComplete && parentTask.status !== 'done') {
+                this.toggleTaskCompletion(parentTask);
+            }
+        }
+    }
 }
