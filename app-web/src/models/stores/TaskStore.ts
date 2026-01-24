@@ -38,12 +38,16 @@ export class TaskStore {
     createTemplate(title: string) {
         const task = new Task(title);
         task.isTemplate = true;
+        task.workspaceId = this.rootStore.activeWorkspace.id;
         this.templates.push(task);
         return task;
     }
 
     addTemplate(task: Task) {
         task.isTemplate = true;
+        if (!task.workspaceId) {
+            task.workspaceId = this.rootStore.activeWorkspace.id;
+        }
         this.templates.push(task);
     }
 

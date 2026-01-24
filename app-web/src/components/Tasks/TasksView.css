@@ -96,11 +96,13 @@
     padding: 4px 8px;
     border-radius: 4px;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 /* Tasks List */
 .tasks-list {
     flex: 1;
+    min-height: 200px;
     overflow-y: auto;
     padding: 0 16px 16px;
     display: flex;

@@ -62,7 +62,7 @@ export const DailyShutdown = observer(() => {
         })
     );
 
-    if (!store.isDailyShutdownOpen) return null;
+    if (!store.isDailyShutdownOpen || !store.activeWorkspace) return null;
 
     const today = new Date();
     const tomorrow = addDays(today, 1);
@@ -76,7 +76,7 @@ export const DailyShutdown = observer(() => {
     // Calculate source tasks based on selected group
     const sourceTasks = (() => {
         if (shutdownSourceGroupId === 'default') {
-            return store.dumpAreaTasks;
+            return store.dumpAreaTasks.filter(t => !t.scheduledDate);
         }
         const group = store.groups.find(g => g.id === shutdownSourceGroupId);
         if (group) {
@@ -498,6 +498,7 @@ export const DailyShutdown = observer(() => {
                         <div className="left-panel">
                             <div className="brain-dump-header">
                                 <GroupList
+                                    workspace={store.activeWorkspace!}
                                     activeGroupId={shutdownSourceGroupId}
                                     onSelectGroup={setShutdownSourceGroupId}
                                     className="shutdown-group-selector"

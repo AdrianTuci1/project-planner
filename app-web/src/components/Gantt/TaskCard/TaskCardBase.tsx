@@ -15,7 +15,6 @@ import {
     Target
 } from 'lucide-react';
 import { TimeEntryContext } from '../../ContextMenu/TimeEntryContext';
-import { ContextMenu, MenuItem } from '../../ContextMenu/ContextMenu';
 import { LabelContext } from '../../ContextMenu/LabelContext';
 import { MakeRecurringTaskContext } from '../../ContextMenu/MakeRecurringTaskContext';
 import { RecurringTaskActionsContext } from '../../ContextMenu/RecurringTaskActionsContext';

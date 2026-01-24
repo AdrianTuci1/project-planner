@@ -1,5 +1,3 @@
-
-import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { SidebarTaskList } from './SidebarTaskList';
@@ -11,6 +9,7 @@ export const TemplatesView = observer(() => {
     const handleCreate = () => {
         // Create a blank template locally (not in store yet)
         const newTemplate = new Task("");
+        newTemplate.workspaceId = store.activeWorkspace.id;
         // Open modal in creation mode
         store.openTaskModal(newTemplate, true);
     };
