@@ -14,16 +14,22 @@ export class SettingsModule extends BaseApiService {
 
     async updateGeneralSettings(settings: Partial<GeneralSettings>): Promise<void> {
         // Optimistic update
-        const current = await this.getGeneralSettings();
+        const meta = await dbService.get('meta', 'settings_general');
+        const current = meta?.value || await this.getGeneralSettings();
         const updated = { ...current, ...settings };
+        const originalEtag = meta?.etag;
+
+        console.log('[SettingsModule] Optimistic Update:', updated, 'Preserving ETag:', originalEtag);
 
         await dbService.put('meta', {
             key: 'settings_general',
             value: updated,
+            etag: originalEtag, // Preserving ETag is crucial to prevent overwrite by stale 200 OK from server
             lastUpdated: Date.now()
         });
 
         if (navigator.onLine) {
+            console.log("[SettingsModule] Sending update:", settings);
             const res = await fetch(`${this.baseUrl}/settings/general`, {
                 method: 'PUT',
                 headers: {

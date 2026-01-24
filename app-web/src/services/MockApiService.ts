@@ -171,27 +171,38 @@ export class MockApiService implements IApiService {
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve({
-                    moveTasksBottom: true,
-                    markCompleteSubtasks: true,
-                    autoSetActualTime: false,
-                    deepLinkDetection: true,
-                    startWeekOn: 'Sunday',
-                    showWeekends: true,
-                    workdayThreshold: true,
-                    workloadThreshold: '8 hours',
-                    showDeclinedEvents: true,
-                    startDayAt: '12:00 AM',
-                    calendarIncrements: '15 minute',
-                    timeFormat: '12 hour',
-                    darkMode: 'Dark mode',
-                    autoStartNextTask: false,
-                    sidebarLayout: 'Show one list',
-                    addNewTasksTo: 'Top of list',
-                    detectLabel: true,
-                    defaultEstimatedTime: '0 mins',
-                    rolloverNextDay: true,
-                    rolloverRecurring: false,
-                    rolloverTo: 'Bottom of list'
+                    generalSettings: {
+                        moveTasksBottom: true,
+                        markCompleteSubtasks: true,
+                        autoSetActualTime: false,
+                        deepLinkDetection: true,
+                        startWeekOn: 'Sunday',
+                        showWeekends: true,
+                        workdayThreshold: true,
+                        workloadThreshold: '8 hours',
+                        showDeclinedEvents: true,
+                        startDayAt: '12:00 AM',
+                        calendarIncrements: '15 minute',
+                        calendarViewDays: 7,
+                        timeFormat: '12 hour',
+                        darkMode: 'Dark mode',
+                        autoStartNextTask: false,
+                        sidebarLayout: 'Show one list',
+                        addNewTasksTo: 'Top of list',
+                        detectLabel: true,
+                        defaultEstimatedTime: '0 mins',
+                        rolloverNextDay: true,
+                        rolloverRecurring: false,
+                        rolloverTo: 'Bottom of list'
+                    },
+                    featuresSettings: {
+                        dueDatesEnabled: true,
+                        templatesEnabled: true,
+                        taskPriorityEnabled: true,
+                        attachmentsEnabled: true
+                    },
+                    displayName: 'Mock User',
+                    avatarUrl: ''
                 });
             }, MOCK_DELAY);
         });
@@ -256,6 +267,11 @@ export class MockApiService implements IApiService {
         return { url: "", key: "", publicUrl: "" };
     }
 
+    async uploadFile(file: File): Promise<string> {
+        console.log("Mock uploadFile", file.name);
+        return URL.createObjectURL(file); // Return local blob URL for immediate preview
+    }
+
     async deleteFile(key: string): Promise<void> {
         console.log("Mock deleteFile", key);
     }
@@ -305,6 +321,8 @@ export class MockApiService implements IApiService {
     }
 
     async createWorkspace(name: string, type: string, ownerId: string): Promise<any> { return { id: `team-${ownerId}`, name, type, ownerId }; }
+    async updateWorkspace(id: string, data: any): Promise<any> { return { id, ...data }; }
+    async deleteWorkspace(id: string): Promise<void> { console.log("Mock delete workspace", id); }
 
     async createLabel(label: any): Promise<any> { return label; }
     async updateLabel(id: string, label: any): Promise<any> { return label; }

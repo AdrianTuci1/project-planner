@@ -4,6 +4,7 @@ export class AccountSettingsModel {
     // Profile
     displayName: string = 'Tuci';
     email: string = 'adrian.tucicovenco@gmail.com';
+    avatarUrl: string = '';
 
     // Change Email State
     changeEmail = {
@@ -36,7 +37,7 @@ export class AccountSettingsModel {
 
     saveProfile() {
         // Mock save
-        console.log('Saving profile:', this.displayName);
+        console.log('Saving profile:', this.displayName, this.avatarUrl);
     }
 
     updateEmail() {

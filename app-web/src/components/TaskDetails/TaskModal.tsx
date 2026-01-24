@@ -169,7 +169,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
 
 
                         {/* Due Date - Conditional */}
-                        {store.settings.powerFeatures.dueDatesEnabled && (
+                        {store.settings.general.featuresSettings.dueDatesEnabled && (
                             <div
                                 className="meta-row"
                                 onClick={(e) => {
@@ -245,7 +245,7 @@ export const TaskModal = observer(({ task, onClose }: TaskModalProps) => {
                         </div>
 
                         {/* Priority */}
-                        {store.settings.powerFeatures.taskPriorityEnabled && (
+                        {store.settings.general.featuresSettings.taskPriorityEnabled && (
                             <div
                                 className="meta-row"
                                 onClick={(e) => {

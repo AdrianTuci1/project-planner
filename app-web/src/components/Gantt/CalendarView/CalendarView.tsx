@@ -77,7 +77,7 @@ export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: Calen
             'Monday': 1,
             'Saturday': 6
         };
-        const weekStartIdx = weekStartsOnMap[store.settings.general.startWeekOn] ?? 0;
+        const weekStartIdx = weekStartsOnMap[store.settings.general.generalSettings.startWeekOn] ?? 0;
 
         const weekStart = startOfWeek(store.viewDate, { weekStartsOn: weekStartIdx });
         days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -96,7 +96,7 @@ export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: Calen
         days = Array.from({ length: store.daysToShow }, (_, i) => addDays(weekStart, i));
 
         // Filter weekends if needed
-        if (!store.settings.general.showWeekends) {
+        if (!store.settings.general.generalSettings.showWeekends) {
             days = days.filter(d => {
                 const day = d.getDay();
                 return day !== 0 && day !== 6;

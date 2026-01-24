@@ -6,7 +6,8 @@ export class SettingsController {
 
     public getGeneralSettings = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const settings = await this.settingsService.getGeneralSettings();
+            const userId = (req as any).user?.sub || 'default-user';
+            const settings = await this.settingsService.getGeneralSettings(userId);
             res.status(200).json(settings);
         } catch (error) {
             next(error);
@@ -15,8 +16,9 @@ export class SettingsController {
 
     public updateGeneralSettings = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const userId = (req as any).user?.sub || 'default-user';
             const body = req.body;
-            await this.settingsService.updateGeneralSettings(body);
+            await this.settingsService.updateGeneralSettings(body, userId);
             res.status(200).send();
         } catch (error) {
             next(error);

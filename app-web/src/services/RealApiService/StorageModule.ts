@@ -25,4 +25,22 @@ export class StorageModule extends BaseApiService {
     getFileUrl(key: string): string {
         return `${this.baseUrl}/storage/files/${encodeURIComponent(key)}`;
     }
+
+    async uploadFile(file: File): Promise<string> {
+        const { url, publicUrl } = await this.getUploadUrl(file.type, file.name);
+
+        const uploadRes = await fetch(url, {
+            method: 'PUT',
+            body: file,
+            headers: {
+                'Content-Type': file.type
+            }
+        });
+
+        if (!uploadRes.ok) {
+            throw new Error(`Failed to upload file to storage: ${uploadRes.statusText}`);
+        }
+
+        return publicUrl;
+    }
 }

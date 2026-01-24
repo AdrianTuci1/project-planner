@@ -1,84 +1,133 @@
 import { makeAutoObservable } from "mobx";
+import { api } from "../../services/api";
 
 export class GeneralSettingsModel {
-    // After Task Completion
-    moveTasksBottom: boolean = true;
-    markCompleteSubtasks: boolean = true;
-    autoSetActualTime: boolean = false;
+    // Standard General Settings
+    generalSettings = {
+        // After Task Completion
+        moveTasksBottom: true,
+        markCompleteSubtasks: true,
+        autoSetActualTime: false,
 
-    // Decoration
-    deepLinkDetection: boolean = true;
+        // Decoration
+        deepLinkDetection: true,
 
-    // Calendar / Kanban Settings
-    startWeekOn: string = 'Sunday';
-    showWeekends: boolean = true;
+        // Calendar / Kanban Settings
+        startWeekOn: 'Sunday',
+        showWeekends: true,
 
-    // Workload
-    workdayThreshold: boolean = true;
-    workloadThreshold: string = '8 hours';
+        // Workload
+        workdayThreshold: true,
+        workloadThreshold: '8 hours',
 
-    showDeclinedEvents: boolean = true;
-    startDayAt: string = '12:00 AM';
-    calendarIncrements: string = '15 minute';
-    calendarViewDays: number = 7;
-    timeFormat: string = '12 hour';
+        showDeclinedEvents: true,
+        startDayAt: '12:00 AM',
+        calendarIncrements: '15 minute',
+        calendarViewDays: 7,
+        timeFormat: '12 hour',
 
-    // Appearance
-    darkMode: string = 'Dark mode';
+        // Appearance
+        darkMode: 'Dark mode',
 
-    // Timer Settings
-    autoStartNextTask: boolean = false;
+        // Timer Settings
+        autoStartNextTask: false,
 
-    // Braindump & Lists
-    sidebarLayout: string = 'Show one list';
+        // Braindump & Lists
+        sidebarLayout: 'Show one list',
 
-    // New Task / Update Task
-    addNewTasksTo: string = 'Top of list';
-    detectLabel: boolean = true;
-    defaultEstimatedTime: string = '0 mins';
+        // New Task / Update Task
+        addNewTasksTo: 'Top of list',
+        detectLabel: true,
+        defaultEstimatedTime: '0 mins',
 
-    // Task Rollover
-    rolloverNextDay: boolean = true;
-    rolloverRecurring: boolean = false;
-    rolloverTo: string = 'Bottom of list';
+        // Task Rollover
+        rolloverNextDay: true,
+        rolloverRecurring: false,
+        rolloverTo: 'Bottom of list',
+    };
+
+    // Power Features (formerly scattered)
+    featuresSettings = {
+        // Feature Toggles
+        dueDatesEnabled: false,
+        templatesEnabled: false,
+        taskPriorityEnabled: false,
+        attachmentsEnabled: false,
+    };
 
     constructor() {
         makeAutoObservable(this);
     }
 
-    // Generic setter for boolean toggles
-    toggleSetting(key: keyof GeneralSettingsModel) {
-        if (typeof this[key] === 'boolean') {
-            (this[key] as boolean) = !this[key];
+    // Generic setter for boolean toggles in general settings
+    toggleSetting(key: keyof typeof this.generalSettings) {
+        if (typeof this.generalSettings[key] === 'boolean') {
+            (this.generalSettings[key] as boolean) = !this.generalSettings[key];
         }
     }
 
-    // Generic setter for values
-    setSetting(key: keyof GeneralSettingsModel, value: any) {
+    // Generic setter for values in general settings
+    setSetting(key: keyof typeof this.generalSettings, value: any) {
         // @ts-ignore
-        this[key] = value;
-        // Strategy handles auto-save
+        this.generalSettings[key] = value;
+    }
+
+    // Feature toggles
+    toggleFeature(key: keyof typeof this.featuresSettings) {
+        if (typeof this.featuresSettings[key] === 'boolean') {
+            (this.featuresSettings[key] as boolean) = !this.featuresSettings[key];
+        }
+    }
+
+    setFeature(key: keyof typeof this.featuresSettings, value: any) {
+        // @ts-ignore
+        this.featuresSettings[key] = value;
     }
 
     async loadSettings() {
         try {
-            // We would need to import 'api' here, but to avoid circular deps with store -> api -> store, we usually import api directly.
-            // However, store uses api, settings is part of store.
-            // Ideally, we pass simple data or use the singleton api.
-            // Let's assume we can import the singleton `api` instance from services/api
-            const settings = await (await import("../../services/api")).api.getGeneralSettings();
-            Object.assign(this, settings);
+            const settings = await api.getGeneralSettings();
+
+            if (settings) {
+                // Map flat or nested structure from backend to our nested structure
+                // Assuming backend might return nested 'generalSettings' and 'featuresSettings' 
+                // OR a flat list we need to migrate. For now, let's support both if possible or just assume flat -> nested transition.
+
+                // If backend returns the new nested structure:
+                if (settings.generalSettings) {
+                    Object.assign(this.generalSettings, settings.generalSettings);
+                } else {
+                    // Fallback/Migration: Map flat properties to generalSettings
+                    // (This part depends on if we migrate backend data or just frontend mapping)
+                    // Let's iterate keys and assign if they exist in our defaults
+                    Object.keys(this.generalSettings).forEach(k => {
+                        // @ts-ignore
+                        if (settings[k] !== undefined) this.generalSettings[k] = settings[k];
+                    });
+                }
+
+                if (settings.featuresSettings) {
+                    Object.assign(this.featuresSettings, settings.featuresSettings);
+                } else {
+                    // Fallback for features
+                    Object.keys(this.featuresSettings).forEach(k => {
+                        // @ts-ignore
+                        if (settings[k] !== undefined) this.featuresSettings[k] = settings[k];
+                    });
+                }
+            }
         } catch (error) {
             console.error("Failed to load general settings", error);
         }
     }
 
     async saveSettings() {
+        // Handled by SyncStrategy mostly, but if manual save needed:
         try {
-            const { api } = await import("../../services/api");
-            const snapshot = { ...this } as any;
-            // distinct observable/action properties if necessary
-            await api.updateGeneralSettings(snapshot);
+            await api.updateGeneralSettings({
+                generalSettings: this.generalSettings,
+                featuresSettings: this.featuresSettings
+            });
         } catch (error) {
             console.error("Failed to save general settings", error);
         }

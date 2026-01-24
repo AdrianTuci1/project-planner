@@ -184,7 +184,7 @@ export class UIStore {
     }
 
     get daysToShow() {
-        return this.settings.general.calendarViewDays;
+        return this.settings.general.generalSettings.calendarViewDays;
     }
 
     set daysToShow(days: number) {

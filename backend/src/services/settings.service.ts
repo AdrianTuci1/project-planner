@@ -7,39 +7,42 @@ export class SettingsService {
     private tableName: string;
     // START: Default settings to return if none exist
     private defaultSettings: GeneralSettings = {
-        moveTasksBottom: false,
-        markCompleteSubtasks: false,
-        autoSetActualTime: false,
-        deepLinkDetection: false,
-        startWeekOn: 'monday',
-        showWeekends: true,
-        workdayThreshold: false,
-        workloadThreshold: '0',
-        showDeclinedEvents: false,
-        startDayAt: '09:00',
-        calendarIncrements: '15',
-        timeFormat: '24h',
-        darkMode: 'system',
-        autoStartNextTask: false,
-        sidebarLayout: 'default',
-        addNewTasksTo: 'bottom',
-        detectLabel: false,
-        defaultEstimatedTime: '30',
-        rolloverNextDay: false,
-        rolloverRecurring: false,
-        rolloverTo: 'today',
-
-        // Power Features Defaults
-        dueDatesEnabled: false,
-        templatesEnabled: false,
-        taskPriorityEnabled: false,
-        attachmentsEnabled: false,
-
+        generalSettings: {
+            moveTasksBottom: false,
+            markCompleteSubtasks: false,
+            autoSetActualTime: false,
+            deepLinkDetection: false,
+            startWeekOn: 'monday',
+            showWeekends: true,
+            workdayThreshold: false,
+            workloadThreshold: '0',
+            showDeclinedEvents: false,
+            startDayAt: '09:00',
+            calendarIncrements: '15',
+            calendarViewDays: 7,
+            timeFormat: '24h',
+            darkMode: 'system',
+            autoStartNextTask: false,
+            sidebarLayout: 'default',
+            addNewTasksTo: 'bottom',
+            detectLabel: false,
+            defaultEstimatedTime: '30',
+            rolloverNextDay: false,
+            rolloverRecurring: false,
+            rolloverTo: 'today',
+        },
+        featuresSettings: {
+            dueDatesEnabled: false,
+            templatesEnabled: false,
+            taskPriorityEnabled: false,
+            attachmentsEnabled: false,
+        },
         // Due Dates Defaults
         thresholdDays: 7,
 
         // Account Defaults
-        displayName: ''
+        displayName: '',
+        avatarUrl: ''
     };
     // END: Default settings
 
@@ -60,20 +63,27 @@ export class SettingsService {
             return result.Item as GeneralSettings;
         }
 
-        // If no settings found, return defaults (and maybe save them?)
+        // If no settings found, return defaults
         return this.defaultSettings;
     }
 
     public async updateGeneralSettings(settings: Partial<GeneralSettings>, userId: string = 'default-user'): Promise<void> {
-        // Fetch current to merge, or just simple put if we trust partial updates are handled by frontend sending full object?
-        // The interface says "Partial", so we should ideally merge. 
-        // DynamoDB UpdateItem can be complex for many fields.
-        // Simplified approach: Get existing -> Merge -> Put.
-        // OR: Since the requirement is "modular", let's do a smart Update or simple Put if frontend sends all.
-        // Let's assume we do a merge.
-
         const current = await this.getGeneralSettings(userId);
-        const updated = { ...current, ...settings, userId }; // Ensure PK is there
+
+        // Deep merge for nested objects to avoid overwriting with partials
+        const updated: GeneralSettings = {
+            ...current,
+            ...settings, // Top level props
+            generalSettings: {
+                ...(current.generalSettings || this.defaultSettings.generalSettings),
+                ...(settings.generalSettings || {})
+            } as any,
+            featuresSettings: {
+                ...(current.featuresSettings || this.defaultSettings.featuresSettings),
+                ...(settings.featuresSettings || {})
+            } as any,
+            userId // Ensure PK is there
+        };
 
         const command = new PutCommand({
             TableName: this.tableName,

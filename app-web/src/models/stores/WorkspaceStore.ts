@@ -60,7 +60,8 @@ export class WorkspaceStore {
                     name: w.name,
                     type: w.type,
                     ownerId: w.ownerId,
-                    members: w.members
+                    members: w.members,
+                    avatarUrl: w.avatarUrl
                 })),
                 (simplified) => {
                     localStorage.setItem('persisted_workspaces', JSON.stringify(simplified));
@@ -144,7 +145,7 @@ export class WorkspaceStore {
         }
     }
 
-    async updateWorkspace(id: string, data: { name?: string }) {
+    async updateWorkspace(id: string, data: { name?: string, avatarUrl?: string }) {
         this.isLoading = true;
         try {
             await api.updateWorkspace(id, data);
@@ -152,12 +153,41 @@ export class WorkspaceStore {
                 const workspace = this.workspaces.find(w => w.id === id);
                 if (workspace) {
                     if (data.name) workspace.name = data.name;
+                    if (data.avatarUrl) workspace.avatarUrl = data.avatarUrl;
                     // Trigger reaction/sync if needed, though monitoring should catch it
                 }
             });
         } catch (err: any) {
             runInAction(() => {
                 this.error = "Failed to update workspace: " + err.message;
+            });
+            throw err;
+        } finally {
+            runInAction(() => {
+                this.isLoading = false;
+            });
+        }
+    }
+
+    async deleteTeamWorkspace(id: string) {
+        this.isLoading = true;
+        try {
+            await api.deleteWorkspace(id);
+            // Re-initialize to fetch updated list (removes deleted ws)
+            await this.initializeData();
+
+            // Switch to personal workspace if active was deleted or just safety fallback
+            runInAction(() => {
+                const personal = this.workspaces.find(w => w.type === 'personal');
+                if (personal) {
+                    this.activeWorkspaceId = personal.id;
+                    this.rootStore.settings.setTeamView('summary'); // Reset view
+                }
+            });
+
+        } catch (err: any) {
+            runInAction(() => {
+                this.error = "Failed to delete team workspace: " + err.message;
             });
             throw err;
         } finally {
@@ -188,12 +218,14 @@ export class WorkspaceStore {
                         existing.name = fw.name;
                         existing.members = fw.members;
                         existing.ownerId = fw.ownerId;
+                        existing.avatarUrl = fw.avatarUrl;
                         return existing;
                     }
 
                     const w = new Workspace(fw.name, fw.type, id);
                     w.ownerId = fw.ownerId;
                     w.members = fw.members;
+                    w.avatarUrl = fw.avatarUrl;
                     return w;
                 });
 

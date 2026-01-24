@@ -182,7 +182,7 @@ export const TaskCardBase = observer(({
                     </div>
                 </div>
 
-                {(ui.isHovered || isAnyContextOpen || task.labelId || (task.scheduledDate && task.scheduledTime) || (store.settings.powerFeatures.dueDatesEnabled && task.dueDate) || (store.settings.powerFeatures.attachmentsEnabled && task.attachments && task.attachments.length > 0) || (store.settings.powerFeatures.taskPriorityEnabled && task.priority !== 'none') || (task.subtasks.length > 0) || (task.recurrence && task.recurrence !== 'none')) && (
+                {(ui.isHovered || isAnyContextOpen || task.labelId || (task.scheduledDate && task.scheduledTime) || (store.settings.general.featuresSettings.dueDatesEnabled && task.dueDate) || (store.settings.general.featuresSettings.attachmentsEnabled && task.attachments && task.attachments.length > 0) || (store.settings.general.featuresSettings.taskPriorityEnabled && task.priority !== 'none') || (task.subtasks.length > 0) || (task.recurrence && task.recurrence !== 'none')) && (
                     <div className="tc-footer">
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', width: '100%' }}>
 
@@ -214,7 +214,7 @@ export const TaskCardBase = observer(({
                             </div>
 
                             {/* Priority */}
-                            {store.settings.powerFeatures.taskPriorityEnabled && (
+                            {store.settings.general.featuresSettings.taskPriorityEnabled && (
                                 <div
                                     className={`tc-action-icon ${task.priority === 'none' ? 'footer-reveal-item' : ''}`}
                                     style={{ cursor: 'pointer', display: 'flex' }}
@@ -290,7 +290,7 @@ export const TaskCardBase = observer(({
                             </div>
 
                             {/* Attachments */}
-                            {store.settings.powerFeatures.attachmentsEnabled && task.attachments && task.attachments.length > 0 && (
+                            {store.settings.general.featuresSettings.attachmentsEnabled && task.attachments && task.attachments.length > 0 && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: 'var(--text-muted)', fontSize: '11px' }}>
                                     <Paperclip size={12} />
                                     <span>{task.attachments.length}</span>
@@ -298,7 +298,7 @@ export const TaskCardBase = observer(({
                             )}
 
                             {/* Due Date */}
-                            {store.settings.powerFeatures.dueDatesEnabled && task.dueDate && task.status !== 'done' && (
+                            {store.settings.general.featuresSettings.dueDatesEnabled && task.dueDate && task.status !== 'done' && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '11px' }}>
                                     <Target size={12} />
                                     <span>

@@ -1,4 +1,4 @@
-import { reaction, IReactionDisposer } from "mobx";
+import { reaction, IReactionDisposer, toJS } from "mobx";
 import { api } from "../../services/api";
 import { SettingsModel } from "../settings/SettingsModel";
 
@@ -40,44 +40,22 @@ export class SettingsSyncStrategy {
         // Monitor General Settings
         disposers.push(reaction(
             () => ({
-                moveTasksBottom: settings.general.moveTasksBottom,
-                darkMode: settings.general.darkMode,
-                sidebarLayout: settings.general.sidebarLayout,
-                startWeekOn: settings.general.startWeekOn,
-                showWeekends: settings.general.showWeekends,
-                timeFormat: settings.general.timeFormat,
-                markCompleteSubtasks: settings.general.markCompleteSubtasks,
-                autoSetActualTime: settings.general.autoSetActualTime,
-                deepLinkDetection: settings.general.deepLinkDetection,
-                workdayThreshold: settings.general.workdayThreshold,
-                workloadThreshold: settings.general.workloadThreshold,
-                showDeclinedEvents: settings.general.showDeclinedEvents,
-                startDayAt: settings.general.startDayAt,
-                calendarIncrements: settings.general.calendarIncrements,
-                autoStartNextTask: settings.general.autoStartNextTask,
-                addNewTasksTo: settings.general.addNewTasksTo,
-                detectLabel: settings.general.detectLabel,
-                defaultEstimatedTime: settings.general.defaultEstimatedTime,
-                rolloverNextDay: settings.general.rolloverNextDay,
-                rolloverRecurring: settings.general.rolloverRecurring,
-                rolloverTo: settings.general.rolloverTo,
-                calendarViewDays: settings.general.calendarViewDays
+                ...settings.general.generalSettings, // Monitor all properties in generalSettings
+                calendarViewDays: settings.general.generalSettings.calendarViewDays
             }),
             (data) => {
-                this.scheduleUpdate('general', data);
+                this.scheduleUpdate('general', { generalSettings: toJS(settings.general.generalSettings) });
             }
         ));
 
         // Monitor Power Features
+        // Monitor Power Features
         disposers.push(reaction(
             () => ({
-                dueDatesEnabled: settings.powerFeatures.dueDatesEnabled,
-                templatesEnabled: settings.powerFeatures.templatesEnabled,
-                taskPriorityEnabled: settings.powerFeatures.taskPriorityEnabled,
-                attachmentsEnabled: settings.powerFeatures.attachmentsEnabled
+                ...settings.general.featuresSettings
             }),
             (data) => {
-                this.scheduleUpdate('power', data);
+                this.scheduleUpdate('power', { featuresSettings: toJS(settings.general.featuresSettings) });
             }
         ));
 
@@ -94,10 +72,13 @@ export class SettingsSyncStrategy {
         // Monitor Account Settings (Display Name)
         disposers.push(reaction(
             () => ({
-                displayName: settings.account.displayName
+                displayName: settings.account.displayName,
+                avatarUrl: settings.account.avatarUrl
             }),
             (data) => {
-                this.scheduleUpdate('account', data);
+                console.log("[SettingsSyncStrategy] Account changed:", data);
+                // Use shorter debounce for vital profile updates
+                this.scheduleUpdate('account', data, 200);
             }
         ));
 

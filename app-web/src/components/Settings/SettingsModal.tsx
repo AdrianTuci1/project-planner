@@ -42,7 +42,11 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                 {/* Sidebar */}
                 <div className="settings-sidebar">
                     <div className="settings-user-info">
-                        <div className="settings-avatar-sm">T</div>
+                        {settings.account.avatarUrl ? (
+                            <img src={settings.account.avatarUrl} alt="User" className="settings-avatar-sm" style={{ objectFit: 'cover' }} />
+                        ) : (
+                            <div className="settings-avatar-sm">{settings.account.displayName.charAt(0).toUpperCase()}</div>
+                        )}
                         <div style={{ overflow: 'hidden' }}>
                             <div style={{ fontWeight: 600, fontSize: '13px' }}>{settings.account.displayName}</div>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden' }}>{settings.account.email}</div>
@@ -85,7 +89,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                         <Zap size={16} /> Toggle power features
                     </div>
                     {/* Dynamic Power Features Menu */}
-                    {settings.powerFeatures.dueDatesEnabled && (
+                    {settings.general.featuresSettings.dueDatesEnabled && (
                         <div className={`settings-nav-item ${settings.activeTab === 'due_dates' ? 'active' : ''}`} onClick={() => settings.setActiveTab('due_dates')}>
                             <div style={{ width: 16 }} /> {/* Indent */}
                             <Calendar size={16} />Due dates

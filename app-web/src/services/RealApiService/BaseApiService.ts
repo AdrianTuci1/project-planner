@@ -28,7 +28,7 @@ export abstract class BaseApiService {
         try {
             // 2. Check Online Status
             if (!navigator.onLine) {
-                console.log(`[BaseApi] ${storeKey} - Offline.`);
+                console.log(`[BaseApi] ${storeKey} - Offline. Returning ${meta?.value ? 'cached' : 'fallback'}`);
                 if (meta?.value) return meta.value as T;
                 return fallbackValue;
             }

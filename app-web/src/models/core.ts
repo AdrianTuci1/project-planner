@@ -291,6 +291,7 @@ export interface IWorkspace {
     dumpAreaTasks: Task[];
     members?: string[];
     ownerId?: string;
+    avatarUrl?: string;
 }
 
 export class Workspace implements IWorkspace {
@@ -301,6 +302,7 @@ export class Workspace implements IWorkspace {
     dumpAreaTasks: Task[] = [];
     members: string[] = [];
     ownerId: string = "";
+    avatarUrl?: string;
 
     constructor(name: string, type: WorkspaceType, id?: string) {
         this.id = id || type;

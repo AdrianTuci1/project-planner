@@ -24,7 +24,6 @@ export class NotificationStore {
     constructor(rootStore: ProjectStore) {
         this.rootStore = rootStore;
         makeAutoObservable(this);
-        this.fetchNotifications();
     }
 
     async fetchNotifications() {
@@ -89,8 +88,8 @@ export class NotificationStore {
 
             if (accept) {
                 // Refresh data to show new workspace
-                if (this.rootStore.taskStore) {
-                    this.rootStore.taskStore.initializeData();
+                if (this.rootStore.workspaceStore) {
+                    this.rootStore.workspaceStore.initializeData();
                 }
             }
         } catch (err) {

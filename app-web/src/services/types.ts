@@ -6,43 +6,46 @@ export interface InitialDataResponse {
 }
 
 export interface GeneralSettings {
-    moveTasksBottom: boolean;
-    markCompleteSubtasks: boolean;
-    autoSetActualTime: boolean;
-    deepLinkDetection: boolean;
-    startWeekOn: string;
-    showWeekends: boolean;
-    workdayThreshold: boolean;
-    workloadThreshold: string;
-    showDeclinedEvents: boolean;
-    startDayAt: string;
-    calendarIncrements: string;
-    timeFormat: string;
-    darkMode: string;
-    autoStartNextTask: boolean;
-    sidebarLayout: string;
-    addNewTasksTo: string;
-    detectLabel: boolean;
-    defaultEstimatedTime: string;
-    rolloverNextDay: boolean;
-    rolloverRecurring: boolean;
-    rolloverTo: string;
+    generalSettings: {
+        moveTasksBottom: boolean;
+        markCompleteSubtasks: boolean;
+        autoSetActualTime: boolean;
+        deepLinkDetection: boolean;
+        startWeekOn: string;
+        showWeekends: boolean;
+        workdayThreshold: boolean;
+        workloadThreshold: string;
+        showDeclinedEvents: boolean;
+        startDayAt: string;
+        calendarIncrements: string;
+        calendarViewDays: number;
+        timeFormat: string;
+        darkMode: string;
+        autoStartNextTask: boolean;
+        sidebarLayout: string;
+        addNewTasksTo: string;
+        detectLabel: boolean;
+        defaultEstimatedTime: string;
+        rolloverNextDay: boolean;
+        rolloverRecurring: boolean;
+        rolloverTo: string;
+    };
 
-    // Team
+    featuresSettings: {
+        dueDatesEnabled: boolean;
+        templatesEnabled: boolean;
+        taskPriorityEnabled: boolean;
+        attachmentsEnabled: boolean;
+    };
+
+    // Account (Top level or separate?) - Kept top level as per existing pattern or Model
+    displayName?: string;
+    avatarUrl?: string;
     teamId?: string;
     teamMembers?: string[];
 
-    // Power Features
-    dueDatesEnabled?: boolean;
-    templatesEnabled?: boolean;
-    taskPriorityEnabled?: boolean;
-    attachmentsEnabled?: boolean;
-
-    // Due Dates
+    // Due Dates specific
     thresholdDays?: number;
-
-    // Account
-    displayName?: string;
 }
 
 export interface IApiService {
@@ -69,6 +72,7 @@ export interface IApiService {
     createWorkspace(name: string, type: string, ownerId: string): Promise<any>;
     getWorkspaces(): Promise<any[]>;
     updateWorkspace(id: string, data: any): Promise<any>;
+    deleteWorkspace(id: string): Promise<void>;
 
     // Labels
     getLabels(workspaceId?: string): Promise<any[]>;
@@ -88,6 +92,7 @@ export interface IApiService {
 
     // Storage
     getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }>;
+    uploadFile(file: File): Promise<string>;
     deleteFile(key: string): Promise<void>;
     getFileUrl(key: string): string; // Synchronous URL builder
     // Subscription

@@ -44,11 +44,13 @@ export class WorkspaceSyncStrategy {
 
         disposers.push(reaction(
             () => ({
-                name: workspace.name
+                name: workspace.name,
+                avatarUrl: workspace.avatarUrl
                 // type usually static
             }),
             (data) => {
-                this.scheduleUpdate(workspace.id, workspace);
+                // Use shorter debounce for title/avatar updates
+                this.scheduleUpdate(workspace.id, workspace, 200);
             }
         ));
 
@@ -99,7 +101,10 @@ export class WorkspaceSyncStrategy {
             debounced = debounce(async () => {
                 console.log(`[WorkspaceSyncStrategy] Syncing workspace ${workspaceId}...`);
                 try {
-                    await api.updateWorkspace(workspaceId, { name: workspace.name });
+                    await api.updateWorkspace(workspaceId, {
+                        name: workspace.name,
+                        avatarUrl: workspace.avatarUrl
+                    });
                     console.log(`[WorkspaceSyncStrategy] Workspace ${workspaceId} synced.`);
                 } catch (err) {
                     console.error(`[WorkspaceSyncStrategy] Failed to sync workspace ${workspaceId}`, err);

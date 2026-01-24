@@ -404,7 +404,7 @@ export class AuthStore {
     }
 
     loginWithGoogle() {
-        const url = `${COGNITO_DOMAIN}/oauth2/authorize?identity_provider=Google&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&client_id=${CLIENT_ID}&scope=email+openid+phone+profile+aws.cognito.signin.user.admin`;
+        const url = `${COGNITO_DOMAIN}/oauth2/authorize?identity_provider=Google&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&client_id=${CLIENT_ID}&scope=email+openid+profile`;
         window.location.href = url;
     }
 }

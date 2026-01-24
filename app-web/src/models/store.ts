@@ -65,6 +65,10 @@ export class ProjectStore {
         this.workspaceStore.initializeData().then(() => {
             this.checkAndGenerateRecurringTasks();
         });
+        // Initialize settings (now that we are authenticated)
+        this.settings.initialize();
+        // Initialize notifications
+        this.notificationStore.fetchNotifications();
     }
 
     // LabelStore Delegations

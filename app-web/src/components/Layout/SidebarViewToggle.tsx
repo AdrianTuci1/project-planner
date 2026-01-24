@@ -7,7 +7,7 @@ import './Sidebar.css';
 export const SidebarViewToggle = observer(() => {
     const { settings } = store;
 
-    const hasAdditionalViews = settings.powerFeatures.dueDatesEnabled || settings.powerFeatures.templatesEnabled;
+    const hasAdditionalViews = settings.general.featuresSettings.dueDatesEnabled || settings.general.featuresSettings.templatesEnabled;
 
     if (!hasAdditionalViews) {
         return null;
@@ -29,7 +29,7 @@ export const SidebarViewToggle = observer(() => {
                     <circle cx="3" cy="18" r="1"></circle>
                 </svg>
             </button>
-            {settings.powerFeatures.dueDatesEnabled && (
+            {settings.general.featuresSettings.dueDatesEnabled && (
                 <button
                     className={`nav-toggle-btn ${sidebarUI.sidebarView === 'due' ? 'active' : ''}`}
                     onClick={() => sidebarUI.setSidebarView('due')}
@@ -46,7 +46,7 @@ export const SidebarViewToggle = observer(() => {
                     </svg>
                 </button>
             )}
-            {settings.powerFeatures.templatesEnabled && (
+            {settings.general.featuresSettings.templatesEnabled && (
                 <button
                     className={`nav-toggle-btn ${sidebarUI.sidebarView === 'templates' ? 'active' : ''}`}
                     onClick={() => sidebarUI.setSidebarView('templates')}

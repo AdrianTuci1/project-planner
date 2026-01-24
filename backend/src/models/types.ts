@@ -5,48 +5,62 @@ export interface InitialDataResponse {
 }
 
 export interface GeneralSettings {
-    // Existing General Settings
-    moveTasksBottom: boolean;
-    markCompleteSubtasks: boolean;
-    autoSetActualTime: boolean;
-    deepLinkDetection: boolean;
-    startWeekOn: string;
-    showWeekends: boolean;
-    workdayThreshold: boolean;
-    workloadThreshold: string;
-    showDeclinedEvents: boolean;
-    startDayAt: string;
-    calendarIncrements: string;
-    timeFormat: string;
-    darkMode: string;
-    autoStartNextTask: boolean;
-    sidebarLayout: string;
-    addNewTasksTo: string;
-    detectLabel: boolean;
-    defaultEstimatedTime: string;
-    rolloverNextDay: boolean;
-    rolloverRecurring: boolean;
-    rolloverTo: string;
+    // Nested Settings Structure
+    generalSettings?: {
+        moveTasksBottom: boolean;
+        markCompleteSubtasks: boolean;
+        autoSetActualTime: boolean;
+        deepLinkDetection: boolean;
+        startWeekOn: string;
+        showWeekends: boolean;
+        workdayThreshold: boolean;
+        workloadThreshold: string;
+        showDeclinedEvents: boolean;
+        startDayAt: string;
+        calendarIncrements: string;
+        calendarViewDays: number;
+        timeFormat: string;
+        darkMode: string;
+        autoStartNextTask: boolean;
+        sidebarLayout: string;
+        addNewTasksTo: string;
+        detectLabel: boolean;
+        defaultEstimatedTime: string;
+        rolloverNextDay: boolean;
+        rolloverRecurring: boolean;
+        rolloverTo: string;
+    };
 
-    // Team
+    featuresSettings?: {
+        dueDatesEnabled: boolean;
+        templatesEnabled: boolean;
+        taskPriorityEnabled: boolean;
+        attachmentsEnabled: boolean;
+    };
+
+    // Account / Team (Top level)
     teamId?: string;
     teamMembers?: string[];
-
-    // Power Features
-    dueDatesEnabled?: boolean;
-    templatesEnabled?: boolean;
-    taskPriorityEnabled?: boolean;
-    attachmentsEnabled?: boolean;
+    displayName?: string;
+    avatarUrl?: string;
 
     // Due Dates
     thresholdDays?: number;
 
-    // Account
-    displayName?: string;
+    // Legacy/Migration support (optional)
+    [key: string]: any;
 }
 
-
-
+export interface User {
+    id: string;
+    email: string;
+    stripeCustomerId?: string;
+    plan: 'free' | 'pro';
+    subscriptionStatus?: 'active' | 'canceled' | 'expired' | 'trialing';
+    subscriptionExpiry?: number;
+    avatarUrl?: string; // Profile picture
+    createdAt: number;
+}
 
 
 export interface Label {
@@ -83,6 +97,7 @@ export interface Workspace {
     type: 'personal' | 'team';
     ownerId: string;
     members: string[]; // User IDs
+    avatarUrl?: string; // Team Logo
     createdAt: number;
 }
 

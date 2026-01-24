@@ -76,3 +76,29 @@
     background: rgba(239, 68, 68, 0.05);
     border-radius: 6px;
 }
+
+/* Logo Upload Overlay */
+.team-logo-upload-trigger {
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.logo-upload-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 64px;
+    height: 64px;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+.team-logo-upload-trigger:hover .logo-upload-overlay {
+    opacity: 1;
+}

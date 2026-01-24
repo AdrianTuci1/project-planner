@@ -97,6 +97,12 @@ export class WorkspacesService {
             expressionAttributeValues[":name"] = updates.name;
         }
 
+        if (updates.avatarUrl) {
+            updateExpressionParts.push("#avatarUrl = :avatarUrl");
+            expressionAttributeNames["#avatarUrl"] = "avatarUrl";
+            expressionAttributeValues[":avatarUrl"] = updates.avatarUrl;
+        }
+
         if (updateExpressionParts.length === 0) return workspace;
 
         const command = new UpdateCommand({

@@ -51,6 +51,7 @@ export class RealApiService implements IApiService {
     createWorkspace(name: string, type: string, ownerId: string): Promise<any> { return this.workspaceModule.createWorkspace(name, type, ownerId); }
     getWorkspaces(): Promise<any[]> { return this.workspaceModule.getWorkspaces(); }
     updateWorkspace(id: string, data: any): Promise<any> { return this.workspaceModule.updateWorkspace(id, data); }
+    deleteWorkspace(id: string): Promise<void> { return this.workspaceModule.deleteWorkspace(id); }
 
     // Labels delegates
     getLabels(workspaceId?: string): Promise<any[]> { return this.labelModule.getLabels(workspaceId); }
@@ -79,6 +80,7 @@ export class RealApiService implements IApiService {
 
     // Storage delegates
     getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }> { return this.storageModule.getUploadUrl(contentType, fileName); }
+    uploadFile(file: File): Promise<string> { return this.storageModule.uploadFile(file); }
 
     deleteFile(key: string): Promise<void> { return this.storageModule.deleteFile(key); }
     getFileUrl(key: string): string { return this.storageModule.getFileUrl(key); }

@@ -70,16 +70,16 @@ export const PowerFeaturesSettings = observer(() => {
             description: "Attach files (PDF, images, etc...) to your tasks.",
             icon: <Paperclip size={18} />,
             gradientClass: "gradient-1",
-            isEnabled: settings.powerFeatures.attachmentsEnabled,
-            onToggle: () => settings.powerFeatures.toggleAttachments()
+            isEnabled: settings.general.featuresSettings.attachmentsEnabled,
+            onToggle: () => settings.general.toggleFeature('attachmentsEnabled')
         },
         {
             title: "Task Templates",
             description: "Create reusable task templates for common workflows and quickly turn them into tasks.",
             icon: <Copy size={18} />,
             gradientClass: "gradient-2",
-            isEnabled: settings.powerFeatures.templatesEnabled,
-            onToggle: () => settings.powerFeatures.toggleTemplates()
+            isEnabled: settings.general.featuresSettings.templatesEnabled,
+            onToggle: () => settings.general.toggleFeature('templatesEnabled')
         },
         {
             title: "Analytics",
@@ -100,16 +100,16 @@ export const PowerFeaturesSettings = observer(() => {
             description: "Add due dates to your tasks (and even reminder notifications).",
             icon: <CalendarClock size={18} />,
             gradientClass: "gradient-5",
-            isEnabled: settings.powerFeatures.dueDatesEnabled,
-            onToggle: () => settings.powerFeatures.toggleDueDates()
+            isEnabled: settings.general.featuresSettings.dueDatesEnabled,
+            onToggle: () => settings.general.toggleFeature('dueDatesEnabled')
         },
         {
             title: "Task Priority",
             description: "Add priority flags directly on your task to easily see what's important.",
             icon: <Flag size={18} />,
             gradientClass: "gradient-6",
-            isEnabled: settings.powerFeatures.taskPriorityEnabled,
-            onToggle: () => settings.powerFeatures.toggleTaskPriority()
+            isEnabled: settings.general.featuresSettings.taskPriorityEnabled,
+            onToggle: () => settings.general.toggleFeature('taskPriorityEnabled')
         },
         {
             title: "Email forwarding",
