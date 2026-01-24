@@ -71,6 +71,9 @@ export class RealApiService implements IApiService {
     deleteCalendar(id: string): Promise<CalendarData> { return this.calendarModule.deleteCalendar(id); }
     getGoogleAuthUrl(): Promise<{ url: string }> { return this.calendarModule.getGoogleAuthUrl(); }
     exchangeGoogleCode(code: string): Promise<CalendarAccount> { return this.calendarModule.exchangeGoogleCode(code); }
+    getEvents(start: string, end: string): Promise<any[]> { return this.calendarModule.getEvents(start, end); }
+    updateEvent(accountId: string, calendarId: string, eventId: string, event: any): Promise<boolean> { return this.calendarModule.updateEvent(accountId, calendarId, eventId, event); }
+    deleteEvent(accountId: string, calendarId: string, eventId: string): Promise<boolean> { return this.calendarModule.deleteEvent(accountId, calendarId, eventId); }
 
     // Notification delegates
     inviteUser(email: string, workspaceId: string): Promise<void> { return this.notificationModule.inviteUser(email, workspaceId); }

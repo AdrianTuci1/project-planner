@@ -6,6 +6,7 @@ import { Task } from '../../models/core';
 import { store } from '../../models/store';
 import { CalendarCell } from './CalendarView/CalendarCell';
 import { ActiveCalendarsContext } from './ActiveCalendarsContext';
+import { CalendarEventCard } from './TaskCard/CalendarEventCard';
 import './Timebox.css';
 
 interface TimeboxProps {
@@ -21,16 +22,47 @@ export const Timebox = observer(({ hideHeader }: TimeboxProps) => {
 
     const isToday = isSameDay(store.timeboxDate, new Date());
 
-    // Get tasks for the timebox day
-    const tasks = store.allTasks.filter(t =>
-        t.scheduledDate && t.scheduledTime && isSameDay(t.scheduledDate, store.timeboxDate)
-    );
-
+    // Fetch Calendar Events Logic (Internal)
     React.useEffect(() => {
-        if (store.settings.calendar.calendars.length === 0) {
-            store.settings.calendar.fetchCalendars();
+        if (store.activeWorkspace?.type === 'personal') {
+            // Fetch for current day + buffer
+            const start = startOfDay(store.timeboxDate);
+            const end = addDays(start, 1);
+            store.calendarStore.fetchEvents(start, end);
+
+            if (store.settings.calendar.calendars.length === 0) {
+                store.settings.calendar.fetchCalendars();
+            }
         }
-    }, []);
+    }, [store.timeboxDate, store.activeWorkspace?.type]);
+
+    const calendarEvents = store.activeWorkspace?.type === 'personal' ? (store.calendarStore.events as any[]) : [];
+
+    // Get tasks for the timebox day
+    const allEvents = [...store.allTasks, ...calendarEvents] as Task[];
+
+    const tasks = allEvents.filter(t => {
+        const isCalendarEvent = t.id.startsWith('evt_') || (t as any).isCalendarEvent;
+        // Robust check: if allDay explicitly set (from backend), use it. Fallback to rawStart.dateTime check.
+        const isAllDay = (t as any).allDay !== undefined ? (t as any).allDay : (isCalendarEvent && !(t as any).rawStart?.dateTime);
+
+        if (isCalendarEvent && isAllDay) return false; // Exclude all day events from grid
+
+        return t.scheduledDate && t.scheduledTime && isSameDay(t.scheduledDate, store.timeboxDate);
+    });
+
+    const allDayEvents = allEvents.filter(t => {
+        const isCalendarEvent = t.id.startsWith('evt_') || (t as any).isCalendarEvent;
+        if (!isCalendarEvent) return false;
+
+        const isAllDay = (t as any).allDay !== undefined ? (t as any).allDay : !(t as any).rawStart?.dateTime;
+
+        if (isAllDay) {
+            const eDate = new Date((t as any).scheduledDate || (t as any).rawStart?.date);
+            return isSameDay(eDate, store.timeboxDate);
+        }
+        return false;
+    });
 
     // Resize Logic (Copied from CalendarView to ensure parity)
     const handleResizeStart = (e: React.MouseEvent | React.TouchEvent, task: Task) => {
@@ -41,7 +73,7 @@ export const Timebox = observer(({ hideHeader }: TimeboxProps) => {
         const startDuration = task.duration || 15;
 
         const handle = e.target as HTMLElement;
-        const card = handle.closest('.calendar-event') as HTMLElement;
+        const card = handle.closest('.task-card') as HTMLElement;
         const cell = card?.closest('.hour-cell') as HTMLElement; // CalendarCell renders .hour-cell
 
         if (!cell) return;
@@ -59,7 +91,17 @@ export const Timebox = observer(({ hideHeader }: TimeboxProps) => {
             newDuration = Math.max(15, Math.round(newDuration / 15) * 15);
 
             if (newDuration !== task.duration) {
-                task.duration = newDuration;
+                // If it is a calendar event, we must sync via CalendarStore
+                if (task.id.startsWith('evt_')) {
+                    const event = store.calendarStore.getEventById(task.id);
+                    if (event) {
+                        // Calculate new end time
+                        const newEnd = new Date(event.start.getTime() + newDuration * 60000);
+                        store.calendarStore.updateEvent(event, { end: newEnd });
+                    }
+                } else {
+                    task.duration = newDuration;
+                }
             }
         };
 
@@ -114,12 +156,39 @@ export const Timebox = observer(({ hideHeader }: TimeboxProps) => {
                     {format(store.timeboxDate, 'EEE')}
                 </span>
                 <span className="today-badge">{format(store.timeboxDate, 'd')}</span>
-
             </div>
+
 
             <div className="timebox-grid">
                 <table className="timebox-table">
                     <tbody className="timebox-body">
+                        {/* All Day Row inside Table */}
+                        {allDayEvents.length > 0 && (
+                            <tr className="all-day-row">
+                                <td className="time-label-cell all-day-label-cell">
+                                    <span className="all-day-label-text">All Day</span>
+                                </td>
+                                <td className="timebox-content-cell all-day-content-cell">
+                                    <div className="all-day-events-container">
+                                        {allDayEvents.map(ev => (
+                                            <CalendarEventCard
+                                                key={ev.id}
+                                                event={ev}
+                                                style={{
+                                                    height: '24px',
+                                                    width: '100%',
+                                                    minWidth: '100px',
+                                                    flex: '1 0 auto',
+                                                    fontSize: '11px'
+                                                }}
+                                                className="all-day-card"
+                                            />
+                                        ))}
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+
                         {hours.map(hour => {
                             return (
                                 <tr key={hour} className="hour-row">

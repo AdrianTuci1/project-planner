@@ -66,6 +66,23 @@ export class CalendarController {
         }
     }
 
+    public getEvents = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { start, end } = req.query;
+            // @ts-ignore
+            const userId = req.user?.id || 'default-user';
+
+            if (!start || !end) {
+                throw new Error("Missing start/end date params");
+            }
+
+            const events = await this.calendarService.fetchEvents(start as string, end as string, userId);
+            res.status(200).json(events);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     public googleCallback = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Support both GET (query) and POST (body) for transition, or switch strictly to POST
@@ -86,6 +103,48 @@ export class CalendarController {
 
             // Respond with JSON
             res.status(200).json(account);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public updateEvent = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { accountId, calendarId, eventId } = req.params;
+            const eventUpdates = req.body;
+            const start = eventUpdates.start?.dateTime;
+            const end = eventUpdates.end?.dateTime;
+
+            // @ts-ignore
+            const userId = req.user?.id;
+
+            if (start || end) {
+                const success = await this.calendarService.updateEventTime(accountId, calendarId, eventId, start, end, userId);
+                if (success) {
+                    res.status(200).json({ success: true });
+                } else {
+                    res.status(500).json({ error: "Failed to update event" });
+                }
+            } else {
+                res.status(400).json({ error: "Missing start or end time" });
+            }
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public deleteEvent = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { accountId, calendarId, eventId } = req.params;
+            // @ts-ignore
+            const userId = req.user?.id;
+
+            const success = await this.calendarService.deleteEvent(accountId, calendarId, eventId, userId);
+            if (success) {
+                res.status(200).json({ success: true });
+            } else {
+                res.status(500).json({ error: "Failed to delete event" });
+            }
         } catch (error) {
             next(error);
         }

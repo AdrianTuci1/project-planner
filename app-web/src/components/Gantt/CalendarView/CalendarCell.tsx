@@ -6,7 +6,7 @@ import { store } from '../../../models/store';
 import { calculateOverlappingLayout } from '../layoutUtils';
 import { ResizableTaskCard, ResizableTaskCardView } from '../TaskCard/ResizableTaskCard';
 import { CalendarSlot } from './CalendarSlot';
-import { CalendarEventPopover } from './CalendarEventPopover';
+
 
 export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResizeStart, onSlotClick, className, slotPrefix }: {
     date: Date,
@@ -21,20 +21,16 @@ export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResize
     const today = startOfDay(new Date());
     const isToday = isSameDay(date, today);
 
-    const [popover, setPopover] = useState<{ task: Task, position: { x: number, y: number } } | null>(null);
-
     const handleTaskClick = (task: Task, e?: React.MouseEvent) => {
         // Check if calendar event
         const isCalendarEvent = task.id.startsWith('evt_') || (task as any).isCalendarEvent;
-        if (isCalendarEvent && e) {
-            e.stopPropagation();
-            setPopover({
-                task,
-                position: { x: e.clientX, y: e.clientY }
-            });
-        } else {
-            onTaskClick(task, e);
+        if (isCalendarEvent) {
+            // Do nothing on left click for calendar events (user requested only right click context menu)
+            if (e) e.stopPropagation();
+            return;
         }
+
+        onTaskClick(task, e);
     };
 
     const getTasksForDayHour = (date: Date, hour: number) => {
@@ -172,10 +168,13 @@ export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResize
                 // Get layout data
                 const layout = layoutData.get(task.id) || { left: 3, width: 94, zIndex: 1 };
 
+                const isCalendarEvent = task.id.startsWith('evt_') || (task as any).isCalendarEvent;
+
                 return (
                     <ResizableTaskCard
                         key={task.id}
                         task={task}
+                        isCalendarEvent={isCalendarEvent}
                         onTaskClick={handleTaskClick}
                         onResizeStart={(e) => onResizeStart(e, task)}
                         containerData={{
@@ -198,13 +197,6 @@ export const CalendarCell = observer(({ date, hour, tasks, onTaskClick, onResize
                     />
                 );
             })}
-            {popover && (
-                <CalendarEventPopover
-                    task={popover.task}
-                    position={popover.position}
-                    onClose={() => setPopover(null)}
-                />
-            )}
         </td>
     );
 });

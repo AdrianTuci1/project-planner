@@ -148,6 +148,23 @@ export class CalendarSyncStrategy {
             console.error("Failed to sync calendar settings", error);
         }
     }
+    async updateEvent(accountId: string, calendarId: string, eventId: string, data: any) {
+        // We could add debouncing here if needed for rapid resizing
+        try {
+            await api.updateEvent(accountId, calendarId, eventId, data);
+        } catch (error) {
+            console.error("Failed to sync calendar event update", error);
+            // Ideally revert optimistic update in store
+        }
+    }
+
+    async deleteEvent(accountId: string, calendarId: string, eventId: string) {
+        try {
+            await api.deleteEvent(accountId, calendarId, eventId);
+        } catch (error) {
+            console.error("Failed to sync calendar event deletion", error);
+        }
+    }
 }
 
 export const calendarSyncStrategy = new CalendarSyncStrategy();

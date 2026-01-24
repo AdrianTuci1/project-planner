@@ -85,4 +85,50 @@ export class CalendarModule extends BaseApiService {
     async exchangeGoogleCode(code: string): Promise<CalendarAccount> {
         return this.post<CalendarAccount>('/calendars/auth/google/callback', { code });
     }
+
+    async getEvents(start: string, end: string): Promise<any[]> {
+        if (navigator.onLine) {
+            const res = await fetch(`${this.baseUrl}/calendars/events?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`, {
+                method: 'GET',
+                headers: { ...this.getAuthHeader() }
+            });
+            if (!res.ok) throw new Error(`Fetch events failed: ${res.statusText}`);
+            return await res.json();
+        } else {
+            console.warn("Offline: Cannot fetch remote events.");
+            return [];
+        }
+    }
+
+    async updateEvent(accountId: string, calendarId: string, eventId: string, event: any): Promise<boolean> {
+        if (navigator.onLine) {
+            const res = await fetch(`${this.baseUrl}/calendars/${accountId}/calendars/${encodeURIComponent(calendarId)}/events/${eventId}`, {
+                method: 'PATCH', // Using PATCH for partial updates
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...this.getAuthHeader()
+                },
+                body: JSON.stringify(event)
+            });
+            if (!res.ok) throw new Error(`Update event failed: ${res.statusText}`);
+            return true;
+        } else {
+            console.warn("Offline: Cannot update remote event.");
+            return false;
+        }
+    }
+
+    async deleteEvent(accountId: string, calendarId: string, eventId: string): Promise<boolean> {
+        if (navigator.onLine) {
+            const res = await fetch(`${this.baseUrl}/calendars/${accountId}/calendars/${encodeURIComponent(calendarId)}/events/${eventId}`, {
+                method: 'DELETE',
+                headers: { ...this.getAuthHeader() }
+            });
+            if (!res.ok) throw new Error(`Delete event failed: ${res.statusText}`);
+            return true;
+        } else {
+            console.warn("Offline: Cannot delete remote event.");
+            return false;
+        }
+    }
 }

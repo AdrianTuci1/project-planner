@@ -111,7 +111,7 @@ export class CalendarService {
         }
     }
 
-    public async updateEventTime(accountId: string, eventId: string, newStart: string, newEnd: string, userId: string = 'default-user'): Promise<boolean> {
+    public async updateEventTime(accountId: string, calendarId: string, eventId: string, newStart?: string, newEnd?: string, userId: string = 'default-user'): Promise<boolean> {
         const current = await this.getCalendars(userId);
         const account = current.accounts.find(a => a.id === accountId);
         if (!account || !account.refreshToken) return false;
@@ -123,13 +123,14 @@ export class CalendarService {
         const calendar = google.calendar({ version: 'v3', auth });
 
         try {
+            const requestBody: any = {};
+            if (newStart) requestBody.start = { dateTime: newStart };
+            if (newEnd) requestBody.end = { dateTime: newEnd };
+
             await calendar.events.patch({
-                calendarId: 'primary', // TODO: We might need to store which sub-calendar this event belongs to. For now, assume primary.
+                calendarId: calendarId,
                 eventId: eventId,
-                requestBody: {
-                    start: { dateTime: newStart },
-                    end: { dateTime: newEnd }
-                },
+                requestBody,
                 sendUpdates: sendUpdates
             });
             console.log(`[GoogleSync] Moved event ${eventId} on ${account.email}. SendUpdates: ${sendUpdates}`);
@@ -140,7 +141,7 @@ export class CalendarService {
         }
     }
 
-    public async deleteEvent(accountId: string, eventId: string, userId: string = 'default-user'): Promise<boolean> {
+    public async deleteEvent(accountId: string, calendarId: string, eventId: string, userId: string = 'default-user'): Promise<boolean> {
         const current = await this.getCalendars(userId);
         const account = current.accounts.find(a => a.id === accountId);
         if (!account || !account.refreshToken) return false;
@@ -151,7 +152,7 @@ export class CalendarService {
 
         try {
             await calendar.events.delete({
-                calendarId: 'primary',
+                calendarId: calendarId,
                 eventId: eventId,
                 sendUpdates: sendUpdates
             });
@@ -161,6 +162,80 @@ export class CalendarService {
             console.error("Failed to delete remote event", e);
             return false;
         }
+    }
+
+    public async fetchEvents(startDate: string, endDate: string, userId: string = 'default-user'): Promise<any[]> {
+        const current = await this.getCalendars(userId);
+        const allEvents: any[] = [];
+
+        for (const account of current.accounts) {
+            if (!account.isVisible) continue;
+            if (!account.refreshToken) continue;
+
+            const auth = getGoogleAuthClient(account.refreshToken);
+            const calendar = google.calendar({ version: 'v3', auth });
+
+            // Allow syncing multiple sub-calendars
+            const updateTargets = (account.subCalendars && account.subCalendars.length > 0)
+                ? account.subCalendars.filter(c => c.isVisible)
+                : [{ id: 'primary', color: account.color }];
+
+            for (const target of updateTargets) {
+                try {
+                    const response = await calendar.events.list({
+                        calendarId: target.id,
+                        timeMin: startDate,
+                        timeMax: endDate,
+                        singleEvents: true,
+                        orderBy: 'startTime'
+                    });
+
+                    const items = response.data.items || [];
+                    const mapped = items.map(ev => {
+                        const isAllDay = !ev.start?.dateTime;
+                        const mappedEvent: any = {
+                            id: `evt_${ev.id}`, // Prefix to distinguish from tasks
+                            title: ev.summary || '(No Title)',
+                            status: 'todo', // Dummy status for TaskCard compatibility
+                            isCalendarEvent: true,
+
+                            // Times
+                            scheduledDate: ev.start?.dateTime || ev.start?.date, // ISO string
+                            duration: 60, // approximate, or calculate real duration
+
+                            // Metadata
+                            accountId: account.id,
+                            calendarId: target.id,
+                            color: target.color || account.color || '#4285F4',
+                            provider: account.provider,
+                            htmlLink: ev.htmlLink,
+                            allDay: isAllDay,
+                            description: ev.description,
+
+                            // Raw data if needed
+                            start: ev.start,
+                            end: ev.end
+                        };
+
+                        // Calculate duration
+                        if (mappedEvent.scheduledDate && mappedEvent.end?.dateTime) {
+                            const start = new Date(mappedEvent.scheduledDate);
+                            const end = new Date(mappedEvent.end.dateTime);
+                            const diffMs = end.getTime() - start.getTime();
+                            mappedEvent.duration = Math.floor(diffMs / 60000);
+                        }
+
+                        return mappedEvent;
+                    });
+
+                    allEvents.push(...mapped);
+
+                } catch (err) {
+                    console.error(`[CalendarService] Failed to fetch events for ${target.id}`, err);
+                }
+            }
+        }
+        return allEvents;
     }
 
     // --- OAuth Flow Methods ---

@@ -282,6 +282,10 @@ export class MockApiService implements IApiService {
     // Calendar Extra
     async exchangeGoogleCode(code: string): Promise<any> { return { accounts: [] }; }
     async syncSubCalendars(id: string): Promise<any> { return { accounts: [] }; }
+    async getEvents(start: string, end: string): Promise<any[]> { return []; }
+    async updateEvent(accountId: string, calendarId: string, eventId: string, event: any): Promise<boolean> { return true; }
+    async deleteEvent(accountId: string, calendarId: string, eventId: string): Promise<boolean> { return true; }
+
 
     // Subscription
     async createCheckoutSession(priceId: string): Promise<{ url: string }> { return { url: '' }; }

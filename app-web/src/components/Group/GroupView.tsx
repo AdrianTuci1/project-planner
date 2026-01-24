@@ -61,6 +61,8 @@ export const GroupView = observer(({ groupId }: GroupViewProps) => {
     // Fallback for globalTasks if group logic is strict, but store.filteredTasks 
     // usually returns tasks based on activeGroup. If activeGroup is null, it might return empty or dump tasks.
     const globalTasks = store.filteredTasks;
+
+
     // Removed unused variable `hasTasks` to avoid lint warning if not used, 
     // keeping it if logic needed it, but previously it was defining but seemingly not used in render blocks shown.
     // Actually standardizing on provided code.

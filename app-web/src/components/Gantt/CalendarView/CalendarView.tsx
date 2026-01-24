@@ -6,6 +6,7 @@ import { format, addDays, isSameDay, startOfWeek, startOfDay } from 'date-fns';
 import './CalendarView.css';
 import { MonthGrid } from './MonthGrid';
 import { CalendarCell } from './CalendarCell';
+import { CalendarEventCard } from '../TaskCard/CalendarEventCard';
 
 interface CalendarViewProps {
     tasks: Task[];
@@ -28,7 +29,7 @@ export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: Calen
         // e.target is the resize handle. Its parent is the task card. 
         // Its parent's parent is the .hour-cell.
         const handle = e.target as HTMLElement;
-        const card = handle.closest('.calendar-event') as HTMLElement;
+        const card = handle.closest('.task-card') as HTMLElement;
         const cell = card?.closest('.hour-cell') as HTMLElement;
 
         if (!cell) return;
@@ -49,7 +50,17 @@ export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: Calen
             newDuration = Math.max(15, Math.round(newDuration / 15) * 15);
 
             if (newDuration !== task.duration) {
-                task.duration = newDuration;
+                // If it is a calendar event, we must sync via CalendarStore
+                if (task.id.startsWith('evt_')) {
+                    const event = store.calendarStore.getEventById(task.id);
+                    if (event) {
+                        // Calculate new end time
+                        const newEnd = new Date(event.start.getTime() + newDuration * 60000);
+                        store.calendarStore.updateEvent(event, { end: newEnd });
+                    }
+                } else {
+                    task.duration = newDuration;
+                }
             }
         };
 
@@ -71,7 +82,6 @@ export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: Calen
     if (store.calendarViewType === 'day') {
         days = [store.viewDate];
     } else if (store.calendarViewType === 'week') {
-        // Map string setting to 0-6 index
         const weekStartsOnMap: Record<string, 0 | 1 | 6> = {
             'Sunday': 0,
             'Monday': 1,
@@ -80,22 +90,8 @@ export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: Calen
         const weekStartIdx = weekStartsOnMap[store.settings.general.generalSettings.startWeekOn] ?? 0;
 
         const weekStart = startOfWeek(store.viewDate, { weekStartsOn: weekStartIdx });
-        days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-
-        // Use daysToShow ONLY if we are using the default "Sunday" start and showing 7 days isn't forced by the "Week" view concept
-        // ACTUALLY: The previous requirement was "configurable number of days".
-        // Usually "Week View" implies a full week or 5 days (work week).
-        // BUT the user asked for configurable days (2-7).
-        // Interaction:
-        // If daysToShow < 7, we probably just show N days starting from weekStart?
-        // OR does "Week Start On" only matter for full 7-day weeks?
-        // Let's assume:
-        // 1. Calculate the start of the week based on setting.
-        // 2. Generate 'store.daysToShow' days from that start date.
-
         days = Array.from({ length: store.daysToShow }, (_, i) => addDays(weekStart, i));
 
-        // Filter weekends if needed
         if (!store.settings.general.generalSettings.showWeekends) {
             days = days.filter(d => {
                 const day = d.getDay();
@@ -103,14 +99,48 @@ export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: Calen
             });
         }
     } else {
-        // Month view - Placeholder logic for now, will implement MonthGrid next
-        // For now, allow it to render a week or just return null/different component
-        // But to avoid breaking, let's just show the week of the viewDate
         const weekStart = startOfWeek(store.viewDate, { weekStartsOn: 0 });
         days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     }
 
-    const today = startOfDay(new Date());
+    // Fetch Events Logic (Internal)
+    React.useEffect(() => {
+        if (store.activeWorkspace?.type === 'personal' && days.length > 0) {
+            // Buffer
+            const start = addDays(days[0], -1);
+            const end = addDays(days[days.length - 1], 1);
+            store.calendarStore.fetchEvents(start, end);
+        }
+    }, [store.viewDate, store.daysToShow, store.calendarViewType, store.activeWorkspace?.type]); // Depend on view params & workspace
+
+    const calendarEvents = store.activeWorkspace?.type === 'personal' ? store.calendarStore.events : [];
+
+    // Separate Events
+    const allEvents = [...tasks, ...calendarEvents] as Task[];
+
+    const timedTasks: Task[] = [];
+    const allDayEvents: any[] = [];
+
+    allEvents.forEach(t => {
+        const isCalendarEvent = t.id.startsWith('evt_') || (t as any).isCalendarEvent;
+        if (isCalendarEvent) {
+            const isAllDay = (t as any).allDay !== undefined ? (t as any).allDay : !(t as any).rawStart?.dateTime;
+            if (isAllDay) {
+                allDayEvents.push(t);
+            } else {
+                timedTasks.push(t);
+            }
+        } else {
+            // Normal task, check if it has time?
+            // Existing logic assumes tasks in CalendarView HAVE time or are filtered?
+            // CalendarCell checks scheduledTime.
+            if (t.scheduledTime) {
+                timedTasks.push(t);
+            }
+        }
+    });
+
+    const isToday = (d: Date) => isSameDay(d, new Date());
 
     // Create 24 hours (0-23)
     const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -122,23 +152,22 @@ export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: Calen
         return `${hour - 12} PM`;
     };
 
-
     return (
         <div className="calendar-view-container">
             {store.calendarViewType === 'month' ? (
-                <MonthGrid tasks={tasks} onTaskClick={onTaskClick} />
+                <MonthGrid tasks={allEvents} onTaskClick={onTaskClick} />
             ) : (
                 <table className="calendar-table">
                     <thead className="calendar-header">
                         <tr style={{ height: '44px' }}>
                             <th className="time-column-header"></th>
                             {days.map(date => {
-                                const isToday = isSameDay(date, today);
+                                const currentIsToday = isToday(date);
                                 return (
-                                    <th key={date.toString()} className={`day-column-header ${isToday ? 'today' : ''}`} style={{ width: store.calendarViewType === 'day' ? '100%' : undefined }}>
+                                    <th key={date.toString()} className={`day-column-header ${currentIsToday ? 'today' : ''}`} style={{ width: store.calendarViewType === 'day' ? '100%' : undefined }}>
                                         <div className="day-header-content">
                                             <span className="day-name">{format(date, 'EEE')}</span>
-                                            <span className={`day-number ${isToday ? 'today-number' : ''}`}>
+                                            <span className={`day-number ${currentIsToday ? 'today-number' : ''}`}>
                                                 {format(date, 'd')}
                                             </span>
                                         </div>
@@ -146,6 +175,40 @@ export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: Calen
                                 );
                             })}
                         </tr>
+                        {/* All Day Row */}
+                        {store.activeWorkspace?.type === 'personal' && (
+                            <tr className="all-day-row" style={{ height: 'auto', minHeight: '30px' }}>
+                                <td className="time-label" style={{ fontSize: '10px', verticalAlign: 'middle', textAlign: 'center', color: '#888' }}>
+                                    All Day
+                                </td>
+                                {days.map(date => {
+                                    // Filter all day events for this day
+                                    const daysEvents = allDayEvents.filter(e => {
+                                        // Check if date matches (all day usually has 'date' field YYYY-MM-DD or is just date object)
+                                        const eDate = new Date(e.scheduledDate || e.rawStart?.date);
+                                        return isSameDay(eDate, date);
+                                    });
+
+                                    return (
+                                        <td key={`allday-${date.toString()}`} className="all-day-cell" style={{ verticalAlign: 'top', padding: '2px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                {daysEvents.map(ev => (
+                                                    <CalendarEventCard
+                                                        key={ev.id}
+                                                        event={ev}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '22px', // Compact height for month/week views
+                                                        }}
+                                                        className="all-day-card"
+                                                    />
+                                                ))}
+                                            </div>
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        )}
                     </thead>
                     <tbody className="calendar-body">
                         {hours.map(hour => (
@@ -160,7 +223,7 @@ export const CalendarView = observer(({ tasks, onTaskClick, onSlotClick }: Calen
                                         key={`${date.toString()}-${hour}`}
                                         date={date}
                                         hour={hour}
-                                        tasks={tasks}
+                                        tasks={timedTasks}
                                         onTaskClick={onTaskClick}
                                         onResizeStart={handleResizeStart}
                                         onSlotClick={onSlotClick}

@@ -370,3 +370,69 @@
         display: none;
     }
 }
+
+/* All Day Row Styles */
+.all-day-row {
+    height: 25px;
+}
+
+.all-day-label-cell {
+    vertical-align: middle;
+    padding-top: 0;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background-color: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-subtle);
+    height: 25px;
+    overflow: hidden;
+}
+
+.all-day-label-text {
+    font-size: 10px;
+    color: #888;
+    position: absolute;
+    top: 6px;
+    right: 4px;
+}
+
+.all-day-content-cell {
+    vertical-align: middle;
+    padding: 0 4px;
+    position: sticky;
+    top: 0;
+    z-index: 25;
+    background-color: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-subtle);
+    height: 25px;
+    overflow: hidden;
+}
+
+.all-day-events-container {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: center;
+    height: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.all-day-events-container::-webkit-scrollbar {
+    display: none;
+}
+
+.all-day-pill {
+    color: white;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    overflow: hidden;
+    width: 100%;
+    text-overflow: ellipsis;
+    height: 18px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}

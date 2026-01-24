@@ -16,10 +16,17 @@ export class CalendarRoute implements Routes {
 
     private initializeRoutes() {
         this.router.get(`${this.path}`, this.calendarController.getCalendars);
+        this.router.get(`${this.path}/events`, this.authMiddleware.verifyToken, this.calendarController.getEvents);
         this.router.post(`${this.path}`, this.calendarController.addCalendar);
         this.router.put(`${this.path}/:id`, this.calendarController.updateCalendar);
         this.router.post(`${this.path}/:id/sync`, this.authMiddleware.verifyToken, this.calendarController.syncSubCalendars);
         this.router.delete(`${this.path}/:id`, this.calendarController.deleteCalendar);
+
+        // Event Routes
+        // PATCH /calendars/:accountId/calendars/:calendarId/events/:eventId
+        this.router.patch(`${this.path}/:accountId/calendars/:calendarId/events/:eventId`, this.authMiddleware.verifyToken, this.calendarController.updateEvent);
+        // DELETE /calendars/:accountId/calendars/:calendarId/events/:eventId
+        this.router.delete(`${this.path}/:accountId/calendars/:calendarId/events/:eventId`, this.authMiddleware.verifyToken, this.calendarController.deleteEvent);
 
         // OAuth Routes
         this.router.get(`${this.path}/auth/google`, this.calendarController.getGoogleAuthUrl);

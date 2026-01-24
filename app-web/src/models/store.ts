@@ -8,6 +8,7 @@ import { AuthStore } from "./stores/AuthStore";
 import { LabelStore } from "./stores/LabelStore";
 import { WorkspaceStore } from "./stores/WorkspaceStore";
 import { GroupStore } from "./stores/GroupStore";
+import { CalendarStore } from "./stores/CalendarStore";
 
 export class ProjectStore {
     taskStore: TaskStore;
@@ -18,6 +19,7 @@ export class ProjectStore {
     labelStore: LabelStore;
     workspaceStore: WorkspaceStore;
     groupStore: GroupStore;
+    calendarStore: CalendarStore;
 
     constructor() {
         // Initialize sub-stores
@@ -29,6 +31,7 @@ export class ProjectStore {
         this.recurrenceStore = new RecurrenceStore(this);
         this.notificationStore = new NotificationStore(this);
         this.authStore = new AuthStore(this);
+        this.calendarStore = new CalendarStore(this);
 
         makeAutoObservable(this);
 

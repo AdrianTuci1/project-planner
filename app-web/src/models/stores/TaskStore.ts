@@ -110,6 +110,7 @@ export class TaskStore {
     }
 
     deleteTask(taskId: string) {
+
         const activeWorkspace = this.rootStore.workspaceStore.activeWorkspace;
         if (!activeWorkspace) return;
 

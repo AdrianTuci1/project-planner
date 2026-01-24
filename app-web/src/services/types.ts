@@ -90,6 +90,10 @@ export interface IApiService {
     getGoogleAuthUrl(): Promise<{ url: string }>;
     exchangeGoogleCode(code: string): Promise<CalendarAccount>;
 
+    getEvents(start: string, end: string): Promise<any[]>;
+    updateEvent(accountId: string, calendarId: string, eventId: string, event: any): Promise<boolean>;
+    deleteEvent(accountId: string, calendarId: string, eventId: string): Promise<boolean>;
+
     // Storage
     getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }>;
     uploadFile(file: File): Promise<string>;

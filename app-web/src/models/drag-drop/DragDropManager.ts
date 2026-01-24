@@ -278,8 +278,24 @@ export class DragDropManager {
         else if (activeId.startsWith('timebox-')) taskId = activeId.replace('timebox-', '');
 
         let task = store.getTaskById(taskId);
+        let activeCalendarEvent: any = undefined;
 
-        if (!task) {
+        if (!task && taskId.startsWith('evt_')) {
+            activeCalendarEvent = store.calendarStore.getEventById(taskId);
+            // Create a proxy task object for the strategy to use? 
+            // Or handle it directly here if simple?
+            // Strategies expect a Task object mostly.
+            if (activeCalendarEvent) {
+                // Create a transient Task-like object wrapper if needed, 
+                // BUT strategies invoke `task.scheduledDate = ...` etc.
+                // We should probably rely on `CalendarDropStrategy` to handle this or 
+                // we handle it here specially.
+                // Let's create a proxy that delegates to CalendarStore.updateEvent on save?
+                // Simpler: Just handle the update HERE for calendar events and return.
+            }
+        }
+
+        if (!task && !activeCalendarEvent) {
             console.warn('Task not found for DnD:', taskId);
             return;
         }
@@ -318,7 +334,7 @@ export class DragDropManager {
 
         // CLONE TEMPLATES if needed
         const isTemplate = store.templates.some(t => t.id === taskId);
-        if (isTemplate) {
+        if (isTemplate && task) {
             if (dropType === 'kanban-column' || dropType === 'calendar-cell' || dropType === 'timebox-slot') {
                 const clone = task.clone();
                 clone.isTemplate = false;
@@ -339,60 +355,86 @@ export class DragDropManager {
         // No restriction for Sidebar/Kanban/TasksView dropping on Calendar/Timebox
 
         // Centralized GroupId & List Management
-        runInAction(() => {
-            const currentOwner = store.groups.find(g => g.tasks.find(t => t.id === taskId)) ||
-                (store.dumpAreaTasks.find(t => t.id === taskId) ? { tasks: store.dumpAreaTasks } : null);
+        if (task) {
+            runInAction(() => {
+                const currentOwner = store.groups.find(g => g.tasks.find(t => t.id === taskId)) ||
+                    (store.dumpAreaTasks.find(t => t.id === taskId) ? { tasks: store.dumpAreaTasks } : null);
 
-            let targetGroupId: string | null | undefined = undefined;
+                let targetGroupId: string | null | undefined = undefined;
 
-            if (dropType === 'kanban-column' || dropType === 'calendar-cell' || dropType === 'timebox-slot' || dropType === 'tasks-list') {
-                targetGroupId = null; // Always move to Inbox/Null when dropped on a view
-            } else if (dropType === 'sidebar-list') {
-                targetGroupId = overData!.groupId;
-            }
+                if (dropType === 'kanban-column' || dropType === 'calendar-cell' || dropType === 'timebox-slot' || dropType === 'tasks-list') {
+                    targetGroupId = null; // Always move to Inbox/Null when dropped on a view
+                } else if (dropType === 'sidebar-list') {
+                    targetGroupId = overData!.groupId;
+                }
 
-            if (targetGroupId !== undefined) {
-                // Determine target list
-                const targetList = targetGroupId === null ? store.dumpAreaTasks : store.groups.find(g => g.id === targetGroupId)?.tasks;
+                if (targetGroupId !== undefined) {
+                    // Determine target list
+                    const targetList = targetGroupId === null ? store.dumpAreaTasks : store.groups.find(g => g.id === targetGroupId)?.tasks;
 
-                if (targetList && currentOwner && (currentOwner.tasks !== targetList)) {
-                    // Remove from old
-                    if ('removeTask' in currentOwner) {
-                        (currentOwner as any).removeTask(taskId);
-                    } else if (Array.isArray(currentOwner.tasks)) {
-                        const idx = currentOwner.tasks.findIndex((t: Task) => t.id === taskId);
-                        if (idx > -1) currentOwner.tasks.splice(idx, 1);
-                    }
+                    if (targetList && currentOwner && (currentOwner.tasks !== targetList)) {
+                        // Remove from old
+                        if ('removeTask' in currentOwner) {
+                            (currentOwner as any).removeTask(taskId);
+                        } else if (Array.isArray(currentOwner.tasks)) {
+                            const idx = currentOwner.tasks.findIndex((t: Task) => t.id === taskId);
+                            if (idx > -1) currentOwner.tasks.splice(idx, 1);
+                        }
 
-                    // Add to new
-                    task.groupId = targetGroupId;
-                    targetList.push(task);
+                        // Add to new
+                        task.groupId = targetGroupId;
+                        targetList.push(task);
 
-                    // Clear schedule when moving to the sidebar (lists are unscheduled)
-                    if (dropType === 'sidebar-list') {
-                        task.scheduledDate = null;
-                        task.scheduledTime = null;
-                    }
+                        // Clear schedule when moving to the sidebar (lists are unscheduled)
+                        if (dropType === 'sidebar-list') {
+                            task.scheduledDate = null;
+                            task.scheduledTime = null;
+                        }
 
-                    console.log(`[DragDropManager] Moved task ${taskId} to group ${targetGroupId}`);
-                } else if (targetGroupId !== undefined) {
-                    // Even if already in the list (or list not found), ensure groupId is sync'd
-                    task.groupId = targetGroupId;
+                        console.log(`[DragDropManager] Moved task ${taskId} to group ${targetGroupId}`);
+                    } else if (targetGroupId !== undefined) {
+                        // Even if already in the list (or list not found), ensure groupId is sync'd
+                        task.groupId = targetGroupId;
 
-                    // Also clear schedule if dropped back onto its own list in the sidebar (for safety)
-                    if (dropType === 'sidebar-list') {
-                        task.scheduledDate = null;
-                        task.scheduledTime = null;
+                        // Also clear schedule if dropped back onto its own list in the sidebar (for safety)
+                        if (dropType === 'sidebar-list') {
+                            task.scheduledDate = null;
+                            task.scheduledTime = null;
+                        }
                     }
                 }
+            });
+        }
+
+        // SPECIAL HANDLING FOR CALENDAR EVENTS
+        if (activeCalendarEvent) {
+            if (dropType === 'calendar-cell' || dropType === 'timebox-slot') {
+                const { date, hour, minute } = overData;
+                if (date && hour !== undefined) {
+                    const newDate = new Date(date);
+                    newDate.setHours(Number(hour), Number(minute || 0), 0, 0);
+
+                    // Calculate end time to preserve duration
+                    const durationMs = activeCalendarEvent.end.getTime() - activeCalendarEvent.start.getTime();
+                    const newEnd = new Date(newDate.getTime() + durationMs);
+
+                    store.calendarStore.updateEvent(activeCalendarEvent, {
+                        start: newDate,
+                        end: newEnd
+                    });
+                    console.log(`[DragDropManager] Updated Calendar Event ${taskId} to ${newDate}`);
+                }
+            } else {
+                console.warn('[DragDropManager] Calendar Event dropped on invalid target (must remain in calendar/timebox).');
             }
-        });
+            return;
+        }
 
         const strategy = this.strategies.get(dropType);
-        if (strategy) {
+        if (strategy && task) {
             strategy.handle(task, overData, event, { activeId, overId: over.id as string, isReordering });
         } else {
-            console.warn('[DragDropManager] No strategy found for type:', dropType);
+            console.warn('[DragDropManager] No strategy found for type or task invalid:', dropType);
         }
     }
 }
