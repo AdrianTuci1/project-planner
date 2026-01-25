@@ -1,0 +1,188 @@
+.account-data-container {
+    padding: 0px;
+    color: var(--text-primary);
+}
+
+.account-data-header {
+    margin-bottom: 24px;
+}
+
+.account-data-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+}
+
+.account-data-header p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+}
+
+.account-data-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.account-data-card {
+    background: var(--bg-input);
+    /* Lighter than modal content */
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.account-data-card.clickable {
+    cursor: pointer;
+}
+
+.account-data-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+    background: var(--bg-card-hover);
+    /* Slightly darker/different interaction */
+}
+
+.data-card-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.data-card-icon {
+    color: var(--text-primary);
+}
+
+.data-card-info h3 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.data-card-info p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.data-card-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent-purple);
+    font-size: 14px;
+    font-weight: 500;
+    /* Removed cursor: pointer from here as logic moved to card */
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.data-card-action:hover {
+    text-decoration: underline;
+}
+
+/* Back Button */
+.settings-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: var(--accent-purple);
+    font-size: 14px;
+    margin-bottom: 24px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.settings-back-btn:hover {
+    text-decoration: underline;
+}
+
+/* Delete Account Specifics */
+.delete-account-warning {
+    color: var(--text-danger);
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.delete-warning-box {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.delete-account-form {
+    max-width: 400px;
+}
+
+.delete-account-label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+}
+
+.delete-account-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text-main);
+    /* Changed from text-primary based on SettingsModal.css */
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.delete-account-input:focus {
+    outline: none;
+    border-color: var(--text-muted);
+}
+
+.delete-account-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.delete-account-btn:hover {
+    background: #dc2626;
+}
+
+/* Download Button for Export */
+.download-btn {
+    background: var(--bg-input);
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.download-btn:hover {
+    border-color: var(--text-muted);
+    color: var(--text-main);
+    /* Changed from text-primary */
+}

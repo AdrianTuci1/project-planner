@@ -1,5 +1,6 @@
 import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
+import { SSEService } from "./sse.service";
 
 export class GroupsService {
     private docClient: DynamoDBDocumentClient;
@@ -11,7 +12,6 @@ export class GroupsService {
     }
 
     public async getGroups(workspaceId?: string) {
-        // In production, query by GSI on workspaceId
         const command = new ScanCommand({
             TableName: this.tableName,
         });
@@ -22,7 +22,6 @@ export class GroupsService {
         if (workspaceId) {
             groups = groups.filter((g: any) => g.workspaceId === workspaceId || (!g.workspaceId && workspaceId === 'personal'));
         } else {
-            // Default to personal if no workspace provided
             groups = groups.filter((g: any) => !g.workspaceId || g.workspaceId === 'personal');
         }
 
@@ -35,6 +34,15 @@ export class GroupsService {
             Item: group
         });
         await this.docClient.send(command);
+
+        // SSE Emit
+        // Assuming group has createdBy or we infer from context. Logic here is limited without auth context passed down.
+        // Assuming caller handles filtering or we broadcast. 
+        // Ideally we pass userId to these methods.
+        if (group.createdBy) {
+            SSEService.getInstance().sendToUser(group.createdBy, 'group.created', group);
+        }
+
         return group;
     }
 
@@ -44,6 +52,11 @@ export class GroupsService {
             Item: { ...group, id }
         });
         await this.docClient.send(command);
+
+        if (group.createdBy) {
+            SSEService.getInstance().sendToUser(group.createdBy, 'group.updated', { ...group, id });
+        }
+
         return { ...group, id };
     }
 
@@ -53,6 +66,12 @@ export class GroupsService {
             Key: { id }
         });
         await this.docClient.send(command);
+
+        // Cannot emit to specific user easily without fetching first or passing context.
+        // Skipping emit for delete if we don't know who.
+        // OR: broadcast to all? No, security risk.
+        // For now, MVP: client refreshes on manual action, SSE is bonus for other devices.
+
         return { id };
     }
 }

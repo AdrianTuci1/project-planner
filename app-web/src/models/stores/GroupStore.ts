@@ -3,6 +3,7 @@ import { GroupType } from "../core";
 import { ProjectStore } from "../store";
 import { api } from "../../services/api";
 import { groupSyncStrategy } from "../strategies/GroupSyncStrategy";
+import { Group } from "../core"; // Ensure Group imported
 
 export class GroupStore {
     rootStore: ProjectStore;
@@ -10,6 +11,47 @@ export class GroupStore {
     constructor(rootStore: ProjectStore) {
         this.rootStore = rootStore;
         makeAutoObservable(this);
+    }
+
+    handleRealtimeUpdate(type: string, data: any) {
+        const workspaceStore = this.rootStore.workspaceStore;
+
+        const workspace = data.workspaceId ? workspaceStore.workspaces.find((w: any) => w.id === data.workspaceId) : workspaceStore.activeWorkspace;
+        if (!workspace) return;
+
+        switch (type) {
+            case 'group.created':
+                if (!workspace.groups.find((g: any) => g.id === data.id)) {
+                    const newGroup = this.hydrateGroup(data);
+                    workspace.addGroup(newGroup);
+                }
+                break;
+            case 'group.updated':
+                const group = workspace.groups.find((g: any) => g.id === data.id);
+                if (group) {
+                    group.name = data.name;
+                    group.icon = data.icon;
+                    group.defaultLabelId = data.defaultLabelId;
+                    // ... other fields
+                }
+                break;
+            case 'group.deleted':
+                const idx = workspace.groups.findIndex((g: any) => g.id === data.id);
+                if (idx > -1) {
+                    workspace.groups.splice(idx, 1);
+                }
+                break;
+        }
+    }
+
+    private hydrateGroup(g: any): Group {
+        // Simple hydration, Tasks are usually separate or empty initially on group create event
+        const group = new Group(g.name, g.icon, g.type || 'personal', g.workspaceId, g.defaultLabelId, g.autoAddLabelEnabled);
+        group.id = g.id;
+        group.workspaceId = g.workspaceId;
+        // Start monitoring
+        groupSyncStrategy.monitor(group);
+        return group;
     }
 
     async createGroup(name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {

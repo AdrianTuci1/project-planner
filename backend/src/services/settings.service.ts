@@ -1,6 +1,7 @@
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { GeneralSettings } from '../models/types';
+import { SSEService } from "./sse.service";
 
 export class SettingsService {
     private docClient: DynamoDBDocumentClient;
@@ -37,10 +38,7 @@ export class SettingsService {
             taskPriorityEnabled: false,
             attachmentsEnabled: false,
         },
-        // Due Dates Defaults
         thresholdDays: 7,
-
-        // Account Defaults
         displayName: '',
         avatarUrl: ''
     };
@@ -63,17 +61,15 @@ export class SettingsService {
             return result.Item as GeneralSettings;
         }
 
-        // If no settings found, return defaults
         return this.defaultSettings;
     }
 
     public async updateGeneralSettings(settings: Partial<GeneralSettings>, userId: string = 'default-user'): Promise<void> {
         const current = await this.getGeneralSettings(userId);
 
-        // Deep merge for nested objects to avoid overwriting with partials
         const updated: GeneralSettings = {
             ...current,
-            ...settings, // Top level props
+            ...settings,
             generalSettings: {
                 ...(current.generalSettings || this.defaultSettings.generalSettings),
                 ...(settings.generalSettings || {})
@@ -82,7 +78,7 @@ export class SettingsService {
                 ...(current.featuresSettings || this.defaultSettings.featuresSettings),
                 ...(settings.featuresSettings || {})
             } as any,
-            userId // Ensure PK is there
+            userId
         };
 
         const command = new PutCommand({
@@ -91,5 +87,7 @@ export class SettingsService {
         });
 
         await this.docClient.send(command);
+
+        SSEService.getInstance().sendToUser(userId, 'settings.updated', updated);
     }
 }

@@ -73,6 +73,9 @@ export interface IApiService {
     getWorkspaces(): Promise<any[]>;
     updateWorkspace(id: string, data: any): Promise<any>;
     deleteWorkspace(id: string): Promise<void>;
+    removeMember(workspaceId: string, userId: string): Promise<void>;
+    assignOwner(workspaceId: string, userId: string): Promise<void>;
+    leaveWorkspace(workspaceId: string): Promise<void>;
 
     // Labels
     getLabels(workspaceId?: string): Promise<any[]>;

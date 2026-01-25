@@ -252,7 +252,7 @@ export const TopBar = observer(() => {
                     setUserMenuOpen(false);
                     setShowShortcuts(true);
                 }}
-                onLogout={() => console.log('Logout')}
+                onLogout={() => store.authStore.logout()}
             />
 
             {showShortcuts && (

@@ -133,7 +133,7 @@ export class CalendarService {
                 requestBody,
                 sendUpdates: sendUpdates
             });
-            console.log(`[GoogleSync] Moved event ${eventId} on ${account.email}. SendUpdates: ${sendUpdates}`);
+            // console.log(`[GoogleSync] Moved event ${eventId} on ${account.email}. SendUpdates: ${sendUpdates}`);
             return true;
         } catch (e) {
             console.error("Failed to update remote event", e);
@@ -156,7 +156,7 @@ export class CalendarService {
                 eventId: eventId,
                 sendUpdates: sendUpdates
             });
-            console.log(`[GoogleSync] Deleted event ${eventId} on ${account.email}`);
+            // console.log(`[GoogleSync] Deleted event ${eventId} on ${account.email}`);
             return true;
         } catch (e) {
             console.error("Failed to delete remote event", e);

@@ -9,14 +9,18 @@ import {
     GetUserCommand
 } from "@aws-sdk/client-cognito-identity-provider";
 import { ProjectStore } from "../store";
-
 // Configuration from user provided details
-const COGNITO_DOMAIN = "https://auth.simplu.io"; // Custom Domain
-const CLIENT_ID = "ar2m2qg3gp4a0b4cld09aegdb";
-const REDIRECT_URI = "http://localhost:5173";
-const REGION = "eu-central-1";
+// @ts-ignore
+const COGNITO_DOMAIN = import.meta.env.VITE_COGNITO_DOMAIN; // Custom Domain
+// @ts-ignore
+const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID;
+// @ts-ignore
+const REDIRECT_URI = import.meta.env.VITE_COGNITO_REDIRECT_URI;
+// @ts-ignore
+const REGION = import.meta.env.VITE_AWS_REGION;
 
 // We can keep using env vars as fallbacks or overrides if needed, but per request using provided values
+// @ts-ignore
 const AWS_REGION = import.meta.env.VITE_AWS_REGION || REGION;
 
 export class AuthStore {
@@ -27,6 +31,7 @@ export class AuthStore {
     isAuthenticated: boolean = false;
     isLoading: boolean = true;
     error: string | null = null;
+    pendingOnboardingData: any = JSON.parse(localStorage.getItem('pendingOnboarding') || 'null');
 
     constructor(rootStore: ProjectStore) {
         this.rootStore = rootStore;
@@ -81,9 +86,14 @@ export class AuthStore {
         this.error = null;
 
         try {
+            // Generate a username like Name@123456
+            const sanitizedName = name.replace(/\s+/g, '');
+            const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+            const username = `${sanitizedName}@${randomSuffix}`;
+
             const command = new SignUpCommand({
                 ClientId: CLIENT_ID,
-                Username: email,
+                Username: username,
                 Password: password,
                 UserAttributes: [
                     { Name: "email", Value: email },
@@ -189,7 +199,7 @@ export class AuthStore {
                     return; // Active and valid
                 } catch (err) {
                     // Token likely expired
-                    console.log("Access token expired or invalid, trying refresh...");
+                    // console.log("Access token expired or invalid, trying refresh...");
                 }
             }
 
@@ -351,6 +361,13 @@ export class AuthStore {
                     };
 
                     this.syncSettings(attributes);
+
+                    if (this.pendingOnboardingData) {
+                        console.log("[AuthStore] Found pending onboarding data, syncing...");
+                        this.syncUser(this.pendingOnboardingData).then(() => {
+                            this.clearPendingOnboarding();
+                        });
+                    }
                 });
                 return;
             } else {
@@ -380,6 +397,13 @@ export class AuthStore {
                 };
 
                 this.syncSettings(attributes);
+
+                if (this.pendingOnboardingData) {
+                    console.log("[AuthStore] Found pending onboarding data in fallback path, syncing...");
+                    this.syncUser(this.pendingOnboardingData).then(() => {
+                        this.clearPendingOnboarding();
+                    });
+                }
             });
         } catch (err) {
             console.error("Failed to fetch user attributes", err);
@@ -406,5 +430,48 @@ export class AuthStore {
     loginWithGoogle() {
         const url = `${COGNITO_DOMAIN}/oauth2/authorize?identity_provider=Google&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&client_id=${CLIENT_ID}&scope=email+openid+profile`;
         window.location.href = url;
+    }
+
+    async syncUser(onboardingData: any) {
+        try {
+            const token = localStorage.getItem('accessToken');
+            // @ts-ignore
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/sync`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ onboarding: onboardingData })
+            });
+
+            if (!response.ok) {
+                console.warn("Failed to sync user data with backend");
+            } else {
+                const data = await response.json();
+                runInAction(() => {
+                    // Update local user with synced data if needed
+                    if (data.data) {
+                        this.user = { ...this.user, ...data.data };
+                    }
+                });
+            }
+        } catch (err) {
+            console.error("Sync user error", err);
+        }
+    }
+
+    setPendingOnboarding(data: any) {
+        runInAction(() => {
+            this.pendingOnboardingData = data;
+        });
+        localStorage.setItem('pendingOnboarding', JSON.stringify(data));
+    }
+
+    clearPendingOnboarding() {
+        runInAction(() => {
+            this.pendingOnboardingData = null;
+        });
+        localStorage.removeItem('pendingOnboarding');
     }
 }

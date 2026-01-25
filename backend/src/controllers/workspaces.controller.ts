@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { WorkspacesService } from '../services/workspaces.service';
 
 export class WorkspacesController implements Controller {
-    public path = '/workspaces'; // Kept for now if needed by App, but logic moved to route
-    public router = require('express').Router(); // Kept for interface compliance if needed, but unused for internal routing
+    public path = '/workspaces';
+    public router = require('express').Router();
     private workspacesService = new WorkspacesService();
 
 
@@ -48,18 +48,54 @@ export class WorkspacesController implements Controller {
         try {
             const id = req.params.id;
             const updates = req.body;
-            // Security check: Verify owner or permissions? For now simple ownership check could be added in service
-            // but for simplicity we rely on token. Ideally service should check permissions.
-
-            // Fetch workspace to check ownership or fallback
-            // const ownerId = (req as any).user.sub;
-            // ... logic to verify owner ...
-
             const updated = await this.workspacesService.updateWorkspace(id, updates);
             res.status(200).json(updated);
         } catch (error) {
             next(error);
         }
     };
-}
 
+    public deleteWorkspace = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const id = req.params.id;
+            // TODO: check owner permissions here or in service
+            await this.workspacesService.deleteWorkspace(id);
+            res.status(204).send();
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public removeMember = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id, userId } = req.params;
+            // Check permissions?
+            await this.workspacesService.removeMember(id, userId);
+            res.status(204).send();
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public assignOwner = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { ownerId } = req.body;
+            await this.workspacesService.assignOwner(id, ownerId);
+            res.status(200).json({ message: "Owner updated" });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public leaveWorkspace = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const userId = (req as any).user.sub;
+            await this.workspacesService.removeMember(id, userId);
+            res.status(204).send();
+        } catch (error) {
+            next(error);
+        }
+    };
+}

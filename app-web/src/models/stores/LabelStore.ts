@@ -13,6 +13,31 @@ export class LabelStore {
         labelSyncStrategy.monitorStore(this);
     }
 
+    handleRealtimeUpdate(type: string, data: any) {
+        switch (type) {
+            case 'label.created':
+                if (!this.availableLabels.find(l => l.id === data.id)) {
+                    this.availableLabels.push(data);
+                }
+                break;
+            case 'label.updated':
+                const label = this.availableLabels.find(l => l.id === data.id);
+                if (label) {
+                    label.name = data.name;
+                    label.color = data.color;
+                    label.workspaceId = data.workspaceId;
+                }
+                break;
+            case 'label.deleted':
+                const idx = this.availableLabels.findIndex(l => l.id === data.id);
+                if (idx > -1) {
+                    this.availableLabels.splice(idx, 1);
+                    this.rootStore.taskStore.removeLabelFromTasks(data.id);
+                }
+                break;
+        }
+    }
+
     setAvailableLabels(labels: { id: string; name: string; color: string; workspaceId?: string }[]) {
         this.availableLabels = labels;
         // Strategy listens to observable array changes now

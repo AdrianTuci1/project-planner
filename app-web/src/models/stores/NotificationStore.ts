@@ -1,6 +1,7 @@
 import { makeAutoObservable } from "mobx";
 import { ProjectStore } from "../store";
 import { api } from "../../services/api";
+// import { notificationSyncStrategy } from "../strategies/NotificationSyncStrategy"; // Obsolete
 
 export type NotificationType = 'announcement' | 'invite';
 
@@ -26,6 +27,30 @@ export class NotificationStore {
         makeAutoObservable(this);
     }
 
+    handleRealtimeUpdate(type: string, data: any) {
+        switch (type) {
+            case 'notification.created':
+                this.addNotification({
+                    id: data.id,
+                    type: data.type,
+                    title: data.title,
+                    message: data.message,
+                    date: new Date(data.createdAt),
+                    isRead: data.isRead,
+                    inviterName: data.data?.inviterName,
+                    workspaceName: data.data?.workspaceName,
+                    data: data.data
+                });
+                break;
+            case 'notification.updated':
+                const notif = this.notifications.find(n => n.id === data.id);
+                if (notif) {
+                    if (data.isRead !== undefined) notif.isRead = data.isRead;
+                }
+                break;
+        }
+    }
+
     async fetchNotifications() {
         try {
             const data = await api.getNotifications();
@@ -36,7 +61,6 @@ export class NotificationStore {
                 message: n.message,
                 date: new Date(n.createdAt),
                 isRead: n.isRead,
-                // data payload mapping
                 inviterName: n.data?.inviterName,
                 workspaceName: n.data?.workspaceName,
                 data: n.data
@@ -51,6 +75,8 @@ export class NotificationStore {
     }
 
     addNotification(notification: Notification) {
+        // Prevent duplicates
+        if (this.notifications.some(n => n.id === notification.id)) return;
         this.notifications.unshift(notification);
     }
 
@@ -75,8 +101,7 @@ export class NotificationStore {
     async handleInvite(id: string, accept: boolean) {
         try {
             const note = this.notifications.find(n => n.id === id);
-            // If the notification `data` contains `inviteId`, use it.
-            const inviteId = note?.data?.inviteId || note?.data?.id; // fallback
+            const inviteId = note?.data?.inviteId || note?.data?.id;
 
             if (!inviteId) {
                 console.error("Invite ID not found on notification");
@@ -87,7 +112,6 @@ export class NotificationStore {
             this.deleteNotification(id);
 
             if (accept) {
-                // Refresh data to show new workspace
                 if (this.rootStore.workspaceStore) {
                     this.rootStore.workspaceStore.initializeData();
                 }

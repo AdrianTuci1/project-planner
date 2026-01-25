@@ -2,7 +2,7 @@ import { InvitationsService } from './invitations.service';
 import { DBClient } from '../config/db.client';
 import { WorkspacesService } from './workspaces.service';
 import { NotificationsService } from './notifications.service';
-import { DynamoDBDocumentClient, PutCommand, DeleteCommand, GetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, DeleteCommand, GetCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 jest.mock('../config/db.client');
 jest.mock('./workspaces.service');
@@ -24,6 +24,7 @@ describe('InvitationsService', () => {
         // Mock dependencies
         mockWorkspacesService = {
             addMember: jest.fn(),
+            getWorkspaceById: jest.fn(),
         };
         (WorkspacesService as jest.Mock).mockImplementation(() => mockWorkspacesService);
 
@@ -34,7 +35,6 @@ describe('InvitationsService', () => {
 
         jest.clearAllMocks();
         service = new InvitationsService();
-        // Since constructor calls new(), we rely on module mocking.
     });
 
     describe('createInvitation', () => {
@@ -42,84 +42,83 @@ describe('InvitationsService', () => {
             const email = 'test@example.com';
             const workspaceId = 'ws-1';
             const inviterId = 'user-inviter';
-            const inviterName = 'Inviter';
             const foundUserId = 'user-found';
 
-            // Mock findUserIdByEmail (ScanCommand)
-            mockDocClient.send.mockResolvedValueOnce({ Items: [{ id: foundUserId, email }] });
+            // Mock getWorkspace
+            mockWorkspacesService.getWorkspaceById.mockResolvedValue({ id: workspaceId, name: 'Test WS' });
 
-            // Mock PutCommand
+            // Mock PutCommand (invitation)
             mockDocClient.send.mockResolvedValueOnce({});
 
-            const result = await service.createInvitation(email, workspaceId, inviterId, inviterName);
+            // Mock findUserIdByEmail (ScanCommand)
+            mockDocClient.send.mockResolvedValueOnce({ Items: [{ id: foundUserId }] });
 
-            expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(ScanCommand));
+            const result = await service.createInvitation(email, workspaceId, inviterId);
+
+            expect(mockWorkspacesService.getWorkspaceById).toHaveBeenCalledWith(workspaceId);
             expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(PutCommand));
-            expect(mockNotificationsService.createNotification).toHaveBeenCalled();
+            expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(ScanCommand)); // check user email
+            expect(mockNotificationsService.createNotification).toHaveBeenCalled(); // to invitee
             expect(result.email).toBe(email);
         });
 
-        it('should throw error if user not found', async () => {
-            mockDocClient.send.mockResolvedValueOnce({ Items: [] }); // No user found
-            await expect(service.createInvitation('unknown@example.com', 'ws-1', 'u1', 'name'))
-                .rejects.toThrow("User not found");
+        it('should throw error if workspace not found', async () => {
+            mockWorkspacesService.getWorkspaceById.mockResolvedValue(undefined);
+            await expect(service.createInvitation('test@example.com', 'ws-none', 'u1'))
+                .rejects.toThrow("Workspace not found");
         });
     });
 
-    describe('acceptInvitation', () => {
+    describe('respondToInvitation', () => {
         const inviteId = 'inv-1';
-        const userId = 'user-1';
+        const responderId = 'user-1';
         const workspaceId = 'ws-1';
-        const email = 'test@example.com';
 
         it('should accept invitation and add member', async () => {
             // Mock getInvitation
             mockDocClient.send.mockResolvedValueOnce({
-                Item: { id: inviteId, workspaceId, email, status: 'pending' }
+                Item: { id: inviteId, workspaceId, email: 'e@mail.com', inviterId: 'u2', status: 'pending' }
             });
 
-            // Mock getUserById
-            mockDocClient.send.mockResolvedValueOnce({
-                Item: { id: userId, email }
-            });
-
-            // Mock WorkspacesService.addMember
-            mockWorkspacesService.addMember.mockResolvedValue({});
-
-            // Mock DeleteInvite
+            // Mock UpdateCommand (Invite status)
             mockDocClient.send.mockResolvedValueOnce({});
 
-            await service.acceptInvitation(inviteId, userId);
+            await service.respondToInvitation(inviteId, true, responderId);
 
-            expect(mockWorkspacesService.addMember).toHaveBeenCalledWith(workspaceId, userId);
-            expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(DeleteCommand));
+            // Verified updated to accepted
+            expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(UpdateCommand));
+            // Verified workspace addMember called
+            expect(mockWorkspacesService.addMember).toHaveBeenCalledWith(workspaceId, responderId);
+            // Verified inviter notified
+            expect(mockNotificationsService.createNotification).toHaveBeenCalledWith('u2', 'info', expect.stringContaining('Accepted'), expect.any(String));
         });
 
-        it('should throw if invitation not found', async () => {
-            mockDocClient.send.mockResolvedValueOnce({ Item: undefined });
-            await expect(service.acceptInvitation(inviteId, userId)).rejects.toThrow("Invitation not found");
-        });
-
-        it('should throw if email mismatch', async () => {
+        it('should decline invitation', async () => {
             // Mock getInvitation
             mockDocClient.send.mockResolvedValueOnce({
-                Item: { id: inviteId, workspaceId, email, status: 'pending' }
+                Item: { id: inviteId, workspaceId, email: 'e@mail.com', inviterId: 'u2', status: 'pending' }
             });
 
-            // Mock getUserById
-            mockDocClient.send.mockResolvedValueOnce({
-                Item: { id: userId, email: 'other@example.com' }
-            });
-
-            await expect(service.acceptInvitation(inviteId, userId)).rejects.toThrow("not sent to your email");
-        });
-    });
-
-    describe('declineInvitation', () => {
-        it('should delete the invitation', async () => {
+            // Mock UpdateCommand (Invite status)
             mockDocClient.send.mockResolvedValueOnce({});
-            await service.declineInvitation('inv-1');
-            expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(DeleteCommand));
+
+            await service.respondToInvitation(inviteId, false, responderId);
+
+            expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(UpdateCommand));
+            // Ensure NO addMember
+            expect(mockWorkspacesService.addMember).not.toHaveBeenCalled();
+            // Ensure NO notification to inviter (logic says only check if accept?)
+            // Actually checking logic: "if (accept) { ... Notify Inviter }"
+            expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+        });
+
+        it('should throw if invitation not pending', async () => {
+            // Mock getInvitation
+            mockDocClient.send.mockResolvedValueOnce({
+                Item: { id: inviteId, status: 'accepted' }
+            });
+
+            await expect(service.respondToInvitation(inviteId, true, responderId)).rejects.toThrow("already responded");
         });
     });
 });

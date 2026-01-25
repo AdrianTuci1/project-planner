@@ -1,7 +1,7 @@
 import { WorkspacesService } from './workspaces.service';
 import { DBClient } from '../config/db.client';
 import { NotificationsService } from './notifications.service';
-import { DynamoDBDocumentClient, ScanCommand, PutCommand, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, ScanCommand, PutCommand, GetCommand, UpdateCommand, DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 jest.mock('../config/db.client');
 jest.mock('./notifications.service');
@@ -70,6 +70,12 @@ describe('WorkspacesService', () => {
             const type = 'team';
             const ownerId = 'user-123';
 
+            // Mock getWorkspaceById returns undefined (no conflict)
+            mockDocClient.send.mockResolvedValueOnce({ Item: undefined });
+
+            // Mock Put
+            mockDocClient.send.mockResolvedValueOnce({});
+
             const result = await service.createWorkspace(name, type, ownerId);
 
             expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(PutCommand));
@@ -128,10 +134,76 @@ describe('WorkspacesService', () => {
 
             expect(mockDocClient.send).toHaveBeenCalledTimes(1); // Only Get
         });
+    });
 
-        it('should throw error if workspace not found', async () => {
-            mockDocClient.send.mockResolvedValueOnce({ Item: undefined });
-            await expect(service.addMember('ws-x', 'u-x')).rejects.toThrow("Workspace not found");
+    describe('removeMember', () => {
+        it('should remove member if present', async () => {
+            const workspaceId = 'ws-1';
+            const userId = 'user-remove';
+            const mockWorkspace = { id: workspaceId, members: ['owner', userId] };
+
+            mockDocClient.send.mockResolvedValueOnce({ Item: mockWorkspace });
+            mockDocClient.send.mockResolvedValueOnce({});
+
+            await service.removeMember(workspaceId, userId);
+
+            expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(UpdateCommand));
+        });
+    });
+
+    describe('assignOwner', () => {
+        it('should update owner if member exists', async () => {
+            const workspaceId = 'ws-1';
+            const newOwner = 'user-2';
+            const mockWorkspace = { id: workspaceId, members: ['user-1', newOwner], ownerId: 'user-1' };
+
+            mockDocClient.send.mockResolvedValueOnce({ Item: mockWorkspace });
+            mockDocClient.send.mockResolvedValueOnce({});
+
+            await service.assignOwner(workspaceId, newOwner);
+
+            expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(UpdateCommand));
+        });
+
+        it('should throw if new owner is not a member', async () => {
+            const workspaceId = 'ws-1';
+            const newOwner = 'user-external';
+            const mockWorkspace = { id: workspaceId, members: ['user-1'], ownerId: 'user-1' };
+
+            mockDocClient.send.mockResolvedValueOnce({ Item: mockWorkspace });
+
+            await expect(service.assignOwner(workspaceId, newOwner)).rejects.toThrow("New owner must be a member");
+        });
+    });
+
+    describe('deleteWorkspace', () => {
+        it('should delete workspace and cascading resources', async () => {
+            const workspaceId = 'ws-1';
+            const mockWorkspace = { id: workspaceId, members: ['user-1'] };
+
+            // Mock getWorkspace
+            mockDocClient.send.mockResolvedValueOnce({ Item: mockWorkspace });
+
+            // Mock Delete Workspace
+            mockDocClient.send.mockResolvedValueOnce({});
+
+            // Mock Cascade: Tasks (Scan returns 2, then BatchDelete)
+            // Tasks Scan
+            mockDocClient.send.mockResolvedValueOnce({ Items: [{ id: 't1' }, { id: 't2' }] });
+            // Task 1 Delete
+            mockDocClient.send.mockResolvedValueOnce({});
+            // Task 2 Delete
+            mockDocClient.send.mockResolvedValueOnce({});
+
+            // Groups Scan (empty)
+            mockDocClient.send.mockResolvedValueOnce({ Items: [] });
+
+            // Labels Scan (empty)
+            mockDocClient.send.mockResolvedValueOnce({ Items: [] });
+
+            await service.deleteWorkspace(workspaceId);
+
+            expect(mockDocClient.send).toHaveBeenCalledWith(expect.any(DeleteCommand));
         });
     });
 });

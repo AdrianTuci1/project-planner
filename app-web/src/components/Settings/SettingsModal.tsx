@@ -26,6 +26,7 @@ import { DueDatesSettings } from './DueDatesSettings';
 import { AccountSettings } from './AccountSettings';
 import { SubscriptionSettings } from './SubscriptionSettings';
 import { ApiTokenSettings } from './ApiTokenSettings';
+import { AccountDataSettings } from './AccountDataSettings';
 
 interface SettingsModalProps {
     onClose: () => void;
@@ -109,11 +110,13 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
 
 
                     <div className="settings-nav-item"><Download size={16} /> Download apps</div>
-                    <div className="settings-nav-item"><Cloud size={16} /> Account data</div>
+                    <div className={`settings-nav-item ${settings.activeTab === 'account_data' ? 'active' : ''}`} onClick={() => settings.setActiveTab('account_data')}>
+                        <Cloud size={16} /> Account data
+                    </div>
 
                     <div className="settings-separator" />
 
-                    <div className="settings-nav-item" style={{ color: 'var(--accent-pink)' }}>
+                    <div className="settings-nav-item" style={{ color: 'var(--accent-pink)' }} onClick={() => store.authStore.logout()}>
                         <LogOut size={16} /> Log out
                     </div>
                 </div>
@@ -131,6 +134,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                             {settings.activeTab === 'calendar' && 'Calendar Integration'}
                             {settings.activeTab === 'subscription' && 'Subscription'}
                             {settings.activeTab === 'api_token' && 'API Token'}
+                            {settings.activeTab === 'account_data' && 'Account Data'}
                         </span>
                         <button className="icon-btn" onClick={onClose}>
                             <X size={20} />
@@ -151,6 +155,7 @@ export const SettingsModal = observer(({ onClose }: SettingsModalProps) => {
                         {settings.activeTab === 'calendar' && <CalendarSettings />}
                         {settings.activeTab === 'subscription' && <SubscriptionSettings />}
                         {settings.activeTab === 'api_token' && <ApiTokenSettings />}
+                        {settings.activeTab === 'account_data' && <AccountDataSettings />}
                     </div>
                 </div>
             </div>

@@ -1,5 +1,6 @@
 import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
+import { SSEService } from "./sse.service";
 
 export class LabelsService {
     private docClient: DynamoDBDocumentClient;
@@ -40,6 +41,11 @@ export class LabelsService {
             Item: label
         });
         await this.docClient.send(command);
+
+        if (label.createdBy) {
+            SSEService.getInstance().sendToUser(label.createdBy, 'label.created', label);
+        }
+
         return label;
     }
 
@@ -49,6 +55,11 @@ export class LabelsService {
             Item: { ...label, id }
         });
         await this.docClient.send(command);
+
+        if (label.createdBy) {
+            SSEService.getInstance().sendToUser(label.createdBy, 'label.updated', { ...label, id });
+        }
+
         return { ...label, id };
     }
 
@@ -58,6 +69,9 @@ export class LabelsService {
             Key: { id }
         });
         await this.docClient.send(command);
+
+        // Emit 'label.deleted' if possible (missing context here similar to Group)
+
         return { id };
     }
 }

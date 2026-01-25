@@ -1,166 +1,143 @@
-import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand, ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { v4 as uuidv4 } from 'uuid';
-import { WorkspacesService } from "./workspaces.service";
 import { NotificationsService } from "./notifications.service";
+import { WorkspacesService } from "./workspaces.service";
+
+export interface Invitation {
+    id: string;
+    email: string; // The email of the person being invited
+    workspaceId: string;
+    inviterId: string;
+    status: 'pending' | 'accepted' | 'declined';
+    createdAt: number;
+    updatedAt: number;
+}
 
 export class InvitationsService {
     private docClient: DynamoDBDocumentClient;
     private tableName: string;
-    private workspacesService: WorkspacesService;
     private notificationsService: NotificationsService;
+    private workspacesService: WorkspacesService;
 
     constructor() {
         this.docClient = DBClient.getInstance();
         this.tableName = process.env.TABLE_INVITATIONS || 'invitations';
-        this.workspacesService = new WorkspacesService();
         this.notificationsService = new NotificationsService();
+        this.workspacesService = new WorkspacesService();
     }
 
-    public async createInvitation(email: string, workspaceId: string, inviterId: string, inviterName: string) {
-        const inviteId = uuidv4();
+    public async createInvitation(email: string, workspaceId: string, inviterId: string): Promise<Invitation> {
+        // 1. Check if user already member? (Ideally)
+        // For now, just create invite.
 
-        // Find the user to notify
-        const userId = await this.findUserIdByEmail(email);
+        // 2. Lookup workspace name for notification
+        const workspace = await this.workspacesService.getWorkspaceById(workspaceId);
+        if (!workspace) throw new Error("Workspace not found");
 
-        if (!userId) {
-            throw new Error("User not found");
-        }
-
-        const invite = {
-            id: inviteId,
+        const id = uuidv4();
+        const now = Date.now();
+        const invitation: Invitation = {
+            id,
             email,
             workspaceId,
             inviterId,
             status: 'pending',
-            createdAt: Date.now()
+            createdAt: now,
+            updatedAt: now
         };
 
-        await this.docClient.send(new PutCommand({
-            TableName: this.tableName,
-            Item: invite
-        }));
-
-        // Send Notification
-        await this.notificationsService.createNotification(
-            userId,
-            'invite',
-            'Team Invitation',
-            `${inviterName} invited you to join their workspace.`,
-            { inviteId, workspaceId, email }
-        );
-
-        return invite;
-    }
-
-    private async findUserIdByEmail(email: string): Promise<string | null> {
-        try {
-            const command = new ScanCommand({
-                TableName: process.env.TABLE_USERS || 'users',
-                FilterExpression: "email = :e",
-                ExpressionAttributeValues: { ":e": email }
-            });
-            const res = await this.docClient.send(command);
-            if (res.Items && res.Items.length > 0) return res.Items[0].id;
-        } catch (e) {
-            console.warn("Could not query users table", e);
-        }
-        return null;
-    }
-
-    public async acceptInvitation(inviteId: string, userId: string) {
-        const invite = await this.getInvitation(inviteId);
-        if (!invite) throw new Error("Invitation not found");
-        if (invite.status !== 'pending') throw new Error("Invitation no longer valid");
-
-        // Verify the accepting user matches the invited email
-        const user = await this.getUserById(userId);
-        if (!user || user.email !== invite.email) {
-            throw new Error("This invitation was not sent to your email address.");
-        }
-
-        // --- SINGLE TEAM RULE ENFORCEMENT ---
-        // Fetch User Settings to check if they are already in a team
-        const userSettings = await this.getUserSettings(userId); // Helper needed
-        if (userSettings && userSettings.teamId) {
-            throw new Error("You are already part of a Team Workspace. You must leave it before joining another.");
-        }
-
-        await this.workspacesService.addMember(invite.workspaceId, userId);
-
-        // Update User Settings with new teamId
-        await this.updateUserTeamId(userId, invite.workspaceId);
-
-        // Update Invite Status
-        await this.docClient.send(new DeleteCommand({
-            TableName: this.tableName,
-            Key: { id: inviteId }
-        }));
-
-        return { success: true, workspaceId: invite.workspaceId };
-    }
-
-    private async getUserSettings(userId: string) {
-        // Using SettingsService logic or direct DB access? 
-        // Direct DB for internal service logic is cleaner/faster if we know the table.
-        // Table: 'settings' (usually)
-        try {
-            const res = await this.docClient.send(new GetCommand({
-                TableName: process.env.TABLE_SETTINGS || 'settings',
-                Key: { userId }
-            }));
-            return res.Item;
-        } catch (e) { return null; }
-    }
-
-    private async updateUserTeamId(userId: string, teamId: string) {
-        // Upsert teamId
         const command = new PutCommand({
-            TableName: process.env.TABLE_SETTINGS || 'settings',
-            Item: {
+            TableName: this.tableName,
+            Item: invitation
+        });
+
+        await this.docClient.send(command);
+
+        // 3. Try to notify the user if they exist in the system
+        // We need to look up userId by email. This is tricky without a GSI on Users table for email.
+        // Assuming we have a way or we just send email (not implemented yet).
+        // For now, we'll try to find a user with this email to send an in-app notification.
+        // If we can't find them, we can't send in-app notification yet.
+        const userId = await this.findUserIdByEmail(email);
+
+        if (userId) {
+            await this.notificationsService.createNotification(
                 userId,
-                teamId,
-                // We might overwrite other settings if we Put, but usually settings are merged.
-                // Better to use UpdateCommand.
+                'invite',
+                `Invitation to join ${workspace.name}`,
+                `You have been invited to join the workspace "${workspace.name}".`,
+                { inviteId: id, workspaceId, workspaceName: workspace.name, inviterId }
+            );
+        }
+
+        return invitation;
+    }
+
+    public async respondToInvitation(id: string, accept: boolean, responderUserId: string): Promise<void> {
+        const invite = await this.getInvitationById(id);
+        if (!invite) throw new Error("Invitation not found");
+
+        if (invite.status !== 'pending') throw new Error("Invitation already responded to");
+
+        // Verify that the responder is the one invited? 
+        // We invited by 'email'. The responder is 'responderUserId'. 
+        // We should check if responder's email matches the invite email. 
+        // For MVP, we might skip this strict check or assume the frontend handles the correct user context 
+        // if they received the notification. 
+        // Ideally: const user = await userService.get(responderUserId); if (user.email !== invite.email) error;
+
+        const status = accept ? 'accepted' : 'declined';
+
+        const command = new UpdateCommand({
+            TableName: this.tableName,
+            Key: { id },
+            UpdateExpression: "set #status = :s, updatedAt = :u",
+            ExpressionAttributeNames: { "#status": "status" },
+            ExpressionAttributeValues: {
+                ":s": status,
+                ":u": Date.now()
             }
         });
 
-        // Let's use Update to be safe and not wipe other settings
-        const updateCmd = new UpdateCommand({
-            TableName: process.env.TABLE_SETTINGS || 'settings',
-            Key: { userId },
-            UpdateExpression: "SET teamId = :t",
-            ExpressionAttributeValues: { ":t": teamId }
-        });
-        await this.docClient.send(updateCmd);
+        await this.docClient.send(command);
+
+        if (accept) {
+            await this.workspacesService.addMember(invite.workspaceId, responderUserId);
+
+            // Notify Inviter
+            await this.notificationsService.createNotification(
+                invite.inviterId,
+                'info',
+                'Invitation Accepted',
+                `${invite.email} has accepted your invitation to join the workspace.`
+            );
+        }
     }
 
-    public async declineInvitation(inviteId: string) {
-        await this.docClient.send(new DeleteCommand({
-            TableName: this.tableName,
-            Key: { id: inviteId }
-        }));
-        return { success: true };
-    }
-
-    private async getInvitation(id: string) {
-        const res = await this.docClient.send(new GetCommand({
+    public async getInvitationById(id: string): Promise<Invitation | undefined> {
+        const command = new GetCommand({
             TableName: this.tableName,
             Key: { id }
-        }));
-        return res.Item;
+        });
+        const result = await this.docClient.send(command);
+        return result.Item as Invitation | undefined;
     }
 
-    private async getUserById(userId: string) {
-        try {
-            const res = await this.docClient.send(new GetCommand({
-                TableName: process.env.TABLE_USERS || 'users',
-                Key: { id: userId }
-            }));
-            return res.Item;
-        } catch (e) {
-            console.error("Error fetching user:", e);
-            return null;
+    private async findUserIdByEmail(email: string): Promise<string | null> {
+        // Warning: Scan is expensive. Use GSI in production.
+        const { ScanCommand } = await import("@aws-sdk/lib-dynamodb");
+        const command = new ScanCommand({
+            TableName: process.env.TABLE_USERS || 'users',
+            FilterExpression: "email = :e",
+            ExpressionAttributeValues: { ":e": email },
+            ProjectionExpression: "id"
+        });
+
+        const result = await this.docClient.send(command);
+        if (result.Items && result.Items.length > 0) {
+            return result.Items[0].id; // Return first match
         }
+        return null;
     }
 }

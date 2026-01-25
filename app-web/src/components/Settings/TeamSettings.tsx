@@ -289,10 +289,15 @@ export const TeamSettings = observer(() => {
                         ) : (
                             <button
                                 className="disconnect-btn"
-                                onClick={() => {
+                                onClick={async () => {
                                     if (confirm("Are you sure you want to leave this team?")) {
-                                        // TODO: Implement leave functionality
-                                        alert("Leave team functionality coming soon.");
+                                        if (teamWorkspace?.id) {
+                                            try {
+                                                await store.workspaceStore.leaveWorkspace(teamWorkspace.id);
+                                            } catch (e: any) {
+                                                alert(e.message);
+                                            }
+                                        }
                                     }
                                 }}
                             >
@@ -313,8 +318,16 @@ export const TeamSettings = observer(() => {
                     <MenuItem
                         label="Make team owner"
                         icon={<Crown size={14} />}
-                        onClick={() => {
-                            alert("Transfer ownership not implemented yet.");
+                        onClick={async () => {
+                            if (menuState.memberId && teamWorkspace?.id) {
+                                if (confirm("Transfer ownership? You will lose owner privileges.")) {
+                                    try {
+                                        await store.workspaceStore.assignOwner(teamWorkspace.id, menuState.memberId);
+                                    } catch (e: any) {
+                                        alert(e.message);
+                                    }
+                                }
+                            }
                             closeMenu();
                         }}
                     />
@@ -322,8 +335,16 @@ export const TeamSettings = observer(() => {
                         label="Remove from team"
                         icon={<Users size={14} />}
                         color="#EF4444"
-                        onClick={() => {
-                            alert("Remove member not implemented yet.");
+                        onClick={async () => {
+                            if (menuState.memberId && teamWorkspace?.id) {
+                                if (confirm("Remove this member from the team?")) {
+                                    try {
+                                        await store.workspaceStore.removeMember(teamWorkspace.id, menuState.memberId);
+                                    } catch (e: any) {
+                                        alert(e.message);
+                                    }
+                                }
+                            }
                             closeMenu();
                         }}
                     />

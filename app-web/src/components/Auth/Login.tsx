@@ -25,8 +25,13 @@ export const Login: React.FC<LoginProps> = observer(({ onLogin }) => {
     };
 
     return (
-        <AuthLayout imageSrc="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" imageAlt="Abstract Dark Background">
-            <h1 className="auth-title">Log in</h1>
+        <AuthLayout imageSrc="/onb.png" imageAlt="Abstract Dark Background">
+            <div className="auth-brand-header">
+                <div className="auth-logo-wrapper">
+                    <img src="/icon.png" alt="Logo" className="auth-logo" />
+                </div>
+                <span className="auth-brand-name">simplu</span>
+            </div>
             <p className="auth-subtitle">Welcome back! Please enter your details.</p>
 
             <form className="auth-form" onSubmit={handleLogin}>
@@ -80,15 +85,6 @@ export const Login: React.FC<LoginProps> = observer(({ onLogin }) => {
                     className="auth-button-secondary"
                     onClick={() => {
                         store.authStore.loginWithGoogle();
-                    }}
-                    style={{
-                        background: 'transparent',
-                        border: '1px solid var(--border-primary)',
-                        color: 'var(--text-primary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 'var(--space-3)'
                     }}
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

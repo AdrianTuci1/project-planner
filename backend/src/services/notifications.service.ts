@@ -1,6 +1,7 @@
 import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { v4 as uuidv4 } from 'uuid';
+import { SSEService } from "./sse.service";
 
 export class NotificationsService {
     private docClient: DynamoDBDocumentClient;
@@ -30,6 +31,10 @@ export class NotificationsService {
         });
 
         await this.docClient.send(command);
+
+        // SSE Emit
+        SSEService.getInstance().sendToUser(userId, 'notification.created', notification);
+
         return notification;
     }
 
@@ -60,6 +65,10 @@ export class NotificationsService {
         });
 
         await this.docClient.send(updateCmd);
+
+        // SSE Emit
+        SSEService.getInstance().sendToUser(userId, 'notification.updated', { id, isRead: true });
+
         return { id, isRead: true };
     }
 

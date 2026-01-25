@@ -264,7 +264,7 @@ export class UIStore {
 
     closeTaskModal() {
         if (this.isNewTaskInteraction && this.activeTask && !this.activeTask.title.trim()) {
-            console.log(`[UIStore] Cleaning up empty new task: ${this.activeTask.id}`);
+            // console.log(`[UIStore] Cleaning up empty new task: ${this.activeTask.id}`);
             this.rootStore.taskStore.deleteTask(this.activeTask.id);
         }
 

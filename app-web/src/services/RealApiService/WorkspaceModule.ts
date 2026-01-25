@@ -19,6 +19,23 @@ export class WorkspaceModule extends BaseApiService {
         return this.syncAndFetch(`${this.baseUrl}/workspaces/${id}`, 'DELETE', null, 'deleteWorkspace');
     }
 
+    async removeMember(workspaceId: string, userId: string): Promise<void> {
+        return this.syncAndFetch(`${this.baseUrl}/workspaces/${workspaceId}/members/${userId}`, 'DELETE', null, 'removeMember');
+    }
+
+    async assignOwner(workspaceId: string, userId: string): Promise<void> {
+        return this.syncAndFetch(`${this.baseUrl}/workspaces/${workspaceId}/owner`, 'PUT', { ownerId: userId }, 'assignOwner');
+    }
+
+    async leaveWorkspace(workspaceId: string): Promise<void> {
+        // Leaving is effectively removing self. 
+        // Backend should have a convenience route or we use removeMember with 'me' or current userId context.
+        // Typically better to have a dedicated endpoint or handle in UI by passing current ID.
+        // Let's assume we pass current ID from store, so this method might just be an alias or UI calls removeMember directly.
+        // But "leave" implies "me". 
+        return this.syncAndFetch(`${this.baseUrl}/workspaces/${workspaceId}/leave`, 'POST', null, 'leaveWorkspace');
+    }
+
     private async syncAndFetch(url: string, method: string, body: any, context: string, fallbackValue: any = undefined) {
         if (navigator.onLine) {
             try {

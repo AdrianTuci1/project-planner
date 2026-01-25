@@ -98,6 +98,73 @@ export class WorkspaceStore {
         }
     }
 
+    handleRealtimeUpdate(type: string, data: any) {
+        switch (type) {
+            case 'workspace.created':
+                if (!this.workspaces.find(w => w.id === data.id)) {
+                    const ws = new Workspace(data.name, data.type, data.id);
+                    ws.ownerId = data.ownerId;
+                    ws.members = data.members || [];
+                    this.workspaces.push(ws);
+                    workspaceSyncStrategy.monitor(ws);
+                }
+                break;
+            case 'workspace.updated':
+                const wsToUpdate = this.workspaces.find(w => w.id === data.id);
+                if (wsToUpdate) {
+                    wsToUpdate.name = data.name;
+                    wsToUpdate.type = data.type;
+                    wsToUpdate.ownerId = data.ownerId;
+                    wsToUpdate.avatarUrl = data.avatarUrl;
+                }
+                break;
+            case 'workspace.deleted':
+                const idx = this.workspaces.findIndex(w => w.id === data.id);
+                if (idx > -1) {
+                    const deletedId = this.workspaces[idx].id;
+                    this.workspaces.splice(idx, 1);
+                    if (this.activeWorkspaceId === deletedId) {
+                        const personal = this.workspaces.find(w => w.type === 'personal');
+                        if (personal) this.activeWorkspaceId = personal.id;
+                    }
+                }
+                break;
+            case 'workspace.member_added':
+                const wsAdded = this.workspaces.find(w => w.id === data.workspaceId);
+                if (wsAdded) {
+                    if (!wsAdded.members.includes(data.userId)) {
+                        wsAdded.members.push(data.userId);
+                    }
+                }
+                break;
+            case 'workspace.member_removed':
+                const wsRemoved = this.workspaces.find(w => w.id === data.workspaceId);
+                if (wsRemoved) {
+                    wsRemoved.members = wsRemoved.members.filter(m => m !== data.userId);
+                    // If I was removed?
+                    const myId = this.rootStore.currentUser?.id;
+                    if (data.userId === myId) {
+                        // Remove workspace from my list essentially, same as delete for me
+                        const myIdx = this.workspaces.findIndex(w => w.id === data.workspaceId);
+                        if (myIdx > -1) {
+                            this.workspaces.splice(myIdx, 1);
+                            if (this.activeWorkspaceId === data.workspaceId) {
+                                const personal = this.workspaces.find(w => w.type === 'personal');
+                                if (personal) this.activeWorkspaceId = personal.id;
+                            }
+                        }
+                    }
+                }
+                break;
+            case 'workspace.owner_updated':
+                const wsOwner = this.workspaces.find(w => w.id === data.workspaceId);
+                if (wsOwner) {
+                    wsOwner.ownerId = data.newOwnerId;
+                }
+                break;
+        }
+    }
+
     get activeWorkspace() {
         return this.workspaces.find(w => w.id === this.activeWorkspaceId) || this.workspaces[0];
     }
@@ -197,6 +264,71 @@ export class WorkspaceStore {
         }
     }
 
+    async removeMember(workspaceId: string, userId: string) {
+        this.isLoading = true;
+        try {
+            await api.removeMember(workspaceId, userId);
+            runInAction(() => {
+                const ws = this.workspaces.find(w => w.id === workspaceId);
+                if (ws && ws.members) {
+                    ws.members = ws.members.filter(m => m !== userId);
+                }
+            });
+        } catch (err: any) {
+            console.error("Failed to remove member", err);
+            throw err;
+        } finally {
+            runInAction(() => {
+                this.isLoading = false;
+            });
+        }
+    }
+
+    async assignOwner(workspaceId: string, newOwnerId: string) {
+        this.isLoading = true;
+        try {
+            await api.assignOwner(workspaceId, newOwnerId);
+            runInAction(() => {
+                const ws = this.workspaces.find(w => w.id === workspaceId);
+                if (ws) {
+                    ws.ownerId = newOwnerId;
+                }
+            });
+        } catch (err: any) {
+            console.error("Failed to assign owner", err);
+            throw err;
+        } finally {
+            runInAction(() => {
+                this.isLoading = false;
+            });
+        }
+    }
+
+    async leaveWorkspace(workspaceId: string) {
+        this.isLoading = true;
+        try {
+            await api.leaveWorkspace(workspaceId);
+            // Re-init to remove the workspace from list
+            await this.initializeData();
+
+            // Switch to personal
+            runInAction(() => {
+                const personal = this.workspaces.find(w => w.type === 'personal');
+                if (personal) {
+                    this.activeWorkspaceId = personal.id;
+                    this.rootStore.settings.setTeamView('summary');
+                }
+            });
+        } catch (err: any) {
+            console.error("Failed to leave workspace", err);
+            throw err;
+        } finally {
+            runInAction(() => {
+                this.isLoading = false;
+            });
+        }
+    }
+
     async initializeData() {
         this.isLoading = true;
         this.error = null;
@@ -204,7 +336,7 @@ export class WorkspaceStore {
             // 1. Fetch Real Workspaces first (if online)
             let fetchedWorkspaces = [];
             if (typeof window !== 'undefined' && !navigator.onLine) {
-                console.log("[WorkspaceStore] Offline. Skipping workspace list fetch.");
+                // console.log("[WorkspaceStore] Offline. Skipping workspace list fetch.");
             } else {
                 fetchedWorkspaces = await api.getWorkspaces();
             }
@@ -264,7 +396,7 @@ export class WorkspaceStore {
     private async fetchActiveWorkspaceData() {
         if (!this.activeWorkspaceId) return;
 
-        console.log(`[WorkspaceStore] Fetching data for workspace: ${this.activeWorkspaceId}`);
+        // console.log(`[WorkspaceStore] Fetching data for workspace: ${this.activeWorkspaceId}`);
         this.isLoading = true;
 
         try {

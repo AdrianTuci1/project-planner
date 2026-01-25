@@ -18,7 +18,11 @@ export class WorkspacesRoute implements Routes {
         this.router.post(`${this.path}`, this.authMiddleware.verifyToken, this.workspacesController.createWorkspace);
         this.router.get(`${this.path}/:id`, this.authMiddleware.verifyToken, this.workspacesController.getWorkspaceById);
         this.router.put(`${this.path}/:id`, this.authMiddleware.verifyToken, this.workspacesController.updateWorkspace);
+        this.router.delete(`${this.path}/:id`, this.authMiddleware.verifyToken, this.workspacesController.deleteWorkspace);
+
+        // Member management
+        this.router.delete(`${this.path}/:id/members/:userId`, this.authMiddleware.verifyToken, this.workspacesController.removeMember);
+        this.router.put(`${this.path}/:id/owner`, this.authMiddleware.verifyToken, this.workspacesController.assignOwner);
+        this.router.post(`${this.path}/:id/leave`, this.authMiddleware.verifyToken, this.workspacesController.leaveWorkspace);
     }
 }
-
-

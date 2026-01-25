@@ -1,8 +1,8 @@
-import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand, ScanCommand, DeleteCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { Workspace } from '../models/types';
 import { v4 as uuidv4 } from 'uuid';
-
+import { SSEService } from "./sse.service";
 import { NotificationsService } from "./notifications.service";
 
 export class WorkspacesService {
@@ -18,8 +18,6 @@ export class WorkspacesService {
     }
 
     public async getAllWorkspaces(userId: string, email?: string): Promise<Workspace[]> {
-        // Warning: Scan is expensive. Ideally use GSI on members.
-        // But for < 1000 workspaces it's fine.
         const command = new ScanCommand({
             TableName: this.tableName,
         });
@@ -35,7 +33,6 @@ export class WorkspacesService {
             const personal = await this.createWorkspace("Personal", 'personal', userId);
             userWorkspaces.unshift(personal);
 
-            // Trigger Welcome Notification
             if (email) {
                 await this.notificationsService.sendWelcomeNotification(userId, email);
             }
@@ -49,10 +46,10 @@ export class WorkspacesService {
 
         if (type === 'team') {
             workspaceId = `team-${ownerId}`;
-            // Check if already exists to avoid overwriting or duplicates
             const existing = await this.getWorkspaceById(workspaceId);
             if (existing) {
-                return existing;
+                if (existing.ownerId === ownerId) return existing;
+                workspaceId = uuidv4();
             }
         }
 
@@ -71,6 +68,10 @@ export class WorkspacesService {
         });
 
         await this.docClient.send(command);
+
+        // SSE Emit
+        SSEService.getInstance().sendToUser(ownerId, 'workspace.created', newWorkspace);
+
         return newWorkspace;
     }
 
@@ -87,7 +88,6 @@ export class WorkspacesService {
         let targetId = id;
 
         if (id === 'personal' && userId) {
-            // Find personal workspace for this user
             const all = await this.getAllWorkspaces(userId);
             const personal = all.find(w => w.type === 'personal' && w.ownerId === userId);
             if (!personal) throw new Error("Personal workspace not found");
@@ -96,10 +96,6 @@ export class WorkspacesService {
 
         const workspace = await this.getWorkspaceById(targetId);
         if (!workspace) throw new Error("Workspace not found");
-
-        // Verify ownership/permission if needed (simplified: if found via personal/userId check, it's valid)
-        // For strictness, if userId provided, check ownership? 
-        // For now, trusting the 'personal' resolution or direct ID access (which implies they knew the ID).
 
         const updateExpressionParts: string[] = [];
         const expressionAttributeNames: { [key: string]: string } = {};
@@ -129,31 +125,27 @@ export class WorkspacesService {
         });
 
         const result = await this.docClient.send(command);
-        return result.Attributes as Workspace;
+        const updated = result.Attributes as Workspace;
+
+        // SSE Emit to all members
+        if (workspace.members) {
+            workspace.members.forEach(mId => {
+                SSEService.getInstance().sendToUser(mId, 'workspace.updated', updated);
+            });
+        }
+
+        return updated;
     }
 
     public async addMember(workspaceId: string, userId: string) {
-        // Use SET to append to list, checking if not exists ideally.
-        // DynamoDB List append: list_append(members, :u)
-        // But let's read-modify-write for safety or use simple update if we assume set.
-        // Actually workspace.members is an array.
-
-        // Retrieve first to avoid duplicates
-        let targetId = workspaceId;
-        if (workspaceId === 'personal') {
-            // 'personal' shouldn't really have members added like this usually, but IF we supported it:
-            // We need ownerId context. Since addMember usually called during invite, we might have it.
-            // But simpler to expect UUID for addMember.
-        }
-
-        const workspace = await this.getWorkspaceById(targetId);
+        const workspace = await this.getWorkspaceById(workspaceId);
         if (!workspace) throw new Error("Workspace not found");
 
-        if (workspace.members.includes(userId)) return; // Already member
+        if (workspace.members.includes(userId)) return;
 
         const command = new UpdateCommand({
             TableName: this.tableName,
-            Key: { id: targetId },
+            Key: { id: workspaceId },
             UpdateExpression: "SET members = list_append(members, :u)",
             ExpressionAttributeValues: {
                 ":u": [userId]
@@ -161,5 +153,126 @@ export class WorkspacesService {
         });
 
         await this.docClient.send(command);
+
+        // Notify new member
+        SSEService.getInstance().sendToUser(userId, 'workspace.member_added', { workspaceId, userId });
+        // Notify others
+        workspace.members.forEach(mId => {
+            SSEService.getInstance().sendToUser(mId, 'workspace.member_added', { workspaceId, userId });
+        });
+    }
+
+    public async removeMember(workspaceId: string, userId: string) {
+        const workspace = await this.getWorkspaceById(workspaceId);
+        if (!workspace) throw new Error("Workspace not found");
+
+        const idx = workspace.members.indexOf(userId);
+        if (idx === -1) return;
+
+        const newMembers = workspace.members.filter(m => m !== userId);
+
+        const command = new UpdateCommand({
+            TableName: this.tableName,
+            Key: { id: workspaceId },
+            UpdateExpression: "SET members = :m",
+            ExpressionAttributeValues: {
+                ":m": newMembers
+            }
+        });
+
+        await this.docClient.send(command);
+
+        // Notify removed member (so they can update list)
+        SSEService.getInstance().sendToUser(userId, 'workspace.member_removed', { workspaceId, userId });
+        // Notify others
+        newMembers.forEach(mId => {
+            SSEService.getInstance().sendToUser(mId, 'workspace.member_removed', { workspaceId, userId });
+        });
+    }
+
+    public async assignOwner(workspaceId: string, newOwnerId: string) {
+        const workspace = await this.getWorkspaceById(workspaceId);
+        if (!workspace) throw new Error("Workspace not found");
+
+        if (!workspace.members.includes(newOwnerId)) {
+            throw new Error("New owner must be a member of the workspace");
+        }
+
+        const command = new UpdateCommand({
+            TableName: this.tableName,
+            Key: { id: workspaceId },
+            UpdateExpression: "SET ownerId = :o",
+            ExpressionAttributeValues: {
+                ":o": newOwnerId
+            }
+        });
+
+        await this.docClient.send(command);
+
+        // Notify all
+        workspace.members.forEach(mId => {
+            SSEService.getInstance().sendToUser(mId, 'workspace.owner_updated', { workspaceId, newOwnerId });
+        });
+    }
+
+    public async deleteWorkspace(workspaceId: string) {
+        const workspace = await this.getWorkspaceById(workspaceId);
+        if (!workspace) throw new Error("Workspace not found");
+
+        await this.docClient.send(new DeleteCommand({
+            TableName: this.tableName,
+            Key: { id: workspaceId }
+        }));
+
+        await this.cascadeDeleteResources(workspaceId);
+
+        // Notify all members
+        workspace.members.forEach(mId => {
+            SSEService.getInstance().sendToUser(mId, 'workspace.deleted', { id: workspaceId });
+        });
+    }
+
+    private async cascadeDeleteResources(workspaceId: string) {
+        await this.deleteByWorkspaceId(process.env.TABLE_TASKS || 'tasks', workspaceId);
+        await this.deleteByWorkspaceId(process.env.TABLE_GROUPS || 'groups', workspaceId);
+        await this.deleteByWorkspaceId(process.env.TABLE_LABELS || 'labels', workspaceId);
+    }
+
+    private async deleteByWorkspaceId(tableName: string, workspaceId: string) {
+        let items: any[] = [];
+        try {
+            const command = new QueryCommand({
+                TableName: tableName,
+                IndexName: 'WorkspaceIndex',
+                KeyConditionExpression: "workspaceId = :w",
+                ExpressionAttributeValues: { ":w": workspaceId }
+            });
+            const result = await this.docClient.send(command);
+            items = result.Items || [];
+        } catch (e) {
+            const command = new ScanCommand({
+                TableName: tableName,
+                FilterExpression: "workspaceId = :w",
+                ExpressionAttributeValues: { ":w": workspaceId }
+            });
+            const result = await this.docClient.send(command);
+            items = result.Items || [];
+        }
+
+        if (items.length === 0) return;
+
+        const chunked = [];
+        for (let i = 0; i < items.length; i += 25) {
+            chunked.push(items.slice(i, i + 25));
+        }
+
+        for (const chunk of chunked) {
+            await Promise.all(chunk.map(item =>
+                this.docClient.send(new DeleteCommand({
+                    TableName: tableName,
+                    Key: { id: item.id }
+                }))
+            ));
+        }
     }
 }

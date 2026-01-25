@@ -1,4 +1,4 @@
-import { makeAutoObservable, reaction } from "mobx";
+import { makeAutoObservable, reaction, runInAction } from "mobx";
 import { Task, GroupType } from "./core";
 import { TaskStore } from "./stores/TaskStore";
 import { UIStore } from "./stores/UIStore";
@@ -9,6 +9,7 @@ import { LabelStore } from "./stores/LabelStore";
 import { WorkspaceStore } from "./stores/WorkspaceStore";
 import { GroupStore } from "./stores/GroupStore";
 import { CalendarStore } from "./stores/CalendarStore";
+import { realtimeService } from "../services/RealtimeService";
 
 export class ProjectStore {
     taskStore: TaskStore;
@@ -42,15 +43,72 @@ export class ProjectStore {
                 if (isAuthenticated) {
                     console.log("[ProjectStore] Authenticated! Initializing data...");
                     this.initializeData();
+                    realtimeService.connect();
                 } else {
                     console.log("[ProjectStore] Not authenticated yet.");
+                    realtimeService.disconnect();
                 }
             }
         );
     }
 
-    // --- Delegation to Sub-Stores ---
+    handleRealtimeEvent(type: string, data: any) {
+        console.log("[ProjectStore] Handling Realtime Event:", type, data);
+        runInAction(() => {
+            switch (type) {
+                // Tasks
+                case 'task.created':
+                case 'task.updated':
+                case 'task.deleted':
+                    this.taskStore.handleRealtimeUpdate(type, data);
+                    break;
 
+                // Groups
+                case 'group.created':
+                case 'group.updated':
+                case 'group.deleted':
+                    this.groupStore.handleRealtimeUpdate(type, data);
+                    break;
+
+                // Workspaces
+                case 'workspace.created':
+                case 'workspace.updated':
+                case 'workspace.deleted':
+                case 'workspace.member_added':
+                case 'workspace.member_removed':
+                case 'workspace.owner_updated':
+                    this.workspaceStore.handleRealtimeUpdate(type, data);
+                    break;
+
+                // Labels
+                case 'label.created':
+                case 'label.updated':
+                case 'label.deleted':
+                    this.labelStore.handleRealtimeUpdate(type, data);
+                    break;
+
+                // Notifications
+                case 'notification.created':
+                case 'notification.updated':
+                    this.notificationStore.handleRealtimeUpdate(type, data);
+                    break;
+
+                // Settings
+                case 'settings.updated':
+                    // Settings are usually in UIStore or a separate SettingsStore (UIStore.settings)
+                    // UIStore structure handles settings inside it.
+                    if (this.uiStore.settings) {
+                        this.uiStore.settings.updateFromRealtime(data);
+                    }
+                    break;
+
+                default:
+                    console.warn("Unhandled realtime event:", type);
+            }
+        });
+    }
+
+    // --- Delegation to Sub-Stores ---
     // WorkspaceStore Delegations
     get workspaces() { return this.workspaceStore.workspaces; }
     get activeWorkspace() { return this.workspaceStore.activeWorkspace; }

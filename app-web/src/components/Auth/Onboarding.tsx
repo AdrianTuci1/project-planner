@@ -4,6 +4,12 @@ import { store } from '../../models/store';
 import { observer } from 'mobx-react-lite';
 import { runInAction } from 'mobx';
 
+import {
+    Linkedin, Instagram, Users, Building2, Twitter, Globe,
+    GraduationCap, Briefcase, Rocket, LayoutList, Code, User,
+    CheckCircle2, Target, Zap, BookOpen
+} from 'lucide-react';
+
 interface OnboardingProps {
     onComplete: () => void;
 }
@@ -11,18 +17,41 @@ interface OnboardingProps {
 const STEPS = [
     {
         question: "Where did you hear about us?",
-        options: ["LinkedIn", "Instagram", "Friend", "Agency", "Twitter", "Other"],
-        field: "source"
+        options: [
+            { label: "LinkedIn", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/LinkedIn_logo_initials.png/250px-LinkedIn_logo_initials.png" },
+            { label: "Instagram", image: "https://cdn.simpleicons.org/instagram/E4405F" },
+            { label: "Friend / Colleague", emoji: "🥷🏼" },
+            { label: "Agency", emoji: "🏰" },
+            { label: "X", image: "https://img.freepik.com/free-vector/new-2023-twitter-logo-x-icon-design_1017-45418.jpg?semt=ais_hybrid&w=740&q=80" }, // Use black for X logo
+            { label: "Other", emoji: "🌐" }
+        ],
+        field: "source",
+        columns: 2
     },
     {
         question: "Who are you?",
-        options: ["Student", "Freelancer", "Founder", "Product Manager", "Developer", "Other"],
-        field: "role"
+        options: [
+            { label: "Student", emoji: "🎓" },
+            { label: "Freelancer", emoji: "💻" },
+            { label: "Founder", emoji: "🚀" },
+            { label: "Product Manager", emoji: "🧑🏼‍🎨" },
+            { label: "Developer", emoji: "👨‍💻" },
+            { label: "Other", emoji: "💼" }
+        ],
+        field: "role",
+        columns: 2
     },
     {
         question: "What will you use the app for?",
-        options: ["Personal Productivity", "Work Management", "Team Collaboration", "Education", "Other"],
-        field: "usage"
+        options: [
+            { label: "Personal Productivity", emoji: "✅" },
+            { label: "Work Management", emoji: "🎯" },
+            { label: "Team Collaboration", emoji: "🤝" },
+            { label: "Education", emoji: "📚" },
+            { label: "Other", emoji: "⚡" }
+        ],
+        field: "usage",
+        columns: 1
     }
 ];
 
@@ -70,6 +99,7 @@ export const Onboarding: React.FC<OnboardingProps> = observer(({ onComplete }) =
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            store.authStore.setPendingOnboarding(answers);
             await store.authStore.register(email, password, name);
             // After register, we might need confirmation. 
             // For now, assuming we proceed or show a "Check your email" message.
@@ -98,12 +128,18 @@ export const Onboarding: React.FC<OnboardingProps> = observer(({ onComplete }) =
     };
 
     const stepData = STEPS[currentStep];
-    const isSelected = (option: string) => answers[currentStep] === option;
+    const isSelected = (optionLabel: string) => answers[currentStep] === optionLabel;
     const canProceed = !!answers[currentStep];
 
     if (isCreatingAccount) {
         return (
-            <AuthLayout imageSrc="https://images.unsplash.com/photo-1635326444826-06c8f8447838?q=80&w=2670&auto=format&fit=crop" imageAlt="Abstract 3D Shape">
+            <AuthLayout imageSrc="/onb.png" imageAlt="Abstract">
+                <div className="auth-brand-header">
+                    <div className="auth-logo-wrapper">
+                        <img src="/logo.png" alt="Logo" className="auth-logo" />
+                    </div>
+                    <span className="auth-brand-name">simplu</span>
+                </div>
                 <h1 className="auth-title">Create your account</h1>
                 <p className="auth-subtitle">Start your journey with us.</p>
 
@@ -177,17 +213,9 @@ export const Onboarding: React.FC<OnboardingProps> = observer(({ onComplete }) =
                     <button
                         type="button"
                         className="auth-button-secondary"
-                        onClick={() => store.authStore.loginWithGoogle()}
-                        style={{
-                            background: 'transparent',
-                            border: '1px solid var(--border-primary)',
-                            color: 'var(--text-primary)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 'var(--space-3)',
-                            width: '100%',
-                            cursor: 'pointer'
+                        onClick={() => {
+                            store.authStore.setPendingOnboarding(answers);
+                            store.authStore.loginWithGoogle();
                         }}
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -204,25 +232,38 @@ export const Onboarding: React.FC<OnboardingProps> = observer(({ onComplete }) =
     }
 
     return (
-        <AuthLayout imageSrc="https://images.unsplash.com/photo-1635326444826-06c8f8447838?q=80&w=2670&auto=format&fit=crop" imageAlt="Abstract 3D Shape">
-            <div className="auth-step-indicator" style={{ marginBottom: 'var(--space-4)', color: 'var(--text-muted)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Step {currentStep + 1} of {STEPS.length}
+        <AuthLayout imageSrc="/onb.png" imageAlt="Abstract 3D Shape">
+            <div className="auth-brand-header">
+                <div className="auth-logo-wrapper">
+                    <img src="/logo.png" alt="Logo" className="auth-logo" />
+                </div>
+                <span className="auth-brand-name">simplu</span>
             </div>
 
             <h1 className="auth-title">{stepData.question}</h1>
             <p className="auth-subtitle">Select the best option that describes you.</p>
 
             <div className="auth-form">
-                <div className="auth-chip-grid">
-                    {stepData.options.map((option) => (
-                        <div
-                            key={option}
-                            className={`auth-chip ${isSelected(option) ? 'selected' : ''}`}
-                            onClick={() => handleSelect(option)}
-                        >
-                            {option}
-                        </div>
-                    ))}
+                <div className={`auth-option-grid ${stepData.columns === 2 ? 'two-columns' : ''}`}>
+                    {stepData.options.map((option) => {
+                        // @ts-ignore - Dynamic options structure
+                        const { emoji, image } = option;
+                        const isSelectedOption = isSelected(option.label);
+                        return (
+                            <div
+                                key={option.label}
+                                className={`auth-option-card ${isSelectedOption ? 'selected' : ''}`}
+                                onClick={() => handleSelect(option.label)}
+                            >
+                                {image ? (
+                                    <img src={image} alt={option.label} className="auth-option-image" />
+                                ) : (
+                                    <span className="auth-option-emoji">{emoji}</span>
+                                )}
+                                <span className="auth-option-label">{option.label}</span>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 <div className="auth-nav-buttons">

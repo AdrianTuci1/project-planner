@@ -2,7 +2,7 @@ import { makeAutoObservable } from "mobx";
 import { api } from "../../services/api";
 import { settingsSyncStrategy } from "../strategies/SettingsSyncStrategy";
 
-export type SettingsTab = 'account' | 'team' | 'general' | 'labels' | 'power' | 'calendar' | 'due_dates' | 'subscription' | 'api_token';
+export type SettingsTab = 'account' | 'team' | 'general' | 'labels' | 'power' | 'calendar' | 'due_dates' | 'subscription' | 'api_token' | 'account_data';
 export type AccountView = 'main' | 'email' | 'password';
 import { GeneralSettingsModel } from "./GeneralSettingsModel";
 import { AccountSettingsModel } from "./AccountSettingsModel";
@@ -13,6 +13,7 @@ import { DueDatesSettingsModel } from "./DueDatesSettingsModel";
 export class SettingsModel {
     activeTab: SettingsTab = 'account';
     accountView: AccountView = 'main';
+    accountDataView: 'main' | 'import' | 'export' | 'delete' = 'main';
     teamView: 'summary' | 'manage' = 'summary';
     emailToInvite: string = '';
     account = new AccountSettingsModel();
@@ -63,9 +64,16 @@ export class SettingsModel {
         if (tab !== 'account') {
             this.accountView = 'main';
         }
+        if (tab !== 'account_data') {
+            this.accountDataView = 'main';
+        }
         if (tab !== 'team') {
             this.teamView = 'summary';
         }
+    }
+
+    setAccountDataView(view: 'main' | 'import' | 'export' | 'delete') {
+        this.accountDataView = view;
     }
 
     setAccountView(view: AccountView) {

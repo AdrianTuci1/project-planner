@@ -319,6 +319,10 @@ export class Workspace implements IWorkspace {
         return group;
     }
 
+    addGroup(group: Group) {
+        this.groups.push(group);
+    }
+
     addTaskToDump(title: string) {
         const task = new Task(title);
         task.workspaceId = this.id;
