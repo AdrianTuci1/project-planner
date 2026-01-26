@@ -36,7 +36,7 @@ export class App {
         // Debug Logger
         this.app.use((req, res, next) => {
             if (req.url.startsWith('/api/stream')) {
-                console.log(`[App] Incoming SSE Request: ${req.method} ${req.url}`);
+                console.log(`[App] Incoming SSE Request: ${req.method}`);
             }
             next();
         });

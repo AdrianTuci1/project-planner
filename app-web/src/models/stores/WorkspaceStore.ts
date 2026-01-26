@@ -16,6 +16,7 @@ export class WorkspaceStore {
     isLoading: boolean = false;
     error: string | null = null;
     lastFetchRange: { start: Date, end: Date } | null = null;
+    memberDetails: Map<string, any> = new Map();
 
     constructor(rootStore: ProjectStore) {
         this.rootStore = rootStore;
@@ -329,6 +330,22 @@ export class WorkspaceStore {
         }
     }
 
+    async fetchMemberDetails(workspaceId: string) {
+        const workspace = this.workspaces.find(w => w.id === workspaceId);
+        if (!workspace || !workspace.members || workspace.members.length === 0) return;
+
+        try {
+            const users = await api.getUsers(workspace.members);
+            runInAction(() => {
+                users.forEach(u => {
+                    this.memberDetails.set(u.id, u);
+                });
+            });
+        } catch (err) {
+            console.error("Failed to fetch member details", err);
+        }
+    }
+
     async initializeData() {
         this.isLoading = true;
         this.error = null;
@@ -433,6 +450,11 @@ export class WorkspaceStore {
                         workspaceId: l.workspaceId || this.activeWorkspaceId
                     }));
                     this.rootStore.labelStore.setAvailableLabels(mappedLabels);
+                }
+
+                // If it's a team workspace, fetch member details
+                if (targetWorkspace.type === 'team') {
+                    this.fetchMemberDetails(targetWorkspace.id);
                 }
             });
         } catch (err: any) {

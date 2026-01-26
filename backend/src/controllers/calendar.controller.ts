@@ -7,7 +7,7 @@ export class CalendarController {
     public getCalendars = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // @ts-ignore
-            const userId = req.user?.id;
+            const userId = req.user?.sub;
             if (!userId) throw new Error("Unauthorized");
             const data = await this.calendarService.getCalendars(userId);
             res.status(200).json(data);
@@ -20,7 +20,7 @@ export class CalendarController {
         try {
             const account = req.body;
             // @ts-ignore
-            const userId = req.user?.id;
+            const userId = req.user?.sub;
             if (!userId) throw new Error("Unauthorized");
             const updated = await this.calendarService.addAccount(account, userId);
             res.status(200).json(updated);
@@ -34,7 +34,7 @@ export class CalendarController {
             const { id } = req.params;
             const updates = req.body;
             // @ts-ignore
-            const userId = req.user?.id;
+            const userId = req.user?.sub;
             if (!userId) throw new Error("Unauthorized");
             const updated = await this.calendarService.updateAccount(id, updates, userId);
             res.status(200).json(updated);
@@ -47,7 +47,7 @@ export class CalendarController {
         try {
             const { id } = req.params;
             // @ts-ignore
-            const userId = req.user?.id;
+            const userId = req.user?.sub;
             if (!userId) throw new Error("Unauthorized");
             const updated = await this.calendarService.removeAccount(id, userId);
             res.status(200).json(updated);
@@ -69,7 +69,7 @@ export class CalendarController {
         try {
             const { id } = req.params;
             // @ts-ignore
-            const userId = req.user?.id || 'default-user';
+            const userId = req.user?.sub || 'default-user';
 
             const updated = await this.calendarService.fetchSubCalendars(id, userId);
             res.status(200).json(updated);
@@ -82,7 +82,7 @@ export class CalendarController {
         try {
             const { start, end } = req.query;
             // @ts-ignore
-            const userId = req.user?.id || 'default-user';
+            const userId = req.user?.sub || 'default-user';
 
             if (!start || !end) {
                 throw new Error("Missing start/end date params");
@@ -109,7 +109,7 @@ export class CalendarController {
             // If the user calls this from Frontend, they should be Authenticated via JWT.
             // So we can get userId from req.user
             // @ts-ignore
-            const userId = req.user?.id || 'default-user';
+            const userId = req.user?.sub || 'default-user';
 
             const account = await this.calendarService.handleGoogleCallback(code, userId);
 
@@ -128,7 +128,7 @@ export class CalendarController {
             const end = eventUpdates.end?.dateTime;
 
             // @ts-ignore
-            const userId = req.user?.id;
+            const userId = req.user?.sub;
 
             if (start || end) {
                 const success = await this.calendarService.updateEventTime(accountId, calendarId, eventId, start, end, userId);
@@ -149,7 +149,7 @@ export class CalendarController {
         try {
             const { accountId, calendarId, eventId } = req.params;
             // @ts-ignore
-            const userId = req.user?.id;
+            const userId = req.user?.sub;
 
             const success = await this.calendarService.deleteEvent(accountId, calendarId, eventId, userId);
             if (success) {

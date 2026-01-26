@@ -18,8 +18,12 @@ class UserRoute implements Routes {
         this.router.post(`${this.path}/sync`, this.authMiddleware.verifyToken, this.userController.syncUser);
 
         // API Token Routes
+        this.router.get(`${this.path}/api-token`, this.authMiddleware.verifyToken, this.userController.getApiToken);
         this.router.post(`${this.path}/api-token`, this.authMiddleware.verifyToken, this.userController.generateApiToken);
         this.router.delete(`${this.path}/api-token`, this.authMiddleware.verifyToken, this.userController.revokeApiToken);
+
+        // Batch User Fetch
+        this.router.post(`${this.path}/batch`, this.authMiddleware.verifyToken, this.userController.getBatchUsers);
     }
 }
 

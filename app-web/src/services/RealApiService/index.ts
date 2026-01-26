@@ -91,6 +91,7 @@ export class RealApiService implements IApiService {
     respondToInvite(id: string, accept: boolean): Promise<void> { return this.notificationModule.respondToInvite(id, accept); }
 
     // API Token delegates
+    getApiToken(): Promise<{ token: string | null }> { return this.userModule.getApiToken(); }
     generateApiToken(): Promise<{ token: string }> { return this.userModule.generateApiToken(); }
     revokeApiToken(): Promise<void> { return this.userModule.revokeApiToken(); }
 
@@ -104,4 +105,6 @@ export class RealApiService implements IApiService {
     // Subscription delegates
     createCheckoutSession(priceId: string): Promise<{ url: string }> { return this.subscriptionModule.createCheckoutSession(priceId); }
     createCustomerPortalSession(): Promise<{ url: string }> { return this.subscriptionModule.createCustomerPortalSession(); }
+
+    getUsers(ids: string[]): Promise<any[]> { return this.userModule.getUsers(ids); }
 }

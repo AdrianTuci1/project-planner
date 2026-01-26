@@ -23,6 +23,12 @@ export const TeamSettings = observer(() => {
         y: 0
     });
 
+    React.useEffect(() => {
+        if (teamId) {
+            store.workspaceStore.fetchMemberDetails(teamId);
+        }
+    }, [teamId]);
+
     // File Upload Logic
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -227,33 +233,47 @@ export const TeamSettings = observer(() => {
                         {/* Members Section (Restored Style) */}
                         <div style={{ marginTop: 30 }}>
                             <div className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 14, fontWeight: 500 }}>Active Members</div>
-                            <div style={{
-                                display: 'flex', alignItems: 'center', gap: 10,
-                                padding: 10
-                            }}>
-                                {settings.account.avatarUrl ? (
-                                    <img
-                                        src={settings.account.avatarUrl}
-                                        alt={settings.account.displayName}
-                                        style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }}
-                                    />
-                                ) : (
-                                    <div className="settings-avatar-sm" style={{ width: 32, height: 32, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-input)', borderRadius: 6 }}>
-                                        {(settings.account.displayName?.charAt(0) || user?.name?.charAt(0) || 'U').toUpperCase()}
-                                    </div>
-                                )}
+                            {teamWorkspace.members.map((memberId: string) => {
+                                const memberDetail = store.workspaceStore.memberDetails.get(memberId);
+                                const isMemberOwner = teamWorkspace.ownerId === memberId;
+                                const isMe = memberId === user?.sub || memberId === user?.username;
 
-                                <div style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    {settings.account.displayName || user?.name || 'You'}
-                                    <Crown size={14} className="text-warning" style={{ color: '#F59E0B' }} fill="currentColor" />
-                                </div>
-                                <div
-                                    style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}
-                                    className="member-role-label"
-                                >
-                                    Owner
-                                </div>
-                            </div>
+                                return (
+                                    <div
+                                        key={memberId}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 10,
+                                            padding: '10px 0',
+                                            borderBottom: '1px solid var(--border-subtle)'
+                                        }}
+                                        onClick={(e) => !isMe && isOwner && handleMemberClick(e, memberId)}
+                                        className={!isMe && isOwner ? "member-clickable" : ""}
+                                    >
+                                        {memberDetail?.avatarUrl ? (
+                                            <img
+                                                src={memberDetail.avatarUrl}
+                                                alt={memberDetail.name}
+                                                style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }}
+                                            />
+                                        ) : (
+                                            <div className="settings-avatar-sm" style={{ width: 32, height: 32, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-input)', borderRadius: 6 }}>
+                                                {(memberDetail?.name?.charAt(0) || 'U').toUpperCase()}
+                                            </div>
+                                        )}
+
+                                        <div style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            {memberDetail?.name || (isMe ? (settings.account.displayName || user?.name) : 'Loading...')}
+                                            {isMemberOwner && <Crown size={14} className="text-warning" style={{ color: '#F59E0B' }} fill="currentColor" />}
+                                        </div>
+                                        <div
+                                            style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}
+                                            className="member-role-label"
+                                        >
+                                            {isMemberOwner ? 'Owner' : 'Member'}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
 
                         <div className="manage-divider" />
@@ -363,14 +383,25 @@ export const TeamSettings = observer(() => {
 
             <div className="connected-account-card">
                 <div className="account-info">
-                    <div style={{
-                        width: 40, height: 40, borderRadius: 8,
-                        background: 'var(--primary)', color: 'white',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 'bold', fontSize: 18
-                    }}>
-                        {teamName.charAt(0).toUpperCase()}
-                    </div>
+                    {teamWorkspace.avatarUrl ? (
+                        <img
+                            src={teamWorkspace.avatarUrl}
+                            alt="Team Logo"
+                            style={{
+                                width: 40, height: 40, borderRadius: 8,
+                                objectFit: 'cover'
+                            }}
+                        />
+                    ) : (
+                        <div style={{
+                            width: 40, height: 40, borderRadius: 8,
+                            background: 'var(--primary)', color: 'white',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontWeight: 'bold', fontSize: 18
+                        }}>
+                            {teamName.charAt(0).toUpperCase()}
+                        </div>
+                    )}
                     <div>
                         <div style={{ fontWeight: 600, fontSize: 15 }}>{teamWorkspace.name}</div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>

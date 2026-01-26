@@ -72,6 +72,43 @@ export class NotificationsService {
         return { id, isRead: true };
     }
 
+    public async updateNotification(id: string, userId: string, updates: Partial<{ type: string, title: string, message: string, isRead: boolean, data: any }>) {
+        let updateExpression = "set";
+        const expressionAttributeNames: any = {};
+        const expressionAttributeValues: any = {};
+
+        Object.entries(updates).forEach(([key, value], index) => {
+            const attrName = `#attr${index}`;
+            const attrValue = `:val${index}`;
+            updateExpression += ` ${attrName} = ${attrValue},`;
+            expressionAttributeNames[attrName] = key;
+            expressionAttributeValues[attrValue] = value;
+        });
+
+        // Remove trailing comma
+        updateExpression = updateExpression.slice(0, -1);
+
+        const updateCmd = new UpdateCommand({
+            TableName: this.tableName,
+            Key: { id },
+            UpdateExpression: updateExpression,
+            ExpressionAttributeNames: expressionAttributeNames,
+            ExpressionAttributeValues: expressionAttributeValues
+        });
+
+        await this.docClient.send(updateCmd);
+
+        // SSE Emit
+        SSEService.getInstance().sendToUser(userId, 'notification.updated', { id, ...updates });
+
+        return { id, ...updates };
+    }
+
+    public async findNotificationByInviteId(userId: string, inviteId: string) {
+        const notifications = await this.getUserNotifications(userId);
+        return notifications.find((n: any) => n.data?.inviteId === inviteId);
+    }
+
     public async sendGlobalNotification(title: string, message: string, type: string = 'info') {
         const command = new ScanCommand({
             TableName: process.env.TABLE_USERS || 'users',

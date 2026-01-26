@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, BatchGetCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { EmailService } from "./email.service";
 import { NotificationsService } from "./notifications.service";
@@ -113,6 +113,11 @@ export class UserService {
         return token;
     }
 
+    async getApiToken(userId: string) {
+        const user = await this.getUser(userId);
+        return user?.apiToken || null;
+    }
+
     async revokeApiToken(userId: string) {
         const updateCommand = new UpdateCommand({
             TableName: this.tableName,
@@ -142,5 +147,47 @@ export class UserService {
             return user;
         }
         return null;
+    }
+
+    async getUsersByIds(ids: string[]) {
+        if (!ids || ids.length === 0) return [];
+
+        // Dedup ids
+        const uniqueIds = [...new Set(ids)];
+
+        // DynamoDB BatchGetItem has a limit of 100 items per request
+        // For simplicity, we will split into chunks if needed, but assuming small teams for now.
+        // If > 100, we should loop.
+
+        const chunks = [];
+        for (let i = 0; i < uniqueIds.length; i += 100) {
+            chunks.push(uniqueIds.slice(i, i + 100));
+        }
+
+        let allUsers: any[] = [];
+
+        for (const chunk of chunks) {
+            const keys = chunk.map(id => ({ id }));
+            const command = new BatchGetCommand({
+                RequestItems: {
+                    [this.tableName]: {
+                        Keys: keys
+                    }
+                }
+            });
+
+            const result = await this.docClient.send(command);
+            if (result.Responses && result.Responses[this.tableName]) {
+                allUsers = [...allUsers, ...result.Responses[this.tableName]];
+            }
+        }
+
+        // Return only public info
+        return allUsers.map(u => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            avatarUrl: u.avatarUrl
+        }));
     }
 }

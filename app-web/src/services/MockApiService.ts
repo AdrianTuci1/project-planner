@@ -343,4 +343,17 @@ export class MockApiService implements IApiService {
     async removeMember(workspaceId: string, userId: string): Promise<void> { console.log("Mock remove member", workspaceId, userId); }
     async assignOwner(workspaceId: string, userId: string): Promise<void> { console.log("Mock assign owner", workspaceId, userId); }
     async leaveWorkspace(workspaceId: string): Promise<void> { console.log("Mock leave workspace", workspaceId); }
+
+    async getApiToken(): Promise<{ token: string | null }> {
+        return { token: 'sk_mock_existing_token' };
+    }
+
+    async getUsers(ids: string[]): Promise<any[]> {
+        return ids.map(id => ({
+            id,
+            name: `Mock User ${id.substring(0, 4)}`,
+            email: `${id}@example.com`,
+            avatarUrl: ''
+        }));
+    }
 }

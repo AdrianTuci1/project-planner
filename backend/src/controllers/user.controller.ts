@@ -27,11 +27,34 @@ class UserController {
         }
     };
 
+    public getApiToken = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { sub } = (req as any).user;
+            const token = await this.userService.getApiToken(sub);
+            res.status(200).json({ data: { token } });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     public revokeApiToken = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { sub } = (req as any).user;
             await this.userService.revokeApiToken(sub);
             res.status(200).json({ message: 'API Token revoked successfully' });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public getBatchUsers = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { ids } = req.body;
+            if (!Array.isArray(ids)) {
+                return res.status(400).json({ message: 'ids must be an array' });
+            }
+            const users = await this.userService.getUsersByIds(ids);
+            res.status(200).json({ data: users });
         } catch (error) {
             next(error);
         }

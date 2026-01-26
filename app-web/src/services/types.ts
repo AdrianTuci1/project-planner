@@ -90,6 +90,7 @@ export interface IApiService {
     respondToInvite(id: string, accept: boolean): Promise<void>;
 
     // API Token
+    getApiToken(): Promise<{ token: string | null }>;
     generateApiToken(): Promise<{ token: string }>;
     revokeApiToken(): Promise<void>;
 
@@ -109,6 +110,8 @@ export interface IApiService {
     // Subscription
     createCheckoutSession(priceId: string): Promise<{ url: string }>;
     createCustomerPortalSession(): Promise<{ url: string }>;
+
+    getUsers(ids: string[]): Promise<any[]>;
 }
 
 export interface SubCalendar {

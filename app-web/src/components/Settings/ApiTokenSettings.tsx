@@ -8,6 +8,23 @@ export const ApiTokenSettings = observer(() => {
     const [apiToken, setApiToken] = useState<string | null>(null);
     const [showToken, setShowToken] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    React.useEffect(() => {
+        const fetchToken = async () => {
+            try {
+                const { token } = await api.getApiToken();
+                if (token) {
+                    setApiToken(token);
+                }
+            } catch (error) {
+                console.error("Failed to fetch API token", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchToken();
+    }, []);
 
     const handleGenerateToken = async () => {
         try {

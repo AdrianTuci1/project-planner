@@ -46,6 +46,10 @@ export class NotificationStore {
                 const notif = this.notifications.find(n => n.id === data.id);
                 if (notif) {
                     if (data.isRead !== undefined) notif.isRead = data.isRead;
+                    if (data.type !== undefined) notif.type = data.type;
+                    if (data.title !== undefined) notif.title = data.title;
+                    if (data.message !== undefined) notif.message = data.message;
+                    if (data.data !== undefined) notif.data = data.data;
                 }
                 break;
         }

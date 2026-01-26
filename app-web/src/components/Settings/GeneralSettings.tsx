@@ -48,22 +48,6 @@ export const GeneralSettings = observer(() => {
                     <Toggle active={general.generalSettings.markCompleteSubtasks} onChange={() => general.setSetting('markCompleteSubtasks', !general.generalSettings.markCompleteSubtasks)} />
                 </div>
 
-                <div className="setting-row">
-                    <span className="setting-label">Automatically set "actual time" when task is complete</span>
-                    <Toggle active={general.generalSettings.autoSetActualTime} onChange={() => general.setSetting('autoSetActualTime', !general.generalSettings.autoSetActualTime)} />
-                </div>
-            </div>
-
-            <div className="settings-group-decoration">
-                <div className="setting-row">
-                    <span className="setting-label">Enable deep link detection for external apps</span>
-                    <Toggle active={general.generalSettings.deepLinkDetection} onChange={() => general.setSetting('deepLinkDetection', !general.generalSettings.deepLinkDetection)} />
-                </div>
-                <div className="setting-indent">
-                    <button className="setting-action-btn">
-                        Manage <ChevronRight size={14} />
-                    </button>
-                </div>
             </div>
 
             {/* Calendar / Kanban Settings */}
@@ -85,59 +69,9 @@ export const GeneralSettings = observer(() => {
                 </div>
             </div>
 
-            <div className="settings-group-decoration">
-                <div className="setting-row">
-                    <span className="setting-label">Set a workday threshold?</span>
-                    <Toggle active={general.generalSettings.workdayThreshold} onChange={() => general.setSetting('workdayThreshold', !general.generalSettings.workdayThreshold)} />
-                </div>
-
-                <div className="setting-row">
-                    <span className="setting-label">Workload Threshold</span>
-                    <Select
-                        value={general.generalSettings.workloadThreshold}
-                        onChange={(val) => general.setSetting('workloadThreshold', val)}
-                        options={['4 hours', '6 hours', '8 hours', '10 hours']}
-                    />
-                </div>
-
-                <div className="setting-indent">
-                    <div className="setting-label" style={{ marginBottom: 12 }}>Exclude tasks with these labels from workload calculation:</div>
-                    <button className="setting-action-btn">
-                        Add label to exclusion list
-                    </button>
-                </div>
-            </div>
-
             <div className="setting-row">
                 <span className="setting-label">Show declined events</span>
                 <Toggle active={general.generalSettings.showDeclinedEvents} onChange={() => general.setSetting('showDeclinedEvents', !general.generalSettings.showDeclinedEvents)} />
-            </div>
-
-            <div className="setting-row">
-                <span className="setting-label">Start day at</span>
-                <Select
-                    value={general.generalSettings.startDayAt}
-                    onChange={(val) => general.setSetting('startDayAt', val)}
-                    options={['12:00 AM', '6:00 AM', '8:00 AM', '9:00 AM']}
-                />
-            </div>
-
-            <div className="setting-row">
-                <span className="setting-label">Calendar time increments</span>
-                <Select
-                    value={general.generalSettings.calendarIncrements}
-                    onChange={(val) => general.setSetting('calendarIncrements', val)}
-                    options={['15 minute', '30 minute', '1 hour']}
-                />
-            </div>
-
-            <div className="setting-row">
-                <span className="setting-label">Time format</span>
-                <Select
-                    value={general.generalSettings.timeFormat}
-                    onChange={(val) => general.setSetting('timeFormat', val)}
-                    options={['12 hour', '24 hour']}
-                />
             </div>
 
             {/* Appearance */}
@@ -167,20 +101,6 @@ export const GeneralSettings = observer(() => {
                     <button className="setting-action-btn">
                         Change Timer Background <ChevronRight size={14} />
                     </button>
-                </div>
-            </div>
-
-            {/* Braindump & Lists */}
-            <div className="settings-section">
-                <div className="settings-section-header">Braindump & Lists</div>
-
-                <div className="setting-row">
-                    <span className="setting-label">Sidebar layout</span>
-                    <Select
-                        value={general.generalSettings.sidebarLayout}
-                        onChange={(val) => general.setSetting('sidebarLayout', val)}
-                        options={['Show one list', 'Show all lists']}
-                    />
                 </div>
             </div>
 
@@ -215,29 +135,6 @@ export const GeneralSettings = observer(() => {
                 </div>
             </div>
 
-            {/* Task Rollover */}
-            <div className="settings-section">
-                <div className="settings-section-header">Task Rollover</div>
-
-                <div className="setting-row">
-                    <span className="setting-label">Roll-over tasks to the next day</span>
-                    <Toggle active={general.generalSettings.rolloverNextDay} onChange={() => general.setSetting('rolloverNextDay', !general.generalSettings.rolloverNextDay)} />
-                </div>
-
-                <div className="setting-row">
-                    <span className="setting-label">Roll-over recurring tasks</span>
-                    <Toggle active={general.generalSettings.rolloverRecurring} onChange={() => general.setSetting('rolloverRecurring', !general.generalSettings.rolloverRecurring)} />
-                </div>
-
-                <div className="setting-row">
-                    <span className="setting-label">Roll over tasks to the</span>
-                    <Select
-                        value={general.generalSettings.rolloverTo}
-                        onChange={(val) => general.setSetting('rolloverTo', val)}
-                        options={['Bottom of list', 'Top of list']}
-                    />
-                </div>
-            </div>
         </div>
     );
 });

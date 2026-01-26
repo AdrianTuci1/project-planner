@@ -102,6 +102,26 @@ export class InvitationsService {
 
         await this.docClient.send(command);
 
+        // Update the recipient's notification
+        try {
+            const notification = await this.notificationsService.findNotificationByInviteId(responderUserId, id);
+            if (notification) {
+                const workspace = await this.workspacesService.getWorkspaceById(invite.workspaceId);
+                const workspaceName = workspace?.name || "the workspace";
+
+                await this.notificationsService.updateNotification(notification.id, responderUserId, {
+                    type: 'info',
+                    title: accept ? 'Invitation Accepted' : 'Invitation Declined',
+                    message: accept
+                        ? `You have joined "${workspaceName}".`
+                        : `You declined the invitation to join "${workspaceName}".`,
+                    isRead: true
+                });
+            }
+        } catch (err) {
+            console.error("Failed to update notification after invite response", err);
+        }
+
         if (accept) {
             await this.workspacesService.addMember(invite.workspaceId, responderUserId);
 
