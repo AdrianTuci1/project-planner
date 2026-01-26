@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { getGoogleAuthClient } from "../config/google.client";
 import { CalendarAccount, CalendarData } from '../models/types';
@@ -301,5 +301,12 @@ export class CalendarService {
         await this.updateCalendars(currentData, userId);
 
         return newAccount;
+    }
+    public async deleteUserCalendars(userId: string): Promise<void> {
+        const command = new DeleteCommand({
+            TableName: this.tableName,
+            Key: { userId }
+        });
+        await this.docClient.send(command);
     }
 }

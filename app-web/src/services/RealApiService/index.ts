@@ -113,4 +113,5 @@ export class RealApiService implements IApiService {
     updateUser(data: any): Promise<any> { return this.userModule.updateUser(data); }
     syncUser(onboardingData: any): Promise<any> { return this.authModule.syncUser(onboardingData); }
     getUserProfile(): Promise<any> { return this.userModule.getUserProfile(); }
+    deleteAccount(confirmation: string): Promise<void> { return this.userModule.deleteAccount(confirmation); }
 }

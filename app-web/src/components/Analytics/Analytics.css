@@ -245,23 +245,27 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    height: 220px;
-    padding-top: 20px;
-    padding-bottom: 40px;
-    /* Space for rotated labels */
-    /* Remove fixed gap, will be handled dynamically or by flex */
+    height: 260px;
+    /* Increased height to accommodate larger bottom padding */
+    padding: 20px 10px 70px 10px;
+    /* Increased bottom padding for rotated labels */
     position: relative;
     width: 100%;
+    box-sizing: border-box;
+    /* Ensure padding is included in height/width */
 }
 
 /* Grid Lines */
 .chart-grid-lines {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 24px;
-    /* Match padding-bottom of container */
+    top: 20px;
+    /* Match container padding-top */
+    left: 10px;
+    /* Match container padding-left */
+    right: 10px;
+    /* Match container padding-right */
+    bottom: 70px;
+    /* Match container padding-bottom */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -278,13 +282,13 @@
 
 .grid-line span {
     position: absolute;
-    left: -30px;
-    /* Adjust based on needs */
+    left: -35px;
+    /* Moved further left */
     top: -6px;
     font-size: 10px;
     color: #555;
     text-align: right;
-    width: 24px;
+    width: 30px;
 }
 
 .bar-group {
@@ -304,7 +308,8 @@
     background: linear-gradient(180deg, #ff2d55 0%, #d41c40 100%);
     border-radius: 4px 4px 0 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 4px;
+    min-height: 2px;
+    /* Reduced min-height so 0 values don't look like data */
     position: relative;
 }
 
@@ -336,15 +341,22 @@
 
 .bar-label {
     position: absolute;
-    bottom: -35px;
+    bottom: -55px;
+    /* Pushed further down inside the 70px padding */
     left: 50%;
     font-size: 10px;
     color: #888;
     font-weight: 500;
     transform: translateX(-50%) rotate(-45deg);
+    /* Keep rotation */
     transform-origin: center top;
     white-space: nowrap;
     pointer-events: none;
+    text-align: center;
+    width: 100px;
+    /* Give it some width to center properly */
+    display: flex;
+    justify-content: center;
 }
 
 /* Table Styles */

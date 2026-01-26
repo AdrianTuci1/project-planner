@@ -4,20 +4,39 @@ import { store } from '../../models/store';
 import {
     ArrowRight,
     ArrowLeft,
-    FileInput, // for Import
     FileOutput, // for Export
     AlertTriangle, // for Delete
     CheckCircle2, // for Export Tasks
     List, // for Export Lists
     Tag, // for Export Labels
     LayoutTemplate,
-    Trash2
 } from 'lucide-react';
 import './AccountDataSettings.css';
+
+import { api } from '../../services/api';
 
 export const AccountDataSettings = observer(() => {
     const { settings } = store;
     const [confirmationText, setConfirmationText] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleDeleteAccount = async () => {
+        if (confirmationText !== 'permanently delete') return;
+
+        setIsDeleting(true);
+        setError(null);
+
+        try {
+            await api.deleteAccount(confirmationText);
+            // Logout after successful deletion
+            await store.authStore.logout();
+        } catch (err: any) {
+            console.error("Account deletion failed", err);
+            setError(err.message || "Failed to delete account. Please try again.");
+            setIsDeleting(false);
+        }
+    };
 
     // --- Main View ---
     if (settings.accountDataView === 'main') {
@@ -161,6 +180,12 @@ export const AccountDataSettings = observer(() => {
                 </div>
 
                 <div className="delete-account-form">
+                    {error && (
+                        <div className="error-message" style={{ color: 'var(--red-500)', marginBottom: 16 }}>
+                            {error}
+                        </div>
+                    )}
+
                     <label className="delete-account-label">Type <strong>permanently delete</strong> to confirm</label>
                     <input
                         type="text"
@@ -168,14 +193,19 @@ export const AccountDataSettings = observer(() => {
                         placeholder="permanently delete"
                         value={confirmationText}
                         onChange={(e) => setConfirmationText(e.target.value)}
+                        disabled={isDeleting}
                     />
 
                     <button
                         className="delete-account-btn"
-                        disabled={confirmationText !== 'permanently delete'}
-                        style={{ opacity: confirmationText === 'permanently delete' ? 1 : 0.5, cursor: confirmationText === 'permanently delete' ? 'pointer' : 'not-allowed' }}
+                        onClick={handleDeleteAccount}
+                        disabled={confirmationText !== 'permanently delete' || isDeleting}
+                        style={{
+                            opacity: (confirmationText === 'permanently delete' && !isDeleting) ? 1 : 0.5,
+                            cursor: (confirmationText === 'permanently delete' && !isDeleting) ? 'pointer' : 'not-allowed'
+                        }}
                     >
-                        Delete Account
+                        {isDeleting ? 'Deleting...' : 'Delete Account'}
                     </button>
                 </div>
             </div>

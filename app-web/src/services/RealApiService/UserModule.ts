@@ -45,4 +45,20 @@ export class UserModule extends BaseApiService {
             { data: null }
         ).then(res => res.data);
     }
+
+    async deleteAccount(confirmation: string): Promise<void> {
+        const res = await fetch(`${this.baseUrl}/users/me`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                ...this.getAuthHeader()
+            },
+            body: JSON.stringify({ confirmation })
+        });
+
+        if (!res.ok) {
+            const error = await res.json().catch(() => ({}));
+            throw new Error(error.message || `deleteAccount failed: ${res.statusText}`);
+        }
+    }
 }

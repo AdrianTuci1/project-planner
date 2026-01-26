@@ -2,18 +2,38 @@ import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, BatchGet
 import { DBClient } from "../config/db.client";
 import { EmailService } from "./email.service";
 import { NotificationsService } from "./notifications.service";
+import { TasksService } from "./tasks.service";
+import { GroupsService } from "./groups.service";
+import { LabelsService } from "./labels.service";
+import { SettingsService } from "./settings.service";
+import { CalendarService } from "./calendar.service";
+import { WorkspacesService } from "./workspaces.service";
+import { DeleteCommand } from "@aws-sdk/lib-dynamodb";
 
 export class UserService {
     private docClient: DynamoDBDocumentClient;
     private tableName: string;
     private emailService: EmailService;
     private notificationsService: NotificationsService;
+    private tasksService: TasksService;
+    private groupsService: GroupsService;
+    private labelsService: LabelsService;
+    private settingsService: SettingsService;
+    private calendarService: CalendarService;
+    private workspacesService: WorkspacesService;
 
     constructor() {
         this.docClient = DBClient.getInstance();
         this.tableName = process.env.TABLE_USERS || 'Users';
         this.emailService = new EmailService();
+
         this.notificationsService = new NotificationsService();
+        this.tasksService = new TasksService();
+        this.groupsService = new GroupsService();
+        this.labelsService = new LabelsService();
+        this.settingsService = new SettingsService();
+        this.calendarService = new CalendarService();
+        this.workspacesService = new WorkspacesService();
     }
 
     async syncUser(userId: string, email: string, name: string, onboardingData: any) {
@@ -232,5 +252,36 @@ export class UserService {
 
         const result = await this.docClient.send(command);
         return this.maskToken(result.Attributes);
+    }
+
+
+    async deleteAccount(userId: string) {
+        // 1. Delete Personal Tasks
+        await this.tasksService.deleteUserPersonalTasks(userId);
+
+        // 2. Delete Personal Groups
+        await this.groupsService.deleteUserPersonalGroups(userId);
+
+        // 3. Delete Personal Labels
+        await this.labelsService.deleteUserPersonalLabels(userId);
+
+        // 4. Delete Settings
+        await this.settingsService.deleteSettings(userId);
+
+        // 5. Delete Calendars
+        await this.calendarService.deleteUserCalendars(userId);
+
+        // 6. Delete Owned Workspaces (cascades to workspace resources)
+        await this.workspacesService.deleteUserWorkspaces(userId);
+
+        // 7. Delete User
+        const command = new DeleteCommand({
+            TableName: this.tableName,
+            Key: { id: userId }
+        });
+
+        await this.docClient.send(command);
+
+        return { success: true, userId };
     }
 }

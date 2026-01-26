@@ -87,6 +87,22 @@ class UserController {
             next(error);
         }
     };
+
+    public deleteAccount = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { sub } = (req as any).user;
+            const { confirmation } = req.body;
+
+            if (confirmation !== 'permanently delete') {
+                return res.status(400).json({ message: 'Confirmation phrase is incorrect' });
+            }
+
+            await this.userService.deleteAccount(sub);
+            res.status(200).json({ message: 'Account deleted successfully' });
+        } catch (error) {
+            next(error);
+        }
+    };
 }
 
 export default UserController;

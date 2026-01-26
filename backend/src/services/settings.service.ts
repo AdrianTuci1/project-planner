@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { GeneralSettings } from '../models/types';
 import { SSEService } from "./sse.service";
@@ -39,8 +39,6 @@ export class SettingsService {
             attachmentsEnabled: false,
         },
         thresholdDays: 7,
-        displayName: '',
-        avatarUrl: ''
     };
     // END: Default settings
 
@@ -89,5 +87,12 @@ export class SettingsService {
         await this.docClient.send(command);
 
         SSEService.getInstance().sendToUser(userId, 'settings.updated', updated);
+    }
+    public async deleteSettings(userId: string): Promise<void> {
+        const command = new DeleteCommand({
+            TableName: this.tableName,
+            Key: { userId }
+        });
+        await this.docClient.send(command);
     }
 }

@@ -101,6 +101,7 @@ export class LabelsService {
     }
 
     public async deleteLabel(id: string) {
+        // ...
         // Fetch context
         let label: any = null;
         try {
@@ -135,5 +136,35 @@ export class LabelsService {
         }
 
         return { id };
+    }
+
+    public async deleteUserPersonalLabels(userId: string) {
+        const command = new ScanCommand({
+            TableName: this.tableName,
+            FilterExpression: "(createdBy = :u) AND (attribute_not_exists(workspaceId) OR workspaceId = :p)",
+            ExpressionAttributeValues: {
+                ":u": userId,
+                ":p": "personal"
+            }
+        });
+
+        const result = await this.docClient.send(command);
+        const labels = result.Items || [];
+
+        const chunks = [];
+        for (let i = 0; i < labels.length; i += 25) {
+            chunks.push(labels.slice(i, i + 25));
+        }
+
+        for (const chunk of chunks) {
+            await Promise.all(chunk.map(label =>
+                this.docClient.send(new DeleteCommand({
+                    TableName: this.tableName,
+                    Key: { id: label.id }
+                }))
+            ));
+        }
+
+        return labels.length;
     }
 }

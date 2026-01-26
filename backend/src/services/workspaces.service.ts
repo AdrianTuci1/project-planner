@@ -275,4 +275,23 @@ export class WorkspacesService {
             ));
         }
     }
+    public async deleteUserWorkspaces(userId: string) {
+        // Find all workspaces where ownerId = userId
+        // Query if index exists (usually we'd have index on ownerId), otherwise scan
+        // Assuming scan for now as volume is likely manageable or index not strictly defined in context.
+        // Actually, let's use Scan with filter for safety.
+
+        const command = new ScanCommand({
+            TableName: this.tableName,
+            FilterExpression: "ownerId = :o",
+            ExpressionAttributeValues: { ":o": userId }
+        });
+
+        const result = await this.docClient.send(command);
+        const owned = (result.Items || []) as Workspace[];
+
+        for (const workspace of owned) {
+            await this.deleteWorkspace(workspace.id);
+        }
+    }
 }

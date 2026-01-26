@@ -94,6 +94,7 @@ export class GroupsService {
     }
 
     public async deleteGroup(id: string) {
+        // ...
         // Fetch first to get context
         let groupToDelete: any = null;
         try {
@@ -135,5 +136,35 @@ export class GroupsService {
         }
 
         return { id };
+    }
+
+    public async deleteUserPersonalGroups(userId: string) {
+        const command = new ScanCommand({
+            TableName: this.tableName,
+            FilterExpression: "(createdBy = :u) AND (attribute_not_exists(workspaceId) OR workspaceId = :p)",
+            ExpressionAttributeValues: {
+                ":u": userId,
+                ":p": "personal"
+            }
+        });
+
+        const result = await this.docClient.send(command);
+        const groups = result.Items || [];
+
+        const chunks = [];
+        for (let i = 0; i < groups.length; i += 25) {
+            chunks.push(groups.slice(i, i + 25));
+        }
+
+        for (const chunk of chunks) {
+            await Promise.all(chunk.map(group =>
+                this.docClient.send(new DeleteCommand({
+                    TableName: this.tableName,
+                    Key: { id: group.id }
+                }))
+            ));
+        }
+
+        return groups.length;
     }
 }

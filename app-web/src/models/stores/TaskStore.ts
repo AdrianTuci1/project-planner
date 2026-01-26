@@ -215,6 +215,11 @@ export class TaskStore {
     addTaskToDump(title: string) {
         const task = this.rootStore.workspaceStore.activeWorkspace?.addTaskToDump(title);
         if (task) {
+            // Apply default estimated time
+            const defaultDuration = this.getDefaultDuration();
+            if (defaultDuration > 0) {
+                task.duration = defaultDuration;
+            }
             taskSyncStrategy.monitor(task);
         }
         return task;
@@ -250,9 +255,33 @@ export class TaskStore {
 
     createTaskInGroup(title: string, group: any) {
         const task = new Task(title);
+
+        // Apply default estimated time
+        const defaultDuration = this.getDefaultDuration();
+        if (defaultDuration > 0) {
+            task.duration = defaultDuration;
+        }
+
         group.addTask(task);
         taskSyncStrategy.monitor(task);
         return task;
+    }
+
+    private getDefaultDuration(): number {
+        try {
+            const settings = this.rootStore.settings.general.generalSettings;
+            if (!settings || !settings.defaultEstimatedTime) return 0;
+
+            switch (settings.defaultEstimatedTime) {
+                case '15 mins': return 15;
+                case '30 mins': return 30;
+                case '1 hour': return 60;
+                default: return 0;
+            }
+        } catch (e) {
+            console.warn("[TaskStore] Failed to get default duration setting", e);
+            return 0;
+        }
     }
 
     deleteTask(taskId: string) {

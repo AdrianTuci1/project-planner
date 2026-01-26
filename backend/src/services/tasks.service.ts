@@ -148,6 +148,7 @@ export class TasksService {
     }
 
     public async deleteTask(id: string) {
+        // ... existing implementation ...
         // Need to fetch first to know who to notify
         const existing = await this.getTaskById(id);
 
@@ -178,5 +179,40 @@ export class TasksService {
         }
 
         return { id };
+    }
+
+    public async deleteUserPersonalTasks(userId: string) {
+        // Scan for tasks created by user AND (workspaceId is missing OR workspaceId = 'personal')
+        const command = new ScanCommand({
+            TableName: this.tableName,
+            FilterExpression: "(createdBy = :u) AND (attribute_not_exists(workspaceId) OR workspaceId = :p)",
+            ExpressionAttributeValues: {
+                ":u": userId,
+                ":p": "personal"
+            }
+        });
+
+        const result = await this.docClient.send(command);
+        const tasks = result.Items || [];
+
+        // Delete in batches of 25 (DynamoDB limit for BatchWrite is 25, but we can just loop deletes or use BatchWriteItem)
+        // For simplicity and considering we might need SSE, we can loop or use basic batching without SSE for account deletion 
+        // (the user is being deleted, no need to update their UI).
+
+        const chunks = [];
+        for (let i = 0; i < tasks.length; i += 25) {
+            chunks.push(tasks.slice(i, i + 25));
+        }
+
+        for (const chunk of chunks) {
+            await Promise.all(chunk.map(task =>
+                this.docClient.send(new DeleteCommand({
+                    TableName: this.tableName,
+                    Key: { id: task.id }
+                }))
+            ));
+        }
+
+        return tasks.length;
     }
 }

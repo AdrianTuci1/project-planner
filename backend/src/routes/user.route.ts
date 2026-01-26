@@ -30,6 +30,9 @@ class UserRoute implements Routes {
 
         // Update User Profile
         this.router.post(`${this.path}/update`, this.authMiddleware.verifyToken, this.userController.updateUser);
+
+        // Delete Account
+        this.router.delete(`${this.path}/me`, this.authMiddleware.verifyToken, this.userController.deleteAccount);
     }
 }
 

@@ -115,6 +115,7 @@ export interface IApiService {
     updateUser(data: any): Promise<any>;
     syncUser(onboardingData: any): Promise<any>;
     getUserProfile(): Promise<any>;
+    deleteAccount(confirmation: string): Promise<void>;
 }
 
 export interface SubCalendar {

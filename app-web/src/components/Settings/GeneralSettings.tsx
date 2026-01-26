@@ -109,15 +109,6 @@ export const GeneralSettings = observer(() => {
                 <div className="settings-section-header">New Task / Update Task</div>
 
                 <div className="setting-row">
-                    <span className="setting-label">Add new tasks to the</span>
-                    <Select
-                        value={general.generalSettings.addNewTasksTo}
-                        onChange={(val) => general.setSetting('addNewTasksTo', val)}
-                        options={['Top of list', 'Bottom of list']}
-                    />
-                </div>
-
-                <div className="setting-row">
                     <span className="setting-label">Detect label in task title</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <Toggle active={general.generalSettings.detectLabel} onChange={() => general.setSetting('detectLabel', !general.generalSettings.detectLabel)} />
@@ -130,7 +121,7 @@ export const GeneralSettings = observer(() => {
                     <Select
                         value={general.generalSettings.defaultEstimatedTime}
                         onChange={(val) => general.setSetting('defaultEstimatedTime', val)}
-                        options={['0 mins', '15 mins', '30 mins', '1 hour']}
+                        options={['15 mins', '30 mins', '1 hour']}
                     />
                 </div>
             </div>

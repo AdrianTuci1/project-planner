@@ -190,14 +190,55 @@ export const Analytics = observer(() => {
     const timeSpentByDayByLabel = analyticsModel.timeSpentByDayByLabel;
     const timeSpentByDay = analyticsModel.timeSpentByDay;
 
-    // Determine label skip interval
+    // Determine label skip interval and data source
+    const isThreeMonths = analyticsModel.selectedRange === 'last-3-months';
     let skipInterval = 1;
+    let sourceTimeLabelData = timeSpentByDayByLabel;
+    let sourceTimeData = timeSpentByDay;
+
     if (analyticsModel.selectedRange === 'last-2-weeks') {
         skipInterval = 2;
     } else if (analyticsModel.selectedRange === 'last-month') {
         skipInterval = 4;
-    } else if (analyticsModel.selectedRange === 'last-3-months') {
-        skipInterval = 7;
+    } else if (isThreeMonths) {
+        skipInterval = 2; // Aggregated by week, so label every 2nd week
+
+        // Aggregate by week (7 days)
+        const aggregateByWeek = <T extends any>(arr: T[], fn: (chunk: T[]) => T) => {
+            const aggregated: T[] = [];
+            for (let i = 0; i < arr.length; i += 7) {
+                const chunk = arr.slice(i, i + 7);
+                if (chunk.length) aggregated.push(fn(chunk));
+            }
+            return aggregated;
+        };
+
+        sourceTimeLabelData = aggregateByWeek(timeSpentByDayByLabel, (chunk) => {
+            const first = chunk[0];
+            const segmentMap = new Map<string, { value: number, color: string, label: string }>();
+            chunk.forEach(d => {
+                d.segments.forEach(s => {
+                    const existing = segmentMap.get(s.label);
+                    if (existing) existing.value += s.value;
+                    else segmentMap.set(s.label, { ...s });
+                });
+            });
+            return {
+                date: first.date,
+                segments: Array.from(segmentMap.values())
+            };
+        });
+
+        sourceTimeData = aggregateByWeek(timeSpentByDay, (chunk) => {
+            const first = chunk[0];
+            const maxActualDay = chunk.reduce((max, curr) => curr.actual > max.actual ? curr : max, first);
+            return {
+                date: first.date,
+                actual: chunk.reduce((sum, d) => sum + d.actual, 0),
+                estimated: chunk.reduce((sum, d) => sum + d.estimated, 0),
+                dominantColor: maxActualDay.dominantColor
+            };
+        });
     }
 
     // Function to process data with skipping logic
@@ -219,7 +260,7 @@ export const Analytics = observer(() => {
 
     // Prepare chart data for Stacked Time Chart (formerly Tasks Completed)
     const timeLabelChartData = processChartData(
-        timeSpentByDayByLabel.map(d => {
+        sourceTimeLabelData.map(d => {
             const total = d.segments.reduce((acc, s) => acc + s.value, 0);
             return {
                 date: d.date,
@@ -232,7 +273,7 @@ export const Analytics = observer(() => {
 
     // For estimated vs actual
     const timeChartData = processChartData(
-        timeSpentByDay.map(d => ({
+        sourceTimeData.map(d => ({
             date: d.date,
             value: d.actual,
             value2: d.estimated,
