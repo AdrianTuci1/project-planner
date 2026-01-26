@@ -10,6 +10,8 @@ import { store } from './models/store';
 import { TaskCardBase } from './components/Gantt/TaskCard/TaskCardBase';
 
 
+import { customCollisionStrategy } from './models/drag-drop/customCollisionStrategy';
+
 export const MainApp = observer(() => {
     const { handleDragEnd, handleDragOver } = useAppDragEnd();
     const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -49,7 +51,7 @@ export const MainApp = observer(() => {
     return (
         <DndContext
             sensors={sensors}
-            collisionDetection={pointerWithin}
+            collisionDetection={customCollisionStrategy}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEndWrapper}
             onDragOver={handleDragOverWrapper}

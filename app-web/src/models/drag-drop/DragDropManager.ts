@@ -75,6 +75,16 @@ export class DragDropManager {
             const { groupId } = overData;
             const targetList = groupId === null ? store.dumpAreaTasks : store.groups.find(g => g.id === groupId)?.tasks;
 
+            // Optimistically clear schedule to ensure it appears in the Sidebar List (Ghost Card)
+            // The SidebarTaskList renders "unplanned" tasks. If we drag a scheduled task here,
+            // we must clear its date so it passes the filter and renders the placeholder.
+            if (task.scheduledDate || task.scheduledTime) {
+                runInAction(() => {
+                    task.scheduledDate = undefined;
+                    task.scheduledTime = undefined;
+                });
+            }
+
             // If dragging over a list (or item in list) and task is NOT in that list:
             // Move it there.
             if (targetList && !targetList.find(t => t.id === taskId)) {

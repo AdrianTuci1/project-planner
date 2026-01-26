@@ -2,7 +2,7 @@
     background-color: var(--bg-card);
     border: 1px solid transparent;
     border-radius: var(--radius-md);
-    padding: 2px 6px;
+    padding: 8px 6px;
     gap: var(--space-1);
     position: relative;
     user-select: none;

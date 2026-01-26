@@ -1,5 +1,7 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { awsConfig } from "../config/aws.config";
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class EmailService {
     private sesClient: SESClient;
@@ -12,6 +14,10 @@ export class EmailService {
 
     async sendWelcomeEmail(toEmail: string, name: string) {
         try {
+            const templatePath = path.join(__dirname, '../../templates/welcome.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf-8');
+            htmlContent = htmlContent.replace('{{name}}', name);
+
             const command = new SendEmailCommand({
                 Source: this.fromEmail,
                 Destination: {
@@ -23,14 +29,7 @@ export class EmailService {
                     },
                     Body: {
                         Html: {
-                            Data: `
-                                <h1>Welcome on board, ${name}!</h1>
-                                <p>We are thrilled to have you join Simplu.</p>
-                                <p>Get ready to boost your productivity.</p>
-                                <br/>
-                                <p>Best,</p>
-                                <p>The Simplu Team</p>
-                            `
+                            Data: htmlContent
                         },
                         Text: {
                             Data: `Welcome on board, ${name}!\n\nWe are thrilled to have you join Simplu.\nGet ready to boost your productivity.\n\nBest,\nThe Simplu Team`

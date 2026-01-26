@@ -46,7 +46,7 @@ export const SidebarTaskList = observer(({
     return (
         <div
             ref={isSortable ? setNodeRef : undefined}
-            className={`sidebar-tasks-list`}
+            className={`sidebar-tasks-list ${isOver ? 'droppable-over' : ''}`}
             style={{ minHeight: isSortable ? '200px' : '0px' }}
         >
             {isSortable ? (

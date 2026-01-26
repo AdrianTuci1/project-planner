@@ -28,7 +28,7 @@ const TasksList = observer(({ tasks, isAddingTask, setIsAddingTask, handleCreate
         <div
             ref={setNodeRef}
             className={`tasks-list ${isOver ? 'droppable-over' : ''}`}
-            style={isOver ? { backgroundColor: 'var(--bg-card-hover)', minHeight: '50px' } : undefined}
+            style={{ minHeight: '100px' }}
         >
             <TaskCard
                 isGhost
@@ -82,10 +82,10 @@ export const TasksView = observer(({ tasks, onTaskClick, groupId }: TasksViewPro
         if (!t.scheduledDate) return false;
         return isSameDay(t.scheduledDate, currentDate);
     }).sort((a, b) => {
-        if (store.settings.general.generalSettings.moveTasksBottom) {
-            if (a.status === 'done' && b.status !== 'done') return 1;
-            if (a.status !== 'done' && b.status === 'done') return -1;
-        }
+        // if (store.settings.general.generalSettings.moveTasksBottom) {
+        //     if (a.status === 'done' && b.status !== 'done') return 1;
+        //     if (a.status !== 'done' && b.status === 'done') return -1;
+        // }
         return 0;
     });
 

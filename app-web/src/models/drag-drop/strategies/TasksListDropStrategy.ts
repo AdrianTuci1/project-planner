@@ -42,15 +42,31 @@ export class TasksListDropStrategy implements DragStrategy {
                 const overOwner = store.groups.find(g => g.tasks.find(t => t.id === overId)) ||
                     (store.dumpAreaTasks.find(t => t.id === overId) ? { tasks: store.dumpAreaTasks } : null);
 
-                if (taskOwner && overOwner && taskOwner === overOwner) {
-                    const list = taskOwner.tasks as Task[];
-                    const oldIdx = list.findIndex(t => t.id === activeId);
-                    const newIdx = list.findIndex(t => t.id === overId);
+                if (taskOwner && overOwner) {
+                    const sourceList = taskOwner.tasks as Task[];
+                    const targetList = overOwner.tasks as Task[];
+                    const oldIdx = sourceList.findIndex(t => t.id === activeId);
+                    // Find new index in TARGET list
+                    let newIdx = targetList.findIndex(t => t.id === overId);
 
                     if (oldIdx !== -1 && newIdx !== -1) {
                         runInAction(() => {
-                            const [moved] = list.splice(oldIdx, 1);
-                            list.splice(newIdx, 0, moved);
+                            if (taskOwner === overOwner) {
+                                // Same list reorder
+                                const [moved] = sourceList.splice(oldIdx, 1);
+                                sourceList.splice(newIdx, 0, moved);
+                            } else {
+                                // Cross-list move (Change Group)
+                                // We are moving from Group A to Group B to place it "next to" the target task.
+                                const [moved] = sourceList.splice(oldIdx, 1);
+
+                                // Update group ID
+                                const newGroupId = store.groups.find(g => g.tasks === targetList)?.id || null; // null for dumpArea
+                                moved.groupId = newGroupId; // Use setter if available, or property
+
+                                targetList.splice(newIdx, 0, moved);
+                                console.log(`[TasksListDropStrategy] Moved task ${activeId} to group ${newGroupId} at index ${newIdx}`);
+                            }
                         });
                     }
                 }

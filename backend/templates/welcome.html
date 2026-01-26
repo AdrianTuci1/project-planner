@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Simplu</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f6f9fc;
+            color: #4b5563;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            padding: 60px 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: white;
+            line-height: 48px;
+            /* For vertical centering in email clients */
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 300;
+            font-style: italic;
+            line-height: 1.2;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 32px;
+            font-weight: 300;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+            text-align: left;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: #ffffff;
+            color: #0f172a;
+            padding: 16px 40px;
+            border-radius: 100px;
+            /* Pill shape for modern look */
+            text-decoration: none;
+            font-weight: 700;
+            margin-top: 32px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-button:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .header img.bg-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="gradient.avif" alt="" class="bg-gradient" />
+
+            <div style="position: relative; z-index: 1;">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                    <img src="icon.png" alt="Simplu" style="height: 40px; margin-right: 12px;">
+                    <span style="font-size: 24px; font-weight: bold; color: white;">simplu</span>
+                </div>
+
+                <h1>Welcome,</h1>
+                <div class="subtitle">productivity hacker.</div>
+
+                <div style="margin-top: 30px;">
+                    <a href="https://app.simplu.io" class="cta-button"
+                        style="background-color: #ffffff; color: #0f172a;">Open Simplu</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <p>Hi {{name}},</p>
+            <p>We’re thrilled to have you here.</p>
+            <p style="margin-top: 20px;">Simplu was built for people who value clarity and focus. We believe your tools
+                should get out of your way, letting you do your best work without the noise.</p>
+            <p style="margin-top: 20px;">You’ve just taken the first step toward a more organized, productive workflow.
+                Dive in, explore your new workspace, and see how simple complex projects can be.</p>
+
+            <p style="margin-top: 40px; font-weight: 500; color: #111827;">
+                Happy planning,<br>
+                The Simplu Team
+            </p>
+        </div>
+
+        <div class="footer">
+            &copy; 2026 Simplu. All rights reserved.
+        </div>
+    </div>
+</body>
+
+</html>
