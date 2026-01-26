@@ -89,6 +89,10 @@ export interface IApiService {
     markNotificationRead(id: string): Promise<void>;
     respondToInvite(id: string, accept: boolean): Promise<void>;
 
+    // API Token
+    generateApiToken(): Promise<{ token: string }>;
+    revokeApiToken(): Promise<void>;
+
     // Auth
     getGoogleAuthUrl(): Promise<{ url: string }>;
     exchangeGoogleCode(code: string): Promise<CalendarAccount>;

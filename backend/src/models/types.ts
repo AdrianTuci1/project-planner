@@ -60,6 +60,7 @@ export interface User {
     subscriptionExpiry?: number;
     avatarUrl?: string; // Profile picture
     createdAt: number;
+    apiToken?: string;
 }
 
 

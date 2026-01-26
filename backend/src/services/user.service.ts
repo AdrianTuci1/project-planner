@@ -34,9 +34,9 @@ export class UserService {
                     ReturnValues: 'ALL_NEW'
                 });
                 const result = await this.docClient.send(updateCommand);
-                return result.Attributes;
+                return this.maskToken(result.Attributes);
             }
-            return existingUser;
+            return this.maskToken(existingUser);
         }
 
         // 2. Create new user with Trial
@@ -70,7 +70,18 @@ export class UserService {
         // Send Welcome Notification
         await this.notificationsService.sendWelcomeNotification(userId, email);
 
-        return newUser;
+        return this.maskToken(newUser);
+    }
+
+    // Helper to mask token in existing user if needed, or we handle it in syncUser logic below
+    private maskToken(user: any) {
+        if (!user) return user;
+        const { apiToken, ...rest } = user;
+        // Optionally return a flag indicating if token exists
+        return {
+            ...rest,
+            hasApiToken: !!apiToken
+        };
     }
 
 
@@ -81,5 +92,55 @@ export class UserService {
         });
         const result = await this.docClient.send(command);
         return result.Item;
+    }
+
+    async generateApiToken(userId: string) {
+        const randomPart = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const token = `sk_${userId}_${randomPart}`;
+
+        const updateCommand = new UpdateCommand({
+            TableName: this.tableName,
+            Key: { id: userId },
+            UpdateExpression: 'set apiToken = :t, updatedAt = :u',
+            ExpressionAttributeValues: {
+                ':t': token,
+                ':u': new Date().toISOString()
+            },
+            ReturnValues: 'ALL_NEW'
+        });
+
+        await this.docClient.send(updateCommand);
+        return token;
+    }
+
+    async revokeApiToken(userId: string) {
+        const updateCommand = new UpdateCommand({
+            TableName: this.tableName,
+            Key: { id: userId },
+            UpdateExpression: 'remove apiToken set updatedAt = :u',
+            ExpressionAttributeValues: {
+                ':u': new Date().toISOString()
+            },
+            ReturnValues: 'ALL_NEW'
+        });
+
+        await this.docClient.send(updateCommand);
+        return true;
+    }
+
+    async validateApiToken(token: string) {
+        // Format: sk_USERID_RANDOM
+        if (!token.startsWith('sk_')) return null;
+
+        const parts = token.split('_');
+        if (parts.length < 3) return null;
+
+        const userId = parts[1];
+        const user = await this.getUser(userId);
+
+        if (user && user.apiToken === token) {
+            return user;
+        }
+        return null;
     }
 }

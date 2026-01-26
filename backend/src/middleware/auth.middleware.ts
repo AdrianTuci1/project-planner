@@ -27,7 +27,31 @@ export class AuthMiddleware {
         }
 
         const authHeader = req.headers.authorization;
+        const apiTokenHeader = req.headers['x-api-token'] as string;
 
+        // 1. Check for API Token (x-api-token)
+        if (apiTokenHeader && apiTokenHeader.startsWith('sk_')) {
+            // We need to lazily instantiate UserService to avoid circular dependencies if any
+            // But here we can just import it. However, notice AuthMiddleware is used in Routes.
+            // Best to instantiate inside or inject. For now, let's instantiate.
+            const { UserService } = require('../services/user.service');
+            const userService = new UserService();
+
+            try {
+                const user = await userService.validateApiToken(apiTokenHeader);
+                if (user) {
+                    (req as any).user = { sub: user.id, ...user }; // Mock cognito-like payload or attach full user
+                    return next();
+                } else {
+                    return res.status(401).json({ message: "Invalid API Token" });
+                }
+            } catch (error) {
+                console.error("API Token validation error:", error);
+                return res.status(500).json({ message: "Internal Server Error" });
+            }
+        }
+
+        // 2. Fallback to Cognito Token
         if (!authHeader && !req.query.token) {
             return res.status(401).json({ message: "No token provided" });
         }

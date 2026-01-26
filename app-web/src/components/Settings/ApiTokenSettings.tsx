@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { store } from '../../models/store';
+import { api } from '../../services/api';
 import { ExternalLink, Eye, EyeOff, Copy } from 'lucide-react';
 import './ApiTokenSettings.css';
 
@@ -9,11 +9,16 @@ export const ApiTokenSettings = observer(() => {
     const [showToken, setShowToken] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    const handleGenerateToken = () => {
-        // Generate a random API token (in production, this should come from backend)
-        const token = 'sk_sim_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        setApiToken(token);
-        setShowToken(false);
+    const handleGenerateToken = async () => {
+        try {
+            const { token } = await api.generateApiToken();
+            setApiToken(token);
+            setShowToken(true); // Show it immediately so they can copy
+            setCopied(false);
+        } catch (error) {
+            console.error("Failed to generate token", error);
+            alert("Failed to generate token");
+        }
     };
 
     const handleCopyToken = async () => {
@@ -24,9 +29,9 @@ export const ApiTokenSettings = observer(() => {
         }
     };
 
-    const handleGenerateNewToken = () => {
+    const handleGenerateNewToken = async () => {
         if (confirm('Generating a new token will invalidate the current one. Continue?')) {
-            handleGenerateToken();
+            await handleGenerateToken();
         }
     };
 

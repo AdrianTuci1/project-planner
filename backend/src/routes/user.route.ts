@@ -16,6 +16,10 @@ class UserRoute implements Routes {
     private initializeRoutes() {
         // Sync user data after registration
         this.router.post(`${this.path}/sync`, this.authMiddleware.verifyToken, this.userController.syncUser);
+
+        // API Token Routes
+        this.router.post(`${this.path}/api-token`, this.authMiddleware.verifyToken, this.userController.generateApiToken);
+        this.router.delete(`${this.path}/api-token`, this.authMiddleware.verifyToken, this.userController.revokeApiToken);
     }
 }
 

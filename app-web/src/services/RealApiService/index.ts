@@ -10,6 +10,8 @@ import { WorkspaceModule } from './WorkspaceModule';
 import { LabelModule } from './LabelModule';
 import { SubscriptionModule } from './SubscriptionModule';
 
+import { UserModule } from './UserModule';
+
 export class RealApiService implements IApiService {
     private taskModule: TaskModule;
     private groupModule: GroupModule;
@@ -20,6 +22,7 @@ export class RealApiService implements IApiService {
     private notificationModule: NotificationModule;
     private storageModule: StorageModule;
     private subscriptionModule: SubscriptionModule;
+    private userModule: UserModule;
 
     constructor(baseUrl: string) {
         syncService.init();
@@ -32,7 +35,10 @@ export class RealApiService implements IApiService {
         this.notificationModule = new NotificationModule(baseUrl);
         this.storageModule = new StorageModule(baseUrl);
         this.subscriptionModule = new SubscriptionModule(baseUrl);
+        this.userModule = new UserModule(baseUrl);
     }
+
+    // ... (rest of the file)
 
     // Tasks delegates
     getInitialData(startDate: Date, endDate: Date, workspaceId?: string): Promise<InitialDataResponse> {
@@ -83,6 +89,10 @@ export class RealApiService implements IApiService {
     getNotifications(): Promise<any[]> { return this.notificationModule.getNotifications(); }
     markNotificationRead(id: string): Promise<void> { return this.notificationModule.markNotificationRead(id); }
     respondToInvite(id: string, accept: boolean): Promise<void> { return this.notificationModule.respondToInvite(id, accept); }
+
+    // API Token delegates
+    generateApiToken(): Promise<{ token: string }> { return this.userModule.generateApiToken(); }
+    revokeApiToken(): Promise<void> { return this.userModule.revokeApiToken(); }
 
     // Storage delegates
     getUploadUrl(contentType: string, fileName: string): Promise<{ url: string, key: string, publicUrl: string }> { return this.storageModule.getUploadUrl(contentType, fileName); }

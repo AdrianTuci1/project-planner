@@ -1,0 +1,496 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>API Documentation</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 
+      Scalar API Reference 
+      We load the openapi.yaml content from the same directory.
+      Note: This requires serving this directory via a web server.
+    -->
+    <script id="api-reference"></script>
+    <script>
+        var spec = `openapi: 3.1.0
+info:
+  title: Simplu API
+  version: 1.0.0
+  description: |
+    Public API documentation for the Project Management application. Use these endpoints to integrate with external tools.
+
+    **Resource Filtering**
+
+    Most list endpoints (Tasks, Groups, Labels) support filtering by \`workspaceId\`. This allows you to retrieve resources specific to a context:
+
+    - **Personal Workspace**: Use \`workspaceId=personal\` to retrieve items belonging to the user's private workspace.
+    - **Team Workspace**: Use \`workspaceId=team-{userId}\` (e.g., \`team-user123\`) to retrieve items from the user's default team workspace.
+
+    If no \`workspaceId\` is provided, the API typically defaults to the 'personal' workspace or returns all accessible resources depending on the endpoint configuration.
+servers:
+  - url: https://api.simplu.io/api
+    description: API Server
+components:
+  securitySchemes:
+    ApiTokenAuth:
+      type: apiKey
+      in: header
+      name: x-api-token
+      description: API Token generated from your user settings.
+  schemas:
+    Subtask:
+      type: object
+      required: [id, title, isCompleted]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        isCompleted:
+          type: boolean
+    Participant:
+      type: object
+      required: [id, name, initials]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        avatarUrl:
+          type: string
+        initials:
+          type: string
+    Attachment:
+      type: object
+      required: [id, name, size, type, url, key, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        size:
+          type: number
+        type:
+          type: string
+        url:
+          type: string
+        key:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    Task:
+      type: object
+      required: [id, title, status, createdAt, priority, recurrence, isTemplate]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [todo, in-progress, done]
+        duration:
+          type: number
+          description: Estimated duration in minutes
+        actualDuration:
+          type: number
+          description: Actual duration in minutes
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+        subtasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subtask'
+        createdAt:
+          type: string
+          format: date-time
+        scheduledDate:
+          type: string
+          format: date-time
+        scheduledTime:
+          type: string
+          description: Format HH:mm
+        dueDate:
+          type: string
+          format: date-time
+        labelId:
+          type: string
+        recurrence:
+          type: string
+          enum: [none, daily, weekday, weekly, biweekly, monthly, yearly, custom]
+        priority:
+          type: string
+          enum: [high, medium, low, none]
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        workspaceId:
+          type: string
+        groupId:
+          type: string
+        isTemplate:
+          type: boolean
+    Group:
+      type: object
+      required: [id, name, icon, type, autoAddLabelEnabled]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        icon:
+          type: string
+        type:
+          type: string
+          enum: [personal, team]
+        workspaceId:
+          type: string
+        defaultLabelId:
+          type: string
+        autoAddLabelEnabled:
+          type: boolean
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+    Label:
+      type: object
+      required: [id, name, color]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        color:
+          type: string
+    Workspace:
+      type: object
+      required: [id, name, type]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [personal, team]
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        dumpAreaTasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        members:
+          type: array
+          items:
+            type: string
+        ownerId:
+          type: string
+        avatarUrl:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+paths:
+  # User Profile
+  /users/me:
+    get:
+      tags: [User]
+      summary: Get Current User
+      security:
+        - ApiTokenAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # Tasks
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: List Tasks
+      description: Retrieve a list of tasks.
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: workspaceId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by workspace ID. Use 'personal', 'team-{userId}', or a specific workspace UUID.
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter by scheduled date range start.
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter by scheduled date range end.
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+    post:
+      tags: [Tasks]
+      summary: Create Task
+      description: Create a new task.
+      security:
+        - ApiTokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, workspaceId]
+              properties:
+                title:
+                  type: string
+                workspaceId:
+                  type: string
+                groupId:
+                  type: string
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  /tasks/{id}:
+    put:
+      tags: [Tasks]
+      summary: Update Task
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                status:
+                  type: string
+                workspaceId:
+                  type: string
+    delete:
+      tags: [Tasks]
+      summary: Delete Task
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: workspaceId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Workspace ID required for deletion context.
+
+  # Groups (Projects)
+  /groups:
+    get:
+      tags: [Groups]
+      summary: List Groups
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: workspaceId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by workspace ID. Use 'personal', 'team-{userId}', or a specific workspace UUID.
+      responses:
+        '200':
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+    post:
+      tags: [Groups]
+      summary: Create Group
+      security:
+        - ApiTokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, workspaceId]
+              properties:
+                name:
+                  type: string
+                workspaceId:
+                  type: string
+    
+  /groups/{id}:
+    put:
+      tags: [Groups]
+      summary: Update Group
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workspaceId:
+                  type: string
+    delete:
+      tags: [Groups]
+      summary: Delete Group
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+        - name: workspaceId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Workspace ID required for deletion context.
+
+  # Labels
+  /labels:
+    get:
+      tags: [Labels]
+      summary: List Labels
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: workspaceId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by workspace ID. Use 'personal', 'team-{userId}', or a specific workspace UUID.
+      responses:
+        '200':
+          description: List of labels
+    post:
+      tags: [Labels]
+      summary: Create Label
+      security:
+        - ApiTokenAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, workspaceId]
+              properties:
+                name:
+                  type: string
+                workspaceId:
+                  type: string
+                color:
+                  type: string
+  
+  /labels/{id}:
+    delete:
+      tags: [Labels]
+      summary: Delete Label
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+        - name: workspaceId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Workspace ID required for deletion context.
+
+  # Workspaces
+  /workspaces:
+    get:
+      tags: [Workspaces]
+      summary: List Workspaces
+      security:
+        - ApiTokenAuth: []
+      responses:
+        '200':
+          description: List of workspaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workspace'
+`
+        document.getElementById('api-reference').dataset.spec = spec
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+</body>
+
+</html>

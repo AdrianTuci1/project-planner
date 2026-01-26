@@ -331,4 +331,16 @@ export class MockApiService implements IApiService {
     async createLabel(label: any): Promise<any> { return label; }
     async updateLabel(id: string, label: any): Promise<any> { return label; }
     async deleteLabel(id: string): Promise<any> { return { id }; }
+
+    async generateApiToken(): Promise<{ token: string }> {
+        return { token: 'sk_mock_' + Math.random().toString(36).substring(7) };
+    }
+
+    async revokeApiToken(): Promise<void> {
+        console.log("Mock revoke token");
+    }
+
+    async removeMember(workspaceId: string, userId: string): Promise<void> { console.log("Mock remove member", workspaceId, userId); }
+    async assignOwner(workspaceId: string, userId: string): Promise<void> { console.log("Mock assign owner", workspaceId, userId); }
+    async leaveWorkspace(workspaceId: string): Promise<void> { console.log("Mock leave workspace", workspaceId); }
 }
