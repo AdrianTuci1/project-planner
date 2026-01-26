@@ -107,7 +107,10 @@ export class ProjectStore {
                 id: this.authStore.user.sub || this.authStore.user.username || 'current-user',
                 name: name,
                 avatarUrl: this.settings.account.avatarUrl,
-                initials: name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'U'
+                initials: name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'U',
+                plan: this.authStore.user.plan,
+                subscriptionStatus: this.authStore.user.subscriptionStatus,
+                trialEndDate: this.authStore.user.trialEndDate
             };
         }
         return this.taskStore.currentUser;

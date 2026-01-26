@@ -28,18 +28,18 @@ export abstract class BaseApiService {
         try {
             // 2. Check Online Status
             if (!navigator.onLine) {
-                console.log(`[BaseApi] ${storeKey} - Offline. Returning ${meta?.value ? 'cached' : 'fallback'}`);
+                // console.log(`[BaseApi] ${storeKey} - Offline. Returning ${meta?.value ? 'cached' : 'fallback'}`);
                 if (meta?.value) return meta.value as T;
                 return fallbackValue;
             }
 
             // 3. Network Request
             const res = await fetch(url, { headers });
-            console.log(`[BaseApi] ${storeKey} - Status: ${res.status}`);
+            // console.log(`[BaseApi] ${storeKey} - Status: ${res.status}`);
 
             // 4. Handle 304 Not Modified
             if (res.status === 304) {
-                console.log(`[BaseApi] ${storeKey} - 304. Returning cached.`);
+                // console.log(`[BaseApi] ${storeKey} - 304. Returning cached.`);
                 if (meta?.value) return meta.value as T;
                 return fallbackValue;
             }
@@ -48,7 +48,7 @@ export abstract class BaseApiService {
             if (res.ok) {
                 const data = await res.json();
                 const newEtag = res.headers.get('ETag');
-                console.log(`[BaseApi] ${storeKey} - 200 OK. New ETag: ${newEtag}`);
+                // console.log(`[BaseApi] ${storeKey} - 200 OK. New ETag: ${newEtag}`);
 
                 // Update Cache
                 await dbService.put('meta', {

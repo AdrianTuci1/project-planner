@@ -20,6 +20,9 @@ export interface IParticipant {
     name: string;
     avatarUrl?: string; // Optional image
     initials: string;
+    plan?: string;
+    subscriptionStatus?: string;
+    trialEndDate?: string;
 }
 
 export type TaskStatus = 'todo' | 'in-progress' | 'done';

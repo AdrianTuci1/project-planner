@@ -1,18 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
-import { CreditCard, ExternalLink, AlertTriangle } from 'lucide-react';
+import { CreditCard, ExternalLink, AlertTriangle, CheckCircle2, Crown, Sparkles } from 'lucide-react';
 import { api } from '../../services/api';
+import { differenceInDays } from 'date-fns';
+import './SubscriptionSettings.css';
 
 export const SubscriptionSettings = observer(() => {
-    const { settings } = store;
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Placeholder for actual subscription data from store/backend
-    // TODO: Connect to actual user subscription state
-    const subscriptionStatus = "Free Trial 🥳";
-    const daysLeft = 2; // Calculate this based on trial end date
+    const user = store.currentUser;
+    const isPro = user?.plan === 'pro';
+    const isTrialing = isPro && user?.subscriptionStatus === 'trialing';
+    const isActive = isPro && user?.subscriptionStatus === 'active';
+
+    let daysLeft = 0;
+    if (isTrialing && user?.trialEndDate) {
+        daysLeft = Math.max(0, differenceInDays(new Date(user.trialEndDate), new Date()) + 1);
+    }
 
     const handleCreatePortalSession = async () => {
         setIsLoading(true);
@@ -32,17 +38,16 @@ export const SubscriptionSettings = observer(() => {
         }
     };
 
-    const handleChangePlan = async () => {
-        // Logic to determine if we send them to portal or checkout
-        // For now, let's assume portal handles upgrades too or we redirect to a checkout for specific plan
-        // If they are on free, maybe we want to go straight to checkout?
-        // For simplicity, let's try portal first as it handles "Update plan" usually.
-        // Or if specific requirement: "All options redirect to stripe"
-        handleCreatePortalSession();
+    const handleChangePlan = () => {
+        if (!isPro || isTrialing) {
+            store.openUpgradeModal();
+        } else {
+            handleCreatePortalSession();
+        }
     };
 
     return (
-        <div className="settings-panel">
+        <div className="subscription-settings-container">
             <p className="settings-description">Manage your billing and membership plan.</p>
 
             {error && (
@@ -52,44 +57,66 @@ export const SubscriptionSettings = observer(() => {
                 </div>
             )}
 
-            <div className="settings-group">
-                <div className="settings-label">MEMBERSHIP</div>
-                <div style={{ fontSize: '16px', fontWeight: 500, marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {subscriptionStatus}
-                    <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(ends in {daysLeft} days)</span>
+            <div className={`plan-status-card ${isTrialing ? 'trialing' : ''} ${isActive ? 'active' : ''}`}>
+                <div className="card-header">
+                    <div>
+                        <div className="plan-title">
+                            {isActive ? 'Pro Plan' : isTrialing ? 'Free Trial' : 'Free Plan'}
+                        </div>
+                        <div className="plan-subtitle">
+                            {isActive ? 'You have full access to all premium features.' :
+                                isTrialing ? 'You are currently exploring premium features.' :
+                                    'Limited features. Upgrade to unlock full potential.'}
+                        </div>
+                    </div>
+                    <div className={`plan-badge ${isPro ? 'pro' : 'free'}`}>
+                        {isPro ? 'PRO' : 'FREE'}
+                    </div>
                 </div>
 
-                <div className="settings-label">MANAGE MEMBERSHIP</div>
+                {isTrialing && (
+                    <div className="trial-expiry-info">
+                        <Sparkles size={16} color="#EC4899" />
+                        <span>Your trial ends in <span className="trial-days">{daysLeft} days</span>.</span>
+                    </div>
+                )}
 
-                <div className="settings-action-list">
-                    <button
-                        className="settings-action-btn"
-                        onClick={handleCreatePortalSession}
-                        disabled={isLoading}
-                        style={{ display: 'flex', alignItems: 'center', color: 'var(--accent-primary)', background: 'none', border: 'none', padding: '8px 0', fontSize: '15px', cursor: 'pointer', width: '100%', textAlign: 'left' }}
-                    >
-                        View invoices <ExternalLink size={14} style={{ marginLeft: '8px' }} />
-                    </button>
-
-                    <button
-                        className="settings-action-btn"
-                        onClick={handleChangePlan}
-                        disabled={isLoading}
-                        style={{ display: 'flex', alignItems: 'center', color: 'var(--accent-primary)', background: 'none', border: 'none', padding: '8px 0', fontSize: '15px', cursor: 'pointer', width: '100%', textAlign: 'left' }}
-                    >
-                        Change Plan <ExternalLink size={14} style={{ marginLeft: '8px' }} />
-                    </button>
-
-                    <button
-                        className="settings-action-btn"
-                        onClick={handleCreatePortalSession}
-                        disabled={isLoading}
-                        style={{ display: 'flex', alignItems: 'center', color: 'var(--accent-primary)', background: 'none', border: 'none', padding: '8px 0', fontSize: '15px', cursor: 'pointer', width: '100%', textAlign: 'left' }}
-                    >
-                        Cancel Membership <ExternalLink size={14} style={{ marginLeft: '8px' }} />
-                    </button>
-                </div>
+                {isActive && (
+                    <div className="trial-expiry-info">
+                        <CheckCircle2 size={16} color="#10B981" />
+                        <span>Your subscription is active.</span>
+                    </div>
+                )}
             </div>
+
+            <div className="settings-label">MANAGE MEMBERSHIP</div>
+
+            <div className="settings-action-list">
+                <button className="settings-action-btn" onClick={handleCreatePortalSession} disabled={isLoading}>
+                    <span>View invoices</span>
+                    <ExternalLink size={14} className="action-icon" />
+                </button>
+
+                <button className="settings-action-btn" onClick={handleChangePlan} disabled={isLoading}>
+                    <span>Change Plan</span>
+                    <ExternalLink size={14} className="action-icon" />
+                </button>
+
+                <button className="settings-action-btn danger" onClick={handleCreatePortalSession} disabled={isLoading}>
+                    <span>Cancel Membership</span>
+                    <AlertTriangle size={14} className="action-icon" />
+                </button>
+            </div>
+
+            {!isActive && !isTrialing && (
+                <div className="upgrade-cta">
+                    <h3>Get the most out of Project Planner</h3>
+                    <p>Unlock unlimited projects, team collaboration, and advanced analytics.</p>
+                    <button className="premium-btn" onClick={() => store.openUpgradeModal()}>
+                        Upgrade to Pro
+                    </button>
+                </div>
+            )}
         </div>
     );
 });

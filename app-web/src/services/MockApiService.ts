@@ -288,7 +288,7 @@ export class MockApiService implements IApiService {
 
 
     // Subscription
-    async createCheckoutSession(priceId: string): Promise<{ url: string }> { return { url: '' }; }
+    async createCheckoutSession(planType: 'monthly' | 'yearly'): Promise<{ url: string }> { return { url: '' }; }
     async createCustomerPortalSession(): Promise<{ url: string }> { return { url: '' }; }
 
     async createTask(task: any): Promise<any> {

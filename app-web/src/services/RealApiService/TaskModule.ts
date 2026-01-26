@@ -24,7 +24,7 @@ export class TaskModule extends BaseApiService {
 
         // Used for parallel fetching
         const fetchItem = async <T>(url: string, key: string, storeName: 'groups' | 'tasks' | null = null): Promise<T[]> => {
-            console.log(`[FetchItem] Starting for ${key}. Store: ${storeName}`);
+            // console.log(`[FetchItem] Starting for ${key}. Store: ${storeName}`);
             const meta = await dbService.get('meta', key);
             const headers: HeadersInit = { ...this.getAuthHeader() };
 
@@ -34,17 +34,17 @@ export class TaskModule extends BaseApiService {
                 const cached = await dbService.getAll(storeName as any);
                 hasCachedData = !!(cached && cached.length > 0);
             }
-            console.log(`[FetchItem] ${key} - Has Cached Data: ${hasCachedData}, ETag Available: ${!!meta?.etag}`);
+            // console.log(`[FetchItem] ${key} - Has Cached Data: ${hasCachedData}, ETag Available: ${!!meta?.etag}`);
 
             // Only send ETag if we have data (for stores) or if we don't use a store (fallback logic)
             if (meta?.etag && (!storeName || hasCachedData)) {
-                console.log(`[FetchItem] ${key} - Sending If-None-Match: ${meta.etag}`);
+                // console.log(`[FetchItem] ${key} - Sending If-None-Match: ${meta.etag}`);
                 (headers as any)['If-None-Match'] = meta.etag;
             }
 
             try {
                 if (!navigator.onLine) {
-                    console.log(`[FetchItem] ${key} - Offline. Returning cached.`);
+                    // console.log(`[FetchItem] ${key} - Offline. Returning cached.`);
                     if (storeName) {
                         const cached = await dbService.getAll(storeName) as unknown as T[];
                         // If it's tasks, filter by workspaceId
@@ -65,10 +65,10 @@ export class TaskModule extends BaseApiService {
                 }
 
                 const res = await fetch(url, { headers });
-                console.log(`[FetchItem] ${key} - Response Status: ${res.status}`);
+                // console.log(`[FetchItem] ${key} - Response Status: ${res.status}`);
 
                 if (res.status === 304) {
-                    console.log(`[FetchItem] ${key} - 304 Not Modified. Reading from DB.`);
+                    // console.log(`[FetchItem] ${key} - 304 Not Modified. Reading from DB.`);
                     if (storeName) {
                         const data = await dbService.getAll(storeName) as unknown as T[];
                         console.log(`[FetchItem] ${key} - DB returned ${data?.length} items.`);
@@ -80,7 +80,7 @@ export class TaskModule extends BaseApiService {
                 if (res.ok) {
                     const data = await res.json();
                     const etag = res.headers.get('ETag');
-                    console.log(`[FetchItem] ${key} - 200 OK. Data Length: ${data?.length || 0}. New ETag: ${etag}`);
+                    // console.log(`[FetchItem] ${key} - 200 OK. Data Length: ${data?.length || 0}. New ETag: ${etag}`);
 
                     await dbService.put('meta', { key, etag: etag || undefined, lastUpdated: Date.now(), value: null });
 

@@ -10,6 +10,9 @@ export const ApiTokenSettings = observer(() => {
     const [copied, setCopied] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
+    // @ts-ignore
+    const apiDocsUrl = import.meta.env.VITE_API_DOCS_URL;
+
     React.useEffect(() => {
         const fetchToken = async () => {
             try {
@@ -70,7 +73,7 @@ export const ApiTokenSettings = observer(() => {
                         Zapier
                     </span>
                 </p>
-                <a href="#" className="api-docs-link" onClick={(e) => e.preventDefault()}>
+                <a href={apiDocsUrl} className="api-docs-link" onClick={(e) => e.preventDefault()}>
                     <span>View API documentation</span>
                     <ExternalLink size={14} />
                 </a>

@@ -12,7 +12,7 @@ import {
     PanelRight,
     Search
 } from 'lucide-react';
-import { addDays, addWeeks, addMonths } from 'date-fns';
+import { addDays, addWeeks, addMonths, differenceInDays } from 'date-fns';
 import '../Layout/KanbanLayout.css';
 
 import { UserContext } from '../ContextMenu/UserContext';
@@ -32,7 +32,6 @@ const topbarStyles = `
   }
   .trial-button:hover {
     opacity: 0.9;
-    transform: translateY(-1px);
   }
 `;
 // Inject styles
@@ -116,6 +115,16 @@ export const TopBar = observer(() => {
         }
     };
 
+    const user = store.currentUser;
+    const isTrialing = user?.plan === 'pro' && user?.subscriptionStatus === 'trialing';
+    const isPro = user?.plan === 'pro' && user?.subscriptionStatus === 'active';
+
+    let trialDaysLeft = 0;
+    if (isTrialing && user?.trialEndDate) {
+        // Use max to avoid negative days if date-fns returns -0 or something
+        trialDaysLeft = Math.max(0, differenceInDays(new Date(user.trialEndDate), new Date()) + 1);
+    }
+
     return (
         <div className="kanban-topbar">
             {/* LEFT SECTION */}
@@ -149,9 +158,11 @@ export const TopBar = observer(() => {
             {/* RIGHT SECTION */}
             <div className="topbar-right">
                 <div className="topbar-actions">
-                    <div className="topbar-button trial-button" onClick={() => store.openUpgradeModal()}>
-                        Free Trial
-                    </div>
+                    {!isPro && (
+                        <div className="topbar-button trial-button" onClick={() => store.openUpgradeModal()}>
+                            {isTrialing ? `Free Pro: ${trialDaysLeft} days` : 'Free'}
+                        </div>
+                    )}
 
                     <div
                         className="topbar-button"

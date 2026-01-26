@@ -124,7 +124,7 @@ export const AccountSettings = observer(() => {
 
                     <div style={{ marginTop: 40, borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
                         <label className="form-label">App Version</label>
-                        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>3.7.5</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>1.0.0</div>
                     </div>
                 </>
             )}

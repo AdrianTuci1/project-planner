@@ -25,7 +25,7 @@ export class RealtimeService {
         const apiUrl = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:3000';
         const url = `${apiUrl}/stream?token=${token}`;
 
-        console.log(`[Realtime] Connecting to SSE: ${apiUrl}/api/stream... (Token length: ${token.length})`);
+        console.log(`[Realtime] Connecting to SSE: ${apiUrl}/stream... (Token length: ${token.length})`);
 
         this.eventSource = new EventSource(url);
 

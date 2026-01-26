@@ -3,7 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
 import { Routes } from './routes/routes.interface';
+import { helmetConfig, corsConfig } from './config/security.config';
 
 dotenv.config();
 
@@ -20,10 +22,8 @@ export class App {
     }
 
     private initializeMiddlewares() {
-        this.app.use(helmet({
-            crossOriginResourcePolicy: { policy: "cross-origin" }
-        }));
-        this.app.use(cors());
+        this.app.use(helmet(helmetConfig));
+        this.app.use(cors(corsConfig));
         this.app.use(morgan('dev'));
         this.app.use(express.json({
             limit: '25mb',
@@ -33,12 +33,11 @@ export class App {
         }));
         this.app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
-        // Debug Logger
-        this.app.use((req, res, next) => {
-            if (req.url.startsWith('/api/stream')) {
-                console.log(`[App] Incoming SSE Request: ${req.method}`);
-            }
-            next();
+        // Serve API Documentation
+        const docsPath = path.join(__dirname, '../api-documentation');
+        this.app.use('/docs', express.static(docsPath));
+        this.app.get('/docs', (req, res) => {
+            res.sendFile(path.join(docsPath, 'index.html'));
         });
     }
 

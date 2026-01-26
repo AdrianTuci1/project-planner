@@ -60,7 +60,6 @@ export class AuthMiddleware {
 
         try {
             const payload = await this.verifier.verify(token);
-            console.log(`[AuthMiddleware] Verified token for sub: ${payload.sub}`);
             (req as any).user = payload; // Attach user to request
             next();
         } catch (err) {

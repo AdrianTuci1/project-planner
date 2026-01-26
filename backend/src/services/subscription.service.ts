@@ -6,8 +6,8 @@ import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'; // Adjust as needed
 
-const PRICE_ID_PRO_MONTHLY = 'price_1Qj...';
-const PRICE_ID_PRO_YEARLY = 'price_1Qj...';
+const PRICE_ID_PRO_MONTHLY = process.env.STRIPE_PRICE_PRO_MONTHLY || 'price_1Qj_placeholder_monthly';
+const PRICE_ID_PRO_YEARLY = process.env.STRIPE_PRICE_PRO_YEARLY || 'price_1Qj_placeholder_yearly';
 
 export class SubscriptionService {
     private stripe: Stripe;
@@ -18,7 +18,9 @@ export class SubscriptionService {
         this.docClient = DBClient.getInstance();
     }
 
-    async createCheckoutSession(userId: string, priceId: string) {
+    async createCheckoutSession(userId: string, planType: 'monthly' | 'yearly') {
+        const priceId = planType === 'yearly' ? PRICE_ID_PRO_YEARLY : PRICE_ID_PRO_MONTHLY;
+
         // 1. Get user from DB to find stripeCustomerId if exists
         const user = await this.getUser(userId);
         if (!user) {

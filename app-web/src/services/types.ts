@@ -108,7 +108,7 @@ export interface IApiService {
     deleteFile(key: string): Promise<void>;
     getFileUrl(key: string): string; // Synchronous URL builder
     // Subscription
-    createCheckoutSession(priceId: string): Promise<{ url: string }>;
+    createCheckoutSession(planType: 'monthly' | 'yearly'): Promise<{ url: string }>;
     createCustomerPortalSession(): Promise<{ url: string }>;
 
     getUsers(ids: string[]): Promise<any[]>;

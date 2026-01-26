@@ -103,7 +103,7 @@ export class RealApiService implements IApiService {
     getFileUrl(key: string): string { return this.storageModule.getFileUrl(key); }
 
     // Subscription delegates
-    createCheckoutSession(priceId: string): Promise<{ url: string }> { return this.subscriptionModule.createCheckoutSession(priceId); }
+    createCheckoutSession(planType: 'monthly' | 'yearly'): Promise<{ url: string }> { return this.subscriptionModule.createCheckoutSession(planType); }
     createCustomerPortalSession(): Promise<{ url: string }> { return this.subscriptionModule.createCustomerPortalSession(); }
 
     getUsers(ids: string[]): Promise<any[]> { return this.userModule.getUsers(ids); }

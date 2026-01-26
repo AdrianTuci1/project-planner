@@ -6,22 +6,45 @@ import {
     Check,
     Sparkles,
     Infinity,
-    Brain,
     Smartphone,
     Clock,
     Calendar,
     Tag,
     List,
     Repeat,
-    Bot,
-    Heart
+    Heart,
+    Inbox,
+    PersonStanding,
+    Wrench
 } from 'lucide-react';
+import { api } from '../../services/api';
 import './UpgradeModal.css';
 
 export const UpgradeModal = observer(() => {
     const [billedYearly, setBilledYearly] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     if (!store.isUpgradeModalOpen) return null;
+
+    const handleUpgrade = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const planType = billedYearly ? 'yearly' : 'monthly';
+            const { url } = await api.createCheckoutSession(planType);
+            if (url) {
+                window.location.href = url;
+            } else {
+                setError("Failed to create checkout session.");
+            }
+        } catch (err: any) {
+            console.error("Upgrade failed:", err);
+            setError(err.message || "An unexpected error occurred.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="upgrade-modal-overlay" onClick={() => store.closeUpgradeModal()}>
@@ -57,10 +80,16 @@ export const UpgradeModal = observer(() => {
                         <div className="plan-column">
                             <div className="plan-name">Pro</div>
                             <div className="plan-price">
-                                {billedYearly ? '$7.99/mo' : '$9.99/mo'}
+                                {billedYearly ? '$119.99/year' : '$14.99/mo'}
                             </div>
                             <div className="plan-action">
-                                <button className="upgrade-button">Upgrade</button>
+                                <button
+                                    className="upgrade-button"
+                                    onClick={handleUpgrade}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? 'Processing...' : 'Upgrade'}
+                                </button>
                             </div>
                             <div className="billing-toggle">
                                 <input
@@ -77,28 +106,31 @@ export const UpgradeModal = observer(() => {
                         </div>
                     </div>
 
+                    {error && <div className="upgrade-error-message" style={{ color: '#EF4444', textAlign: 'center', marginBottom: '16px', fontSize: '14px' }}>{error}</div>}
+
                     {/* Feature List */}
                     <div className="feature-scroll-area">
                         <FeatureRow icon={<Infinity size={16} color="#3B82F6" />} name="Unlimited tasks" basic={true} pro={true} />
-                        <FeatureRow icon={<Brain size={16} color="#8B5CF6" />} name="Braindump" basic={true} pro={true} />
+                        <FeatureRow icon={<Inbox size={16} color="#8B5CF6" />} name="Inbox" basic={true} pro={true} />
                         <FeatureRow icon={<Smartphone size={16} color="#10B981" />} name="iPhone & iPad App" basic={true} pro={true} />
+                        <FeatureRow icon={<PersonStanding size={16} color="#8B5CF6" />} name="Join teams" basic={true} pro={true} />
                         <FeatureRow icon={<Clock size={16} color="#F59E0B" />} name="Timebox mode" basic={false} pro={true} />
                         <FeatureRow icon={<Calendar size={16} color="#10B981" />} name="Google Calendar Integration" basic={false} pro={true} />
                         <FeatureRow icon={<Calendar size={16} color="#EF4444" />} name="Apple Calendar Integration" basic={false} pro={true} />
                         <FeatureRow icon={<Tag size={16} color="#EC4899" />} name="Labels & Filters" basic={false} pro={true} />
                         <FeatureRow icon={<List size={16} color="#F97316" />} name="Subtasks" basic={false} pro={true} />
                         <FeatureRow icon={<Repeat size={16} color="#3B82F6" />} name="Recurring Tasks" basic={false} pro={true} />
-                        <FeatureRow icon={<Bot size={16} color="#8B5CF6" />} name="AI Assistant" basic={false} pro={true} />
+                        <FeatureRow icon={<Wrench size={16} color="#8B5CF6" />} name="Create teams" basic={false} pro={true} />
                         <FeatureRow icon={<Heart size={16} color="#EF4444" />} name="Support an Independent Developer" basic={false} pro={true} />
                     </div>
 
                     <div className="modal-footer">
-                        <a href="#" className="footer-link">
+                        {/* <a href="#" className="footer-link">
                             🧐 Student or non profit? <span>Click here</span> for 50% off any plan
                         </a>
                         <a href="#" className="footer-link">
                             💫 Tired of subscriptions? <span>Click here</span> to purchase a lifetime license ($300)
-                        </a>
+                        </a> */}
                     </div>
                 </div>
             </div>

@@ -6,10 +6,10 @@ export class SubscriptionController {
 
     public createCheckoutSession = async (req: Request, res: Response) => {
         try {
-            const { priceId } = req.body;
+            const { planType } = req.body;
             // @ts-ignore - Assuming auth middleware instills user
             const userId = req.user.id;
-            const session = await this.subscriptionService.createCheckoutSession(userId, priceId);
+            const session = await this.subscriptionService.createCheckoutSession(userId, planType);
             res.status(200).json(session);
         } catch (error: any) {
             res.status(500).json({ message: error.message });
