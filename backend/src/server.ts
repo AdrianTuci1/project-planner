@@ -18,11 +18,13 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 import { GroupsRoute } from './routes/groups.route';
 import { StorageRoute } from './routes/storage.route';
 import UserRoute from './routes/user.route';
+import AuthRoute from './routes/auth.route';
 
 const port = parseInt(process.env.PORT || '3000'); // Default to 3001 to avoid React conflict
 
 const app = new App(
     [
+        new AuthRoute(),
         new TasksRoute(),
         new LabelsRoute(),
         new GroupsRoute(),

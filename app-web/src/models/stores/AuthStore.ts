@@ -86,22 +86,49 @@ export class AuthStore {
         this.error = null;
 
         try {
-            // Generate a username like Name@123456
-            const sanitizedName = name.replace(/\s+/g, '');
-            const randomSuffix = Math.floor(100000 + Math.random() * 900000);
-            const username = `${sanitizedName}@${randomSuffix}`;
+            // Retrieve pending onboarding data (if any)
+            const onboarding = this.pendingOnboardingData || {};
 
-            const command = new SignUpCommand({
-                ClientId: CLIENT_ID,
-                Username: username,
-                Password: password,
-                UserAttributes: [
-                    { Name: "email", Value: email },
-                    { Name: "name", Value: name }
-                ],
+            // @ts-ignore
+            const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
+            const response = await fetch(`${apiUrl}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password, name, onboarding })
             });
 
-            await this.client.send(command);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || "Registration failed");
+            }
+
+            const data = await response.json();
+
+            // Backend returns { data: { tokens: {...}, user: {...} }, message: "..." }
+            const result = data.data;
+
+            if (result.tokens) {
+                // Map keys to match handleAuthSuccess expectation (UpperCamelCase)
+                const authResult = {
+                    AccessToken: result.tokens.AccessToken,
+                    RefreshToken: result.tokens.RefreshToken,
+                    IdToken: result.tokens.IdToken,
+                    ExpiresIn: result.tokens.ExpiresIn
+                };
+                this.handleAuthSuccess(authResult);
+            }
+
+            // Update user state immediately with returned data
+            runInAction(() => {
+                this.user = result.user;
+                if (this.pendingOnboardingData) {
+                    this.clearPendingOnboarding();
+                }
+            });
+
             return true;
         } catch (err: any) {
             runInAction(() => {
@@ -115,22 +142,28 @@ export class AuthStore {
         }
     }
 
-    async confirmRegistration(email: string, code: string) {
+    async resetPassword(email: string) {
         this.isLoading = true;
         this.error = null;
 
         try {
-            const command = new ConfirmSignUpCommand({
-                ClientId: CLIENT_ID,
-                Username: email,
-                ConfirmationCode: code,
+            // @ts-ignore
+            const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
+            const response = await fetch(`${apiUrl}/auth/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
             });
 
-            await this.client.send(command);
+            if (!response.ok) {
+                throw new Error("Failed to reset password");
+            }
+
             return true;
         } catch (err: any) {
             runInAction(() => {
-                this.error = err.message || "Failed to confirm registration";
+                this.error = err.message || "Failed to reset password";
             });
             throw err;
         } finally {
@@ -362,12 +395,12 @@ export class AuthStore {
 
                     this.syncSettings(attributes);
 
-                    if (this.pendingOnboardingData) {
-                        console.log("[AuthStore] Found pending onboarding data, syncing...");
-                        this.syncUser(this.pendingOnboardingData).then(() => {
+                    // Always sync user to get latest Plan/Subscription status from DB
+                    this.syncUser(this.pendingOnboardingData || null).then(() => {
+                        if (this.pendingOnboardingData) {
                             this.clearPendingOnboarding();
-                        });
-                    }
+                        }
+                    });
                 });
                 return;
             } else {
@@ -398,12 +431,13 @@ export class AuthStore {
 
                 this.syncSettings(attributes);
 
-                if (this.pendingOnboardingData) {
-                    console.log("[AuthStore] Found pending onboarding data in fallback path, syncing...");
-                    this.syncUser(this.pendingOnboardingData).then(() => {
+                // Always sync user to get latest Plan/Subscription status from DB
+                // If we have pending onboarding data, pass it.
+                this.syncUser(this.pendingOnboardingData || null).then(() => {
+                    if (this.pendingOnboardingData) {
                         this.clearPendingOnboarding();
-                    });
-                }
+                    }
+                });
             });
         } catch (err) {
             console.error("Failed to fetch user attributes", err);
@@ -436,7 +470,10 @@ export class AuthStore {
         try {
             const token = localStorage.getItem('accessToken');
             // @ts-ignore
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/sync`, {
+            const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
+            // @ts-ignore
+            const response = await fetch(`${apiUrl}/users/sync`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

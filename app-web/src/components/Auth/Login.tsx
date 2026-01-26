@@ -9,20 +9,113 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = observer(({ onLogin }) => {
+    // Login State
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
+    // Forgot Password State
+    const [isForgotMode, setIsForgotMode] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState("");
+    const [forgotSuccess, setForgotSuccess] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await store.authStore.login(email, password);
-            // If successful and no error thrown
             onLogin();
         } catch (err: any) {
-            // Error is handled in store (sets store.authStore.error) but we can also log or alert if needed
-            // For UI, we'll display store.authStore.error below inputs
+            // Error handled in store
         }
     };
+
+    const handleForgot = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await store.authStore.resetPassword(forgotEmail);
+            setForgotSuccess(true);
+        } catch (err: any) {
+            // Error handled in store
+        }
+    };
+
+    if (isForgotMode) {
+        return (
+            <AuthLayout imageSrc="/onb.png" imageAlt="Abstract Dark Background">
+                <div className="auth-brand-header">
+                    <div className="auth-logo-wrapper">
+                        <img src="/icon.png" alt="Logo" className="auth-logo" />
+                    </div>
+                    <span className="auth-brand-name">simplu</span>
+                </div>
+                <h1 className="auth-title">Reset Password</h1>
+                <p className="auth-subtitle">Enter your email to receive a temporary password.</p>
+
+                {!forgotSuccess ? (
+                    <form className="auth-form" onSubmit={handleForgot}>
+                        <div>
+                            <label className="auth-label">Email</label>
+                            <input
+                                className="auth-input"
+                                type="email"
+                                placeholder="Enter your email"
+                                value={forgotEmail}
+                                onChange={(e) => setForgotEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        {store.authStore.error && (
+                            <div style={{ color: 'red', marginTop: 10, fontSize: 'var(--text-sm)' }}>{store.authStore.error}</div>
+                        )}
+
+                        <div className="auth-nav-buttons" style={{ marginTop: 'var(--space-6)' }}>
+                            <button
+                                type="button"
+                                className="auth-back-button"
+                                onClick={() => setIsForgotMode(false)}
+                            >
+                                Back
+                            </button>
+                            <button
+                                className="auth-button"
+                                type="submit"
+                                disabled={store.authStore.isLoading}
+                                style={{ flex: 1, cursor: store.authStore.isLoading ? 'wait' : 'pointer' }}
+                            >
+                                {store.authStore.isLoading ? "Sending..." : "Send Reset Link"}
+                            </button>
+                        </div>
+                    </form>
+                ) : (
+                    <div className="auth-form">
+                        <div style={{
+                            background: 'rgba(52, 211, 153, 0.1)',
+                            border: '1px solid var(--success)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: 'var(--space-4)',
+                            color: 'var(--success)',
+                            marginBottom: 'var(--space-6)',
+                            textAlign: 'center'
+                        }}>
+                            <p><strong>Check your email!</strong></p>
+                            <p style={{ marginTop: 4, fontSize: 'var(--text-sm)' }}>We have sent a temporary password to <strong>{forgotEmail}</strong>.</p>
+                        </div>
+                        <button
+                            className="auth-button"
+                            onClick={() => {
+                                setIsForgotMode(false);
+                                setForgotSuccess(false);
+                                setEmail(forgotEmail); // Pre-fill login email
+                            }}
+                            style={{ width: '100%' }}
+                        >
+                            Back to Login
+                        </button>
+                    </div>
+                )}
+            </AuthLayout>
+        );
+    }
 
     return (
         <AuthLayout imageSrc="/onb.png" imageAlt="Abstract Dark Background">
@@ -48,7 +141,23 @@ export const Login: React.FC<LoginProps> = observer(({ onLogin }) => {
                 </div>
 
                 <div>
-                    <label className="auth-label">Password</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <label className="auth-label" style={{ marginBottom: 0 }}>Password</label>
+                        <button
+                            type="button"
+                            onClick={() => setIsForgotMode(true)}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--primary)',
+                                fontSize: 'var(--text-xs)',
+                                cursor: 'pointer',
+                                fontWeight: 500
+                            }}
+                        >
+                            Forgot password?
+                        </button>
+                    </div>
                     <input
                         className="auth-input"
                         type="password"
@@ -67,7 +176,7 @@ export const Login: React.FC<LoginProps> = observer(({ onLogin }) => {
                     className="auth-button"
                     type="submit"
                     disabled={store.authStore.isLoading}
-                    style={{ cursor: store.authStore.isLoading ? 'wait' : 'pointer' }}
+                    style={{ cursor: store.authStore.isLoading ? 'wait' : 'pointer', marginTop: 'var(--space-6)' }}
                 >
                     {store.authStore.isLoading ? "Signing in..." : "Sign in"}
                 </button>

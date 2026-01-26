@@ -1,13 +1,19 @@
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
+import { EmailService } from "./email.service";
+import { NotificationsService } from "./notifications.service";
 
 export class UserService {
     private docClient: DynamoDBDocumentClient;
     private tableName: string;
+    private emailService: EmailService;
+    private notificationsService: NotificationsService;
 
     constructor() {
         this.docClient = DBClient.getInstance();
-        this.tableName = process.env.USERS_TABLE || 'Users';
+        this.tableName = process.env.TABLE_USERS || 'Users';
+        this.emailService = new EmailService();
+        this.notificationsService = new NotificationsService();
     }
 
     async syncUser(userId: string, email: string, name: string, onboardingData: any) {
@@ -57,8 +63,16 @@ export class UserService {
         });
 
         await this.docClient.send(command);
+
+        // Send Welcome Email
+        this.emailService.sendWelcomeEmail(email, name);
+
+        // Send Welcome Notification
+        await this.notificationsService.sendWelcomeNotification(userId, email);
+
         return newUser;
     }
+
 
     private async getUser(userId: string) {
         const command = new GetCommand({
