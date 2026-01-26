@@ -69,19 +69,6 @@ export class SettingsSyncStrategy {
             }
         ));
 
-        // Monitor Account Settings (Display Name)
-        disposers.push(reaction(
-            () => ({
-                displayName: settings.account.displayName,
-                avatarUrl: settings.account.avatarUrl
-            }),
-            (data) => {
-                console.log("[SettingsSyncStrategy] Account changed:", data);
-                // Use shorter debounce for vital profile updates
-                this.scheduleUpdate('account', data, 200);
-            }
-        ));
-
         this.disposers.set('general', disposers);
         this.isMonitoring.add('general');
     }
@@ -93,7 +80,7 @@ export class SettingsSyncStrategy {
             this.disposers.delete(key);
         }
 
-        const keysToClear = [key, 'power', 'dueDates', 'account'];
+        const keysToClear = [key, 'power', 'dueDates'];
         keysToClear.forEach(k => {
             const pending = this.pendingUpdates.get(k);
             if (pending) {

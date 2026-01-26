@@ -1,5 +1,5 @@
 /* TopBar.css */
-.top-bar {
+.kanban-topbar {
     height: var(--header-height);
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
@@ -7,6 +7,7 @@
     padding: 0 var(--space-4);
     background-color: var(--bg-app);
     justify-content: space-between;
+    min-width: 800px;
 }
 
 .tb-left,

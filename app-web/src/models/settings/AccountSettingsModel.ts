@@ -27,6 +27,14 @@ export class AccountSettingsModel {
         this.displayName = name;
     }
 
+    setAvatarUrl(url: string) {
+        this.avatarUrl = url;
+    }
+
+    setEmail(email: string) {
+        this.email = email;
+    }
+
     setChangeEmailField(field: keyof typeof this.changeEmail, value: string) {
         this.changeEmail[field] = value;
     }

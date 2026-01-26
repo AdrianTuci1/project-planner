@@ -17,6 +17,16 @@ class UserController {
         }
     };
 
+    public getMe = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { sub } = (req as any).user;
+            const user = await this.userService.getUserProfile(sub);
+            res.status(200).json({ data: user });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     public generateApiToken = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { sub } = (req as any).user;
@@ -55,6 +65,24 @@ class UserController {
             }
             const users = await this.userService.getUsersByIds(ids);
             res.status(200).json({ data: users });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public updateUser = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { sub } = (req as any).user;
+            const userData = req.body;
+
+            // Security Check: Ensure user is only updating themselves
+            if (userData.id && userData.id !== sub) {
+                console.warn(`[Security Warning] User ${sub} attempted to update user ${userData.id}`);
+                return res.status(403).json({ message: 'Forbidden: You can only update your own profile' });
+            }
+
+            const updatedUser = await this.userService.updateUser(sub, userData);
+            res.status(200).json({ data: updatedUser, message: 'User updated successfully' });
         } catch (error) {
             next(error);
         }

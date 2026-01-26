@@ -356,4 +356,18 @@ export class MockApiService implements IApiService {
             avatarUrl: ''
         }));
     }
+
+    async updateUser(data: any): Promise<any> {
+        console.log("Mock updateUser", data);
+        return data;
+    }
+
+    async syncUser(onboardingData: any): Promise<any> {
+        console.log("Mock syncUser", onboardingData);
+        return { data: { id: 'mock-id', name: 'Mock User', email: 'mock@example.com' } };
+    }
+
+    async getUserProfile(): Promise<any> {
+        return { id: 'mock-id', name: 'Mock User', email: 'mock@example.com', avatarUrl: '' };
+    }
 }

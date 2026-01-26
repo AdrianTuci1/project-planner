@@ -22,6 +22,7 @@ import { SearchSpotlight } from './SearchSpotlight';
 
 import { CalendarViewMenu } from '../Gantt/CalendarViewMenu';
 import { ShortcutsModal } from '../KeyboardShortcuts/ShortcutsModal';
+import { CachedAvatar } from '../Shared/CachedAvatar';
 
 const topbarStyles = `
   .trial-button {
@@ -213,20 +214,13 @@ export const TopBar = observer(() => {
                         className="avatar-button"
                         onClick={handleUserClick}
                     >
-                        {store.currentUser?.avatarUrl ? (
-                            <img
-                                src={store.currentUser.avatarUrl}
-                                alt="Avatar"
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: '50%',
-                                    objectFit: 'cover',
-                                }}
-                            />
-                        ) : (
-                            store.currentUser?.initials[0] || 'T'
-                        )}
+                        <CachedAvatar
+                            url={store.currentUser?.avatarUrl}
+                            alt="Avatar"
+                            fallback={store.currentUser?.initials[0] || 'U'}
+                            style={{ width: '100%', height: '100%', display: "flex", alignItems: "center", justifyContent: "center" }}
+                            borderRadius="50%"
+                        />
                     </div>
                 </div>
 

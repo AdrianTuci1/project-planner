@@ -33,4 +33,16 @@ export class UserModule extends BaseApiService {
     async getUsers(ids: string[]): Promise<any[]> {
         return this.post<{ data: any[] }>('/users/batch', { ids }).then(res => res.data);
     }
+
+    async updateUser(data: any): Promise<any> {
+        return this.post<{ data: any }>('/users/update', data).then(res => res.data);
+    }
+
+    async getUserProfile(): Promise<any> {
+        return this.fetchOrCached<{ data: any }>(
+            `${this.baseUrl}/users/me`,
+            'user_profile',
+            { data: null }
+        ).then(res => res.data);
+    }
 }

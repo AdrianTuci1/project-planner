@@ -1,4 +1,4 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import { api } from "../../services/api";
 
 export class GeneralSettingsModel {
@@ -105,37 +105,39 @@ export class GeneralSettingsModel {
             if (settings) {
                 console.log('[GeneralSettingsModel] Loading settings from backend:', settings);
 
-                // Handle generalSettings
-                if (settings.generalSettings) {
-                    Object.keys(settings.generalSettings).forEach(key => {
-                        if (key in this.generalSettings) {
+                runInAction(() => {
+                    // Handle generalSettings
+                    if (settings.generalSettings) {
+                        Object.keys(settings.generalSettings).forEach(key => {
+                            if (key in this.generalSettings) {
+                                // @ts-ignore
+                                this.generalSettings[key] = settings.generalSettings[key];
+                            }
+                        });
+                    } else {
+                        // Fallback: Map flat properties to generalSettings
+                        Object.keys(this.generalSettings).forEach(k => {
                             // @ts-ignore
-                            this.generalSettings[key] = settings.generalSettings[key];
-                        }
-                    });
-                } else {
-                    // Fallback: Map flat properties to generalSettings
-                    Object.keys(this.generalSettings).forEach(k => {
-                        // @ts-ignore
-                        if (settings[k] !== undefined) this.generalSettings[k] = settings[k];
-                    });
-                }
+                            if (settings[k] !== undefined) this.generalSettings[k] = settings[k];
+                        });
+                    }
 
-                // Handle featuresSettings - ensure all properties are initialized
-                if (settings.featuresSettings) {
-                    Object.keys(settings.featuresSettings).forEach(key => {
-                        if (key in this.featuresSettings) {
+                    // Handle featuresSettings - ensure all properties are initialized
+                    if (settings.featuresSettings) {
+                        Object.keys(settings.featuresSettings).forEach(key => {
+                            if (key in this.featuresSettings) {
+                                // @ts-ignore
+                                this.featuresSettings[key] = settings.featuresSettings[key];
+                            }
+                        });
+                    } else {
+                        // Fallback for features - check flat properties
+                        Object.keys(this.featuresSettings).forEach(k => {
                             // @ts-ignore
-                            this.featuresSettings[key] = settings.featuresSettings[key];
-                        }
-                    });
-                } else {
-                    // Fallback for features - check flat properties
-                    Object.keys(this.featuresSettings).forEach(k => {
-                        // @ts-ignore
-                        if (settings[k] !== undefined) this.featuresSettings[k] = settings[k];
-                    });
-                }
+                            if (settings[k] !== undefined) this.featuresSettings[k] = settings[k];
+                        });
+                    }
+                });
 
                 console.log('[GeneralSettingsModel] After loading, featuresSettings:', {
                     dueDatesEnabled: this.featuresSettings.dueDatesEnabled,

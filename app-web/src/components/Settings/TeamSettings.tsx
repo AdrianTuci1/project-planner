@@ -5,11 +5,13 @@ import { api } from '../../services/api';
 import { ArrowLeft, Users, ChevronRight, Crown, Camera, Mail, Plus } from 'lucide-react';
 import { ContextMenu, MenuItem } from '../ContextMenu/ContextMenu';
 import './TeamSettings.css';
+import { useCachedImage } from '../../utils/ImageCache';
 
 export const TeamSettings = observer(() => {
     const { settings, authStore } = store;
     const user = authStore.user;
     const teamWorkspace = store.workspaceStore.workspaces.find(w => w.type === 'team');
+    const { cachedUrl: teamAvatarUrl } = useCachedImage(teamWorkspace?.avatarUrl);
     const teamId = teamWorkspace?.id;
     const [isCreating, setIsCreating] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -168,8 +170,8 @@ export const TeamSettings = observer(() => {
                                 onClick={handleLogoClick}
                                 className={isOwner ? "team-logo-upload-trigger" : ""}
                             >
-                                {teamWorkspace.avatarUrl ? (
-                                    <img src={teamWorkspace.avatarUrl} alt="Team Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                {teamAvatarUrl ? (
+                                    <img src={teamAvatarUrl} alt="Team Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
                                     <div style={{ fontSize: 32, fontWeight: 600, color: 'var(--primary)' }}>
                                         {teamName.charAt(0).toUpperCase()}
@@ -383,9 +385,9 @@ export const TeamSettings = observer(() => {
 
             <div className="connected-account-card">
                 <div className="account-info">
-                    {teamWorkspace.avatarUrl ? (
+                    {teamAvatarUrl ? (
                         <img
-                            src={teamWorkspace.avatarUrl}
+                            src={teamAvatarUrl}
                             alt="Team Logo"
                             style={{
                                 width: 40, height: 40, borderRadius: 8,

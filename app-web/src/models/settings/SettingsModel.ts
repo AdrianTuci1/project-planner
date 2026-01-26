@@ -34,6 +34,10 @@ export class SettingsModel {
         await this.loadSettings();
         // Defer monitoring slightly or do it immediately
         settingsSyncStrategy.monitor(this);
+
+        // Import strategy lazily or use exported instance
+        const { profileSyncStrategy } = await import("../strategies/ProfileSyncStrategy");
+        profileSyncStrategy.monitor(this.account);
     }
 
     async loadSettings() {
@@ -47,11 +51,9 @@ export class SettingsModel {
             // Populate Due Dates
             if (settings.thresholdDays !== undefined) this.dueDates.thresholdDays = settings.thresholdDays;
 
-            // Populate Account
-            if (settings.displayName !== undefined) this.account.displayName = settings.displayName;
-            if (settings.avatarUrl !== undefined) this.account.avatarUrl = settings.avatarUrl;
-
+            // Populate Account - Now handled via AuthStore user sync
         } catch (error) {
+
             console.error("Failed to load global settings", error);
         }
     }
@@ -70,8 +72,6 @@ export class SettingsModel {
             Object.assign(this.general.generalSettings, data.generalSettings);
         } else {
             // Try to match fields
-            if (data.displayName !== undefined) this.account.displayName = data.displayName;
-            if (data.avatarUrl !== undefined) this.account.avatarUrl = data.avatarUrl;
             if (data.thresholdDays !== undefined) this.dueDates.thresholdDays = data.thresholdDays;
 
             // Delegation for general properties

@@ -112,6 +112,9 @@ export interface IApiService {
     createCustomerPortalSession(): Promise<{ url: string }>;
 
     getUsers(ids: string[]): Promise<any[]>;
+    updateUser(data: any): Promise<any>;
+    syncUser(onboardingData: any): Promise<any>;
+    getUserProfile(): Promise<any>;
 }
 
 export interface SubCalendar {

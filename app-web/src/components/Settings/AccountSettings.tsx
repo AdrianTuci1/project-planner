@@ -9,9 +9,11 @@ import {
     ArrowLeft
 } from 'lucide-react';
 import './AccountSettings.css';
+import { useCachedImage } from '../../utils/ImageCache';
 
 export const AccountSettings = observer(() => {
-    const { settings } = store;
+    const { settings, authStore } = store;
+    const { cachedUrl: avatarUrl } = useCachedImage(authStore.user?.avatarUrl || settings.account.avatarUrl);
 
     // File Upload Logic
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -21,7 +23,7 @@ export const AccountSettings = observer(() => {
         if (file) {
             try {
                 const url = await api.uploadFile(file);
-                settings.account.avatarUrl = url;
+                settings.account.setAvatarUrl(url);
             } catch (err) {
                 console.error("Failed to upload avatar", err);
                 alert("Failed to upload avatar.");
@@ -34,16 +36,16 @@ export const AccountSettings = observer(() => {
             {settings.accountView === 'main' && (
                 <>
                     <div className="avatar-upload-section">
-                        {settings.account.avatarUrl ? (
+                        {avatarUrl ? (
                             <img
-                                src={settings.account.avatarUrl}
+                                src={avatarUrl}
                                 alt="Profile"
                                 className="large-avatar"
                                 style={{ objectFit: 'cover' }}
                             />
                         ) : (
                             <div className="large-avatar">
-                                {settings.account.displayName.charAt(0).toUpperCase()}
+                                {(settings.account.displayName || 'U').charAt(0).toUpperCase()}
                             </div>
                         )}
                         <button className="btn-secondary" onClick={() => fileInputRef.current?.click()}>Upload photo</button>
@@ -62,7 +64,11 @@ export const AccountSettings = observer(() => {
                             className="form-input"
                             value={settings.account.displayName}
                             onChange={(e) => settings.account.setDisplayName(e.target.value)}
+                            placeholder="Enter your name"
                         />
+                        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>
+                            Updates your profile name in Simplu
+                        </div>
                     </div>
 
                     <div className="form-group">

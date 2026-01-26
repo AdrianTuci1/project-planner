@@ -85,6 +85,11 @@ export class UserService {
     }
 
 
+    async getUserProfile(userId: string) {
+        const user = await this.getUser(userId);
+        return this.maskToken(user);
+    }
+
     private async getUser(userId: string) {
         const command = new GetCommand({
             TableName: this.tableName,
@@ -189,5 +194,43 @@ export class UserService {
             email: u.email,
             avatarUrl: u.avatarUrl
         }));
+    }
+
+    async updateUser(userId: string, data: { name?: string, avatarUrl?: string }) {
+        const updateExpressionParts: string[] = [];
+        const expressionAttributeValues: any = {
+            ':u': new Date().toISOString()
+        };
+        const expressionAttributeNames: any = {};
+
+        // Strictly allow only name and avatarUrl
+        if (data.name !== undefined && typeof data.name === 'string') {
+            updateExpressionParts.push('#n = :n');
+            expressionAttributeValues[':n'] = data.name;
+            expressionAttributeNames['#n'] = 'name';
+        }
+
+        if (data.avatarUrl !== undefined && typeof data.avatarUrl === 'string') {
+            updateExpressionParts.push('avatarUrl = :a');
+            expressionAttributeValues[':a'] = data.avatarUrl;
+        }
+
+        if (updateExpressionParts.length === 0) {
+            return this.getUser(userId);
+        }
+
+        const updateExpression = `set ${updateExpressionParts.join(', ')}, updatedAt = :u`;
+
+        const command = new UpdateCommand({
+            TableName: this.tableName,
+            Key: { id: userId },
+            UpdateExpression: updateExpression,
+            ExpressionAttributeValues: expressionAttributeValues,
+            ExpressionAttributeNames: Object.keys(expressionAttributeNames).length > 0 ? expressionAttributeNames : undefined,
+            ReturnValues: 'ALL_NEW'
+        });
+
+        const result = await this.docClient.send(command);
+        return this.maskToken(result.Attributes);
     }
 }

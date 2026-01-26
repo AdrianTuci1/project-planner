@@ -11,6 +11,7 @@ import { LabelModule } from './LabelModule';
 import { SubscriptionModule } from './SubscriptionModule';
 
 import { UserModule } from './UserModule';
+import { AuthModule } from './AuthModule';
 
 export class RealApiService implements IApiService {
     private taskModule: TaskModule;
@@ -23,6 +24,7 @@ export class RealApiService implements IApiService {
     private storageModule: StorageModule;
     private subscriptionModule: SubscriptionModule;
     private userModule: UserModule;
+    private authModule: AuthModule;
 
     constructor(baseUrl: string) {
         syncService.init();
@@ -36,6 +38,7 @@ export class RealApiService implements IApiService {
         this.storageModule = new StorageModule(baseUrl);
         this.subscriptionModule = new SubscriptionModule(baseUrl);
         this.userModule = new UserModule(baseUrl);
+        this.authModule = new AuthModule(baseUrl);
     }
 
     // ... (rest of the file)
@@ -107,4 +110,7 @@ export class RealApiService implements IApiService {
     createCustomerPortalSession(): Promise<{ url: string }> { return this.subscriptionModule.createCustomerPortalSession(); }
 
     getUsers(ids: string[]): Promise<any[]> { return this.userModule.getUsers(ids); }
+    updateUser(data: any): Promise<any> { return this.userModule.updateUser(data); }
+    syncUser(onboardingData: any): Promise<any> { return this.authModule.syncUser(onboardingData); }
+    getUserProfile(): Promise<any> { return this.userModule.getUserProfile(); }
 }

@@ -7,6 +7,7 @@ import {
     GetUserCommand
 } from "@aws-sdk/client-cognito-identity-provider";
 import { ProjectStore } from "../store";
+import { api } from "../../services/api";
 // Configuration from user provided details
 // @ts-ignore
 const COGNITO_DOMAIN = import.meta.env.VITE_COGNITO_DOMAIN; // Custom Domain
@@ -408,6 +409,16 @@ export class AuthStore {
                             this.clearPendingOnboarding();
                         }
                     });
+
+                    // Fetch full profile from DB via Me endpoint
+                    api.getUserProfile().then(dbUser => {
+                        if (dbUser) {
+                            runInAction(() => {
+                                this.user = { ...this.user, ...dbUser };
+                                this.syncSettings(this.user);
+                            });
+                        }
+                    });
                 });
                 return;
             } else {
@@ -445,6 +456,16 @@ export class AuthStore {
                         this.clearPendingOnboarding();
                     }
                 });
+
+                // Fetch full profile from DB via Me endpoint
+                api.getUserProfile().then(dbUser => {
+                    if (dbUser) {
+                        runInAction(() => {
+                            this.user = { ...this.user, ...dbUser };
+                            this.syncSettings(this.user);
+                        });
+                    }
+                });
             });
         } catch (err) {
             console.error("Failed to fetch user attributes", err);
@@ -454,16 +475,23 @@ export class AuthStore {
 
     private syncSettings(attributes: any) {
         if (this.rootStore.uiStore.settings.account) {
-            if (attributes.name) {
-                this.rootStore.uiStore.settings.account.setDisplayName(attributes.name);
+            // Priority: Local User Object (DB) > Federated Attributes
+            // Note: attributes might be from Cognito (fetchUserAttributes) or DB (syncUser/getUserProfile)
+            const finalName = this.user?.name || this.user?.displayName || attributes?.name || attributes?.displayName;
+            const finalAvatarUrl = this.user?.avatarUrl || attributes?.avatarUrl || attributes?.picture;
+
+            if (finalName) {
+                this.rootStore.uiStore.settings.account.setDisplayName(finalName);
             }
             if (attributes.email) {
-                this.rootStore.uiStore.settings.account.email = attributes.email;
+                this.rootStore.uiStore.settings.account.setEmail(attributes.email);
+            }
+            if (finalAvatarUrl) {
+                this.rootStore.uiStore.settings.account.setAvatarUrl(finalAvatarUrl);
             }
             // Sync Team ID
-            if (attributes['custom:teamId'] || attributes.teamId) {
-                // Assuming we store it in SettingsStore or user object directly
-                this.user.teamId = attributes['custom:teamId'] || attributes.teamId;
+            if (attributes['custom:teamId'] || attributes.teamId || this.user?.teamId) {
+                this.user.teamId = attributes['custom:teamId'] || attributes.teamId || this.user?.teamId;
             }
         }
     }
@@ -475,33 +503,29 @@ export class AuthStore {
 
     async syncUser(onboardingData: any) {
         try {
-            const token = localStorage.getItem('accessToken');
-            // @ts-ignore
-            const apiUrl = import.meta.env.VITE_API_BASE_URL;
-
-            // @ts-ignore
-            const response = await fetch(`${apiUrl}/users/sync`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ onboarding: onboardingData })
+            const data = await api.syncUser(onboardingData);
+            runInAction(() => {
+                // Update local user with synced data if needed
+                if (data) {
+                    this.user = { ...this.user, ...data };
+                    this.syncSettings(this.user);
+                }
             });
-
-            if (!response.ok) {
-                console.warn("Failed to sync user data with backend");
-            } else {
-                const data = await response.json();
-                runInAction(() => {
-                    // Update local user with synced data if needed
-                    if (data.data) {
-                        this.user = { ...this.user, ...data.data };
-                    }
-                });
-            }
         } catch (err) {
             console.error("Sync user error", err);
+        }
+    }
+
+    async updateUserProfile(data: { name?: string, avatarUrl?: string }) {
+        try {
+            const updated = await api.updateUser(data);
+            runInAction(() => {
+                this.user = { ...this.user, ...updated };
+                this.syncSettings(this.user);
+            });
+        } catch (err) {
+            console.error("Failed to update user profile", err);
+            throw err;
         }
     }
 

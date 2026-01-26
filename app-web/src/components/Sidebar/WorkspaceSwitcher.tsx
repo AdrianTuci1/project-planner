@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { ChevronUp, Check, Plus } from 'lucide-react';
+import { CachedAvatar } from '../Shared/CachedAvatar';
 import './WorkspaceSwitcher.css';
 
 export const WorkspaceSwitcher = observer(() => {
@@ -17,11 +18,13 @@ export const WorkspaceSwitcher = observer(() => {
             >
                 <div className="workspace-info">
                     <div className={`workspace-avatar ${store.activeWorkspace?.type === 'personal' ? 'personal' : 'team'}`}>
-                        {store.activeWorkspace?.avatarUrl ? (
-                            <img src={store.activeWorkspace.avatarUrl} alt="Ws" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
-                        ) : (
-                            store.activeWorkspace?.type === 'personal' ? 'P' : 'T'
-                        )}
+                        <CachedAvatar
+                            url={store.activeWorkspace?.avatarUrl}
+                            alt="Ws"
+                            fallback={store.activeWorkspace?.type === 'personal' ? 'P' : 'T'}
+                            style={{ width: '100%', height: '100%' }}
+                            borderRadius="inherit"
+                        />
                     </div>
                     <span className="workspace-name">
                         {store.activeWorkspace?.name || 'Workspace'}
@@ -56,11 +59,13 @@ export const WorkspaceSwitcher = observer(() => {
                                 }}
                             >
                                 <div className={`workspace-avatar ${ws.type === 'personal' ? 'personal' : 'team'}`}>
-                                    {ws.avatarUrl ? (
-                                        <img src={ws.avatarUrl} alt="Ws" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
-                                    ) : (
-                                        ws.type === 'personal' ? 'P' : 'T'
-                                    )}
+                                    <CachedAvatar
+                                        url={ws.avatarUrl}
+                                        alt="Ws"
+                                        fallback={ws.type === 'personal' ? 'P' : 'T'}
+                                        style={{ width: '100%', height: '100%' }}
+                                        borderRadius="inherit"
+                                    />
                                 </div>
                                 <span className="workspace-name">{ws.name}</span>
                                 {store.activeWorkspace?.id === ws.id && <Check size={14} className="menu-item-check" />}

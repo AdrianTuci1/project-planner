@@ -1,4 +1,4 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import { ProjectStore } from "../store";
 import { api } from "../../services/api";
 // import { notificationSyncStrategy } from "../strategies/NotificationSyncStrategy"; // Obsolete
@@ -28,47 +28,51 @@ export class NotificationStore {
     }
 
     handleRealtimeUpdate(type: string, data: any) {
-        switch (type) {
-            case 'notification.created':
-                this.addNotification({
-                    id: data.id,
-                    type: data.type,
-                    title: data.title,
-                    message: data.message,
-                    date: new Date(data.createdAt),
-                    isRead: data.isRead,
-                    inviterName: data.data?.inviterName,
-                    workspaceName: data.data?.workspaceName,
-                    data: data.data
-                });
-                break;
-            case 'notification.updated':
-                const notif = this.notifications.find(n => n.id === data.id);
-                if (notif) {
-                    if (data.isRead !== undefined) notif.isRead = data.isRead;
-                    if (data.type !== undefined) notif.type = data.type;
-                    if (data.title !== undefined) notif.title = data.title;
-                    if (data.message !== undefined) notif.message = data.message;
-                    if (data.data !== undefined) notif.data = data.data;
-                }
-                break;
-        }
+        runInAction(() => {
+            switch (type) {
+                case 'notification.created':
+                    this.addNotification({
+                        id: data.id,
+                        type: data.type,
+                        title: data.title,
+                        message: data.message,
+                        date: new Date(data.createdAt),
+                        isRead: data.isRead,
+                        inviterName: data.data?.inviterName,
+                        workspaceName: data.data?.workspaceName,
+                        data: data.data
+                    });
+                    break;
+                case 'notification.updated':
+                    const notif = this.notifications.find(n => n.id === data.id);
+                    if (notif) {
+                        if (data.isRead !== undefined) notif.isRead = data.isRead;
+                        if (data.type !== undefined) notif.type = data.type;
+                        if (data.title !== undefined) notif.title = data.title;
+                        if (data.message !== undefined) notif.message = data.message;
+                        if (data.data !== undefined) notif.data = data.data;
+                    }
+                    break;
+            }
+        });
     }
 
     async fetchNotifications() {
         try {
             const data = await api.getNotifications();
-            this.notifications = data.map((n: any) => ({
-                id: n.id,
-                type: n.type,
-                title: n.title,
-                message: n.message,
-                date: new Date(n.createdAt),
-                isRead: n.isRead,
-                inviterName: n.data?.inviterName,
-                workspaceName: n.data?.workspaceName,
-                data: n.data
-            }));
+            runInAction(() => {
+                this.notifications = data.map((n: any) => ({
+                    id: n.id,
+                    type: n.type,
+                    title: n.title,
+                    message: n.message,
+                    date: new Date(n.createdAt),
+                    isRead: n.isRead,
+                    inviterName: n.data?.inviterName,
+                    workspaceName: n.data?.workspaceName,
+                    data: n.data
+                }));
+            });
         } catch (err) {
             console.error("Failed to fetch notifications", err);
         }
