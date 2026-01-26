@@ -19,7 +19,8 @@ export class TasksController {
         try {
             const task = req.body;
             // Inject createdBy from the authenticated user
-            task.createdBy = (req as any).user?.sub || 'dev-user';
+            // @ts-ignore
+            task.createdBy = (req as any).user?.id || (req as any).user?.sub || 'dev-user';
             const result = await this.tasksService.createTask(task);
             res.status(201).json(result);
         } catch (error) {

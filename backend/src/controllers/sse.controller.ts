@@ -13,6 +13,7 @@ export class SSEController {
             res.flushHeaders();
 
             // Register client
+            console.log(`[SSEController] Stream request for User: ${userId}`);
             SSEService.getInstance().addClient(userId, res);
 
             // Keep alive heartbeat

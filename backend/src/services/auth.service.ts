@@ -2,7 +2,8 @@ import {
     CognitoIdentityProviderClient,
     AdminCreateUserCommand,
     AdminSetUserPasswordCommand,
-    InitiateAuthCommand
+    InitiateAuthCommand,
+    ListUsersCommand
 } from "@aws-sdk/client-cognito-identity-provider";
 import { UserService } from "./user.service";
 import { EmailService } from "./email.service";
@@ -31,11 +32,18 @@ export class AuthService {
         try {
             console.log(`[AuthService] Registering user: ${email}`);
 
+            // Generate unique username: Name + @ + 6 random digits
+            const sanitizedName = name.replace(/\s+/g, '');
+            const randomDigits = Math.floor(100000 + Math.random() * 900000);
+            const username = `${sanitizedName}@${randomDigits}`;
+
+            console.log(`[AuthService] Generated username: ${username}`);
+
             // 1. Create User (AdminCreateUser)
             // MessageAction: SUPPRESS prevents sending the default confirmation code email
             const createCommand = new AdminCreateUserCommand({
                 UserPoolId: this.userPoolId,
-                Username: email,
+                Username: username,
                 UserAttributes: [
                     { Name: "email", Value: email },
                     { Name: "name", Value: name },
@@ -55,7 +63,7 @@ export class AuthService {
             // Permanent: true marks the status as CONFIRMED
             const setPasswordCommand = new AdminSetUserPasswordCommand({
                 UserPoolId: this.userPoolId,
-                Username: email,
+                Username: username,
                 Password: password,
                 Permanent: true
             });
@@ -67,7 +75,7 @@ export class AuthService {
                 AuthFlow: "USER_PASSWORD_AUTH",
                 ClientId: this.clientId,
                 AuthParameters: {
-                    USERNAME: email,
+                    USERNAME: username,
                     PASSWORD: password
                 }
             });
@@ -103,13 +111,32 @@ export class AuthService {
         try {
             console.log(`[AuthService] Resetting password for: ${email}`);
 
+            // Lookup Username by email
+            const listUsersCommand = new ListUsersCommand({
+                UserPoolId: this.userPoolId,
+                Filter: `email = "${email}"`,
+                Limit: 1
+            });
+
+            const listResult = await this.client.send(listUsersCommand);
+            const user = listResult.Users?.[0];
+
+            if (!user || !user.Username) {
+                console.error(`[AuthService] User not found for email: ${email}`);
+                // Don't reveal user existence? Or maybe just throw error for now as this is internal tool likely
+                throw new Error("User not found");
+            }
+
+            const username = user.Username;
+            console.log(`[AuthService] Found username: ${username} for email: ${email}`);
+
             // Generate random temp password
             const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!1`;
 
             // Set temporary password (Permanent=false forces change on next login)
             const command = new AdminSetUserPasswordCommand({
                 UserPoolId: this.userPoolId,
-                Username: email,
+                Username: username,
                 Password: tempPassword,
                 Permanent: false
             });

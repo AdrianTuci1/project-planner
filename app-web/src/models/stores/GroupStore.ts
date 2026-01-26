@@ -56,7 +56,12 @@ export class GroupStore {
 
     async createGroup(name: string, icon?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
         // Groups created in a workspace should match that workspace.
+        const userId = this.rootStore.authStore.user?.sub || this.rootStore.authStore.user?.username;
         const group = this.rootStore.workspaceStore.activeWorkspace?.createGroup(name, icon, defaultLabelId, autoAddLabelEnabled);
+
+        if (group && userId) {
+            group.createdBy = userId;
+        }
 
         if (group) {
             // Start monitoring immediately so subsequent changes are caught

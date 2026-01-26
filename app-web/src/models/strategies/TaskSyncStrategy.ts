@@ -143,7 +143,23 @@ export class TaskSyncStrategy {
         this.isMonitoring.delete(taskId);
     }
 
+    private isReceivingRemoteUpdate = false;
+
+    runWithoutSync(action: () => void) {
+        this.isReceivingRemoteUpdate = true;
+        try {
+            action();
+        } finally {
+            this.isReceivingRemoteUpdate = false;
+        }
+    }
+
     private scheduleUpdate(taskId: string, task: Task, delay: number = 1000) {
+        if (this.isReceivingRemoteUpdate) {
+            // console.log(`[TaskSyncStrategy] Skipping sync for ${taskId} due to remote update`);
+            return;
+        }
+
         let debounced = this.pendingUpdates.get(taskId);
 
         if (!debounced) {

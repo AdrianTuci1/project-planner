@@ -40,23 +40,6 @@ export class TasksService {
                 (t.workspaceId === 'personal' || !t.workspaceId) &&
                 (t.createdBy === userId || !t.createdBy)
             );
-        } else if (workspaceId && workspaceId.startsWith('team-')) {
-            const isMyTeam = workspaceId === `team-${userId}`;
-            let hasAccess = isMyTeam;
-
-            if (!hasAccess) {
-                const settingsService = new SettingsService();
-                const settings = await settingsService.getGeneralSettings(userId);
-                if (settings.teamId === workspaceId) {
-                    hasAccess = true;
-                }
-            }
-
-            if (!hasAccess) {
-                return [];
-            }
-
-            allTasks = allTasks.filter((t: any) => t.workspaceId === workspaceId);
 
         } else if (workspaceId === 'team') {
             const settingsService = new SettingsService();
@@ -99,10 +82,21 @@ export class TasksService {
         await this.docClient.send(command);
 
         // SSE Emit
-        if (task.createdBy) {
+        if (task.workspaceId && task.workspaceId !== 'personal') {
+            try {
+                const workspace = await this.workspacesService.getWorkspaceById(task.workspaceId);
+                if (workspace && workspace.members) {
+                    SSEService.getInstance().sendToUsers(workspace.members, 'task.created', task);
+                } else if (task.createdBy) {
+                    SSEService.getInstance().sendToUser(task.createdBy, 'task.created', task);
+                }
+            } catch (err) {
+                console.error("Failed to broadcast task creation", err);
+                // Fallback to creator
+                if (task.createdBy) SSEService.getInstance().sendToUser(task.createdBy, 'task.created', task);
+            }
+        } else if (task.createdBy) {
             SSEService.getInstance().sendToUser(task.createdBy, 'task.created', task);
-            // If workspace task, should ideally broadcast to workspace members.
-            // For MVP, limiting to creator or simple team logic if we knew members here.
         }
 
         return task;
@@ -119,8 +113,23 @@ export class TasksService {
         await this.docClient.send(command);
 
         // SSE Emit
-        if (existing && existing.createdBy) {
-            SSEService.getInstance().sendToUser(existing.createdBy, 'task.updated', updated);
+        if (existing) {
+            const targetWorkspaceId = updated.workspaceId || existing.workspaceId;
+            if (targetWorkspaceId && targetWorkspaceId !== 'personal') {
+                try {
+                    const workspace = await this.workspacesService.getWorkspaceById(targetWorkspaceId);
+                    if (workspace && workspace.members) {
+                        SSEService.getInstance().sendToUsers(workspace.members, 'task.updated', updated);
+                    } else if (existing.createdBy) {
+                        SSEService.getInstance().sendToUser(existing.createdBy, 'task.updated', updated);
+                    }
+                } catch (err) {
+                    console.error("Failed to broadcast task update", err);
+                    if (existing.createdBy) SSEService.getInstance().sendToUser(existing.createdBy, 'task.updated', updated);
+                }
+            } else if (existing.createdBy) {
+                SSEService.getInstance().sendToUser(existing.createdBy, 'task.updated', updated);
+            }
         }
 
         return updated;
@@ -149,8 +158,23 @@ export class TasksService {
         await this.docClient.send(command);
 
         // SSE Emit
-        if (existing && existing.createdBy) {
-            SSEService.getInstance().sendToUser(existing.createdBy, 'task.deleted', { id });
+        if (existing) {
+            const targetWorkspaceId = existing.workspaceId;
+            if (targetWorkspaceId && targetWorkspaceId !== 'personal') {
+                try {
+                    const workspace = await this.workspacesService.getWorkspaceById(targetWorkspaceId);
+                    if (workspace && workspace.members) {
+                        SSEService.getInstance().sendToUsers(workspace.members, 'task.deleted', { id });
+                    } else if (existing.createdBy) {
+                        SSEService.getInstance().sendToUser(existing.createdBy, 'task.deleted', { id });
+                    }
+                } catch (err) {
+                    console.error("Failed to broadcast task deletion", err);
+                    if (existing.createdBy) SSEService.getInstance().sendToUser(existing.createdBy, 'task.deleted', { id });
+                }
+            } else if (existing.createdBy) {
+                SSEService.getInstance().sendToUser(existing.createdBy, 'task.deleted', { id });
+            }
         }
 
         return { id };

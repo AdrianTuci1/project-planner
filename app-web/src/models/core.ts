@@ -84,6 +84,7 @@ export interface IGroup {
     autoAddLabelEnabled: boolean;
     tasks: ITask[];
     participants: IParticipant[];
+    createdBy?: string;
 }
 
 // --- Classes ---
@@ -225,8 +226,9 @@ export class Group implements IGroup {
     autoAddLabelEnabled: boolean = false;
     tasks: Task[] = [];
     participants: IParticipant[] = [];
+    createdBy?: string;
 
-    constructor(name: string, icon: string = '📝', type: GroupType = 'personal', workspaceId?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false) {
+    constructor(name: string, icon: string = '📝', type: GroupType = 'personal', workspaceId?: string, defaultLabelId?: string, autoAddLabelEnabled: boolean = false, createdBy?: string) {
         this.id = uuidv4();
         this.name = name;
         this.icon = icon;
@@ -234,6 +236,7 @@ export class Group implements IGroup {
         this.workspaceId = workspaceId;
         this.defaultLabelId = defaultLabelId;
         this.autoAddLabelEnabled = autoAddLabelEnabled;
+        this.createdBy = createdBy;
         makeAutoObservable(this);
     }
 

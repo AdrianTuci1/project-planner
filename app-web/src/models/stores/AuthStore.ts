@@ -3,8 +3,6 @@ import { makeAutoObservable, runInAction } from "mobx";
 import {
     CognitoIdentityProviderClient,
     InitiateAuthCommand,
-    SignUpCommand,
-    ConfirmSignUpCommand,
     GlobalSignOutCommand,
     GetUserCommand
 } from "@aws-sdk/client-cognito-identity-provider";
@@ -123,7 +121,16 @@ export class AuthStore {
 
             // Update user state immediately with returned data
             runInAction(() => {
-                this.user = result.user;
+                const userData = result.user;
+                // Normalize to match fetchUserAttributes structure
+                this.user = {
+                    username: userData.username || userData.sub,
+                    ...userData
+                };
+
+                // Sync with UI Settings (Account name/email display)
+                this.syncSettings(userData);
+
                 if (this.pendingOnboardingData) {
                     this.clearPendingOnboarding();
                 }

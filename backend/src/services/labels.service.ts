@@ -1,10 +1,12 @@
 import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { SSEService } from "./sse.service";
+import { WorkspacesService } from "./workspaces.service";
 
 export class LabelsService {
     private docClient: DynamoDBDocumentClient;
     private tableName: string;
+    public workspacesService = new WorkspacesService();
 
     constructor() {
         this.docClient = DBClient.getInstance();
@@ -19,17 +21,28 @@ export class LabelsService {
         const result = await this.docClient.send(command);
         let labels = result.Items || [];
 
-        // Filter by creator (privacy)
-        if (userId) {
-            labels = labels.filter((l: any) => l.createdBy === userId || !l.createdBy);
-        }
+        // 1. Filter by Workspace Access
+        if (workspaceId === 'personal') {
+            labels = labels.filter((l: any) =>
+                (l.workspaceId === 'personal' || !l.workspaceId) &&
+                (l.createdBy === userId || !l.createdBy)
+            );
+        } else if (workspaceId) {
+            const workspace = await this.workspacesService.getWorkspaceById(workspaceId);
+            if (!workspace) throw new Error("Workspace not found");
 
-        // Filter by Workspace
-        if (workspaceId) {
-            labels = labels.filter((l: any) => l.workspaceId === workspaceId || (!l.workspaceId && workspaceId === 'personal'));
+            // Check membership if user is provided
+            if (userId && !workspace.members.includes(userId)) {
+                throw new Error("Access denied to this workspace");
+            }
+
+            labels = labels.filter((l: any) => l.workspaceId === workspaceId);
         } else {
             // Default to personal if no workspace provided
-            labels = labels.filter((l: any) => !l.workspaceId || l.workspaceId === 'personal');
+            labels = labels.filter((l: any) =>
+                (!l.workspaceId || l.workspaceId === 'personal') &&
+                (l.createdBy === userId || !l.createdBy)
+            );
         }
 
         return labels;
@@ -42,7 +55,18 @@ export class LabelsService {
         });
         await this.docClient.send(command);
 
-        if (label.createdBy) {
+        if (label.workspaceId && label.workspaceId !== 'personal') {
+            try {
+                const workspace = await this.workspacesService.getWorkspaceById(label.workspaceId);
+                if (workspace && workspace.members) {
+                    SSEService.getInstance().sendToUsers(workspace.members, 'label.created', label);
+                } else if (label.createdBy) {
+                    SSEService.getInstance().sendToUser(label.createdBy, 'label.created', label);
+                }
+            } catch (err) {
+                if (label.createdBy) SSEService.getInstance().sendToUser(label.createdBy, 'label.created', label);
+            }
+        } else if (label.createdBy) {
             SSEService.getInstance().sendToUser(label.createdBy, 'label.created', label);
         }
 
@@ -56,21 +80,59 @@ export class LabelsService {
         });
         await this.docClient.send(command);
 
-        if (label.createdBy) {
-            SSEService.getInstance().sendToUser(label.createdBy, 'label.updated', { ...label, id });
+        const updated = { ...label, id };
+
+        if (label.workspaceId && label.workspaceId !== 'personal') {
+            try {
+                const workspace = await this.workspacesService.getWorkspaceById(label.workspaceId);
+                if (workspace && workspace.members) {
+                    SSEService.getInstance().sendToUsers(workspace.members, 'label.updated', updated);
+                } else if (label.createdBy) {
+                    SSEService.getInstance().sendToUser(label.createdBy, 'label.updated', updated);
+                }
+            } catch (err) {
+                if (label.createdBy) SSEService.getInstance().sendToUser(label.createdBy, 'label.updated', updated);
+            }
+        } else if (label.createdBy) {
+            SSEService.getInstance().sendToUser(label.createdBy, 'label.updated', updated);
         }
 
-        return { ...label, id };
+        return updated;
     }
 
     public async deleteLabel(id: string) {
+        // Fetch context
+        let label: any = null;
+        try {
+            const getCmd = new ScanCommand({
+                TableName: this.tableName,
+                FilterExpression: "id = :id",
+                ExpressionAttributeValues: { ":id": id }
+            });
+            const res = await this.docClient.send(getCmd);
+            if (res.Items && res.Items.length > 0) label = res.Items[0];
+        } catch (e) { }
+
         const command = new DeleteCommand({
             TableName: this.tableName,
             Key: { id }
         });
         await this.docClient.send(command);
 
-        // Emit 'label.deleted' if possible (missing context here similar to Group)
+        if (label) {
+            if (label.workspaceId && label.workspaceId !== 'personal') {
+                try {
+                    const workspace = await this.workspacesService.getWorkspaceById(label.workspaceId);
+                    if (workspace && workspace.members) {
+                        SSEService.getInstance().sendToUsers(workspace.members, 'label.deleted', { id, workspaceId: label.workspaceId });
+                    } else if (label.createdBy) {
+                        SSEService.getInstance().sendToUser(label.createdBy, 'label.deleted', { id });
+                    }
+                } catch (err) { }
+            } else if (label.createdBy) {
+                SSEService.getInstance().sendToUser(label.createdBy, 'label.deleted', { id });
+            }
+        }
 
         return { id };
     }

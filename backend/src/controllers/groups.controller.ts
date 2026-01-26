@@ -7,7 +7,10 @@ export class GroupsController {
     public getGroups = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const workspaceId = req.query.workspaceId as string;
-            const groups = await this.groupsService.getGroups(workspaceId);
+            // @ts-ignore
+            const userId = req.user?.id;
+
+            const groups = await this.groupsService.getGroups(workspaceId, userId);
             res.status(200).json(groups);
         } catch (error) {
             next(error);
@@ -17,6 +20,13 @@ export class GroupsController {
     public createGroup = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const group = req.body;
+
+            // @ts-ignore
+            const userId = req.user?.id;
+            if (userId) {
+                group.createdBy = userId;
+            }
+
             const result = await this.groupsService.createGroup(group);
             res.status(201).json(result);
         } catch (error) {

@@ -6,7 +6,10 @@ export class CalendarController {
 
     public getCalendars = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const data = await this.calendarService.getCalendars();
+            // @ts-ignore
+            const userId = req.user?.id;
+            if (!userId) throw new Error("Unauthorized");
+            const data = await this.calendarService.getCalendars(userId);
             res.status(200).json(data);
         } catch (error) {
             next(error);
@@ -16,7 +19,10 @@ export class CalendarController {
     public addCalendar = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const account = req.body;
-            const updated = await this.calendarService.addAccount(account);
+            // @ts-ignore
+            const userId = req.user?.id;
+            if (!userId) throw new Error("Unauthorized");
+            const updated = await this.calendarService.addAccount(account, userId);
             res.status(200).json(updated);
         } catch (error) {
             next(error);
@@ -27,7 +33,10 @@ export class CalendarController {
         try {
             const { id } = req.params;
             const updates = req.body;
-            const updated = await this.calendarService.updateAccount(id, updates);
+            // @ts-ignore
+            const userId = req.user?.id;
+            if (!userId) throw new Error("Unauthorized");
+            const updated = await this.calendarService.updateAccount(id, updates, userId);
             res.status(200).json(updated);
         } catch (error) {
             next(error);
@@ -37,7 +46,10 @@ export class CalendarController {
     public deleteCalendar = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
-            const updated = await this.calendarService.removeAccount(id);
+            // @ts-ignore
+            const userId = req.user?.id;
+            if (!userId) throw new Error("Unauthorized");
+            const updated = await this.calendarService.removeAccount(id, userId);
             res.status(200).json(updated);
         } catch (error) {
             next(error);

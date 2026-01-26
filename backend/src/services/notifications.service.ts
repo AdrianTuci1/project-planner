@@ -22,7 +22,7 @@ export class NotificationsService {
             message,
             data,
             isRead: false,
-            createdAt: Date.now()
+            createdAt: new Date().toISOString()
         };
 
         const command = new PutCommand({

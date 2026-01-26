@@ -19,6 +19,7 @@ export class SSEService {
     }
 
     public addClient(userId: string, res: Response) {
+        console.log(`[SSEService] Add Client for User: ${userId}`);
         const clientId = Date.now().toString();
 
         const client: SSEClient = {
@@ -28,15 +29,19 @@ export class SSEService {
         };
 
         this.clients.push(client);
+        console.log(`[SSEService] Total clients: ${this.clients.length}`);
 
         // Remove client on close
         res.on('close', () => {
             this.clients = this.clients.filter(c => c.id !== clientId);
+            console.log(`[SSEService] Client removed: ${clientId}. Remaining: ${this.clients.length}`);
         });
     }
 
     public sendToUser(userId: string, type: string, data: any) {
+        console.log(`[SSEService] Emit '${type}' to User: ${userId}`);
         const targetClients = this.clients.filter(c => c.userId === userId);
+        console.log(`[SSEService] Found ${targetClients.length} clients for user ${userId}`);
         targetClients.forEach(client => {
             client.res.write(`event: ${type}\n`);
             client.res.write(`data: ${JSON.stringify(data)}\n\n`);
@@ -57,6 +62,8 @@ export class SSEService {
 
     // Helper to send to multiple users
     public sendToUsers(userIds: string[], type: string, data: any) {
-        userIds.forEach(uid => this.sendToUser(uid, type, data));
+        // Dedup userIds just in case
+        const uniqueIds = [...new Set(userIds)];
+        uniqueIds.forEach(uid => this.sendToUser(uid, type, data));
     }
 }

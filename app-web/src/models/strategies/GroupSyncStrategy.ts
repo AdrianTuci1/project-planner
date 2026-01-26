@@ -78,7 +78,20 @@ export class GroupSyncStrategy {
         this.isMonitoring.delete(groupId);
     }
 
+    private isReceivingRemoteUpdate = false;
+
+    runWithoutSync(action: () => void) {
+        this.isReceivingRemoteUpdate = true;
+        try {
+            action();
+        } finally {
+            this.isReceivingRemoteUpdate = false;
+        }
+    }
+
     private scheduleUpdate(groupId: string, group: Group, delay: number = 1000) {
+        if (this.isReceivingRemoteUpdate) return;
+
         let debounced = this.pendingUpdates.get(groupId);
 
         if (!debounced) {

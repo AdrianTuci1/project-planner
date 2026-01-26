@@ -21,7 +21,8 @@ export class LabelsController {
             const label = req.body;
             const user = (req as any).user;
             if (user) {
-                label.createdBy = user.sub || user.username;
+                // @ts-ignore
+                label.createdBy = user.id || user.sub || user.username;
             }
             const result = await this.labelsService.createLabel(label);
             res.status(201).json(result);

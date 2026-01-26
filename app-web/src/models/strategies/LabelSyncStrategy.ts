@@ -129,7 +129,20 @@ export class LabelSyncStrategy {
         this.isMonitoring.delete(labelId);
     }
 
+    private isReceivingRemoteUpdate = false;
+
+    runWithoutSync(action: () => void) {
+        this.isReceivingRemoteUpdate = true;
+        try {
+            action();
+        } finally {
+            this.isReceivingRemoteUpdate = false;
+        }
+    }
+
     private scheduleUpdate(labelId: string, data: any, delay: number = 1000) {
+        if (this.isReceivingRemoteUpdate) return;
+
         let debounced = this.pendingUpdates.get(labelId);
 
         if (!debounced) {

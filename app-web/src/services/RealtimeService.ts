@@ -11,34 +11,26 @@ export class RealtimeService {
     constructor() { }
 
     public connect() {
-        if (this.eventSource?.readyState === EventSource.OPEN) return;
+        if (this.eventSource?.readyState === EventSource.OPEN) {
+            console.log("[Realtime] Already connected");
+            return;
+        }
 
-        const token = localStorage.getItem('token'); // Simplification. Ideally use api.getToken()
-        if (!token) return;
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            console.warn("[Realtime] No accessToken found, skipping connection");
+            return;
+        }
 
-        // Note: Native EventSource doesn't support headers easily (except cookies).
-        // Polyfill (event-source-polyfill) is usually needed for Authorization header.
-        // OR: backend accepts token in query param.
-        // Let's assume we pass token in query param for now as it's standard for SSE without polyfill.
-        // Backend middleware needs to check query param too.
+        const apiUrl = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:3000';
+        const url = `${apiUrl}/stream?token=${token}`;
 
-        const apiUrl = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000';
-        const url = `${apiUrl}/api/stream?token=${token}`;
-
-        // Wait... App uses AuthMiddleware which expects Bearer header.
-        // I should check if backend middleware supports query param or use a polyfill approach.
-        // For this robust agent, I will assume we need to update Backend Auth Middleware to support query param?
-        // OR: Just rely on cookie if set?
-        // Let's update backend AuthMiddleware briefly if needed, or assume query param is fine.
-        // Or better: Use `fetch` based SSE libraries.
-        // Simplest: `event-source-polyfill` is standard in React apps.
-        // I will use standard EventSource assuming we fixed backend or pass via query. 
-        // Let's TRY query param approach since adding dependencies (polyfill) requires `npm install`.
+        console.log(`[Realtime] Connecting to SSE: ${apiUrl}/api/stream... (Token length: ${token.length})`);
 
         this.eventSource = new EventSource(url);
 
         this.eventSource.onopen = () => {
-            console.log("[Realtime] Connected");
+            console.log("[Realtime] Connected successfully");
             this.retryCount = 0;
         };
 
@@ -67,7 +59,7 @@ export class RealtimeService {
             this.eventSource?.addEventListener(type, (e: MessageEvent) => {
                 try {
                     const data = JSON.parse(e.data);
-                    store.handleRealtimeEvent(type, data);
+                    store.realtimeHandler.handleEvent(type, data);
                 } catch (err) {
                     console.error("[Realtime] Failed to parse event data", err);
                 }

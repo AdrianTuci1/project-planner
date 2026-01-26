@@ -10,6 +10,7 @@ import { WorkspaceStore } from "./stores/WorkspaceStore";
 import { GroupStore } from "./stores/GroupStore";
 import { CalendarStore } from "./stores/CalendarStore";
 import { realtimeService } from "../services/RealtimeService";
+import { RealtimeHandler } from "./RealtimeHandler";
 
 export class ProjectStore {
     taskStore: TaskStore;
@@ -21,6 +22,7 @@ export class ProjectStore {
     workspaceStore: WorkspaceStore;
     groupStore: GroupStore;
     calendarStore: CalendarStore;
+    realtimeHandler: RealtimeHandler;
 
     constructor() {
         // Initialize sub-stores
@@ -33,6 +35,7 @@ export class ProjectStore {
         this.notificationStore = new NotificationStore(this);
         this.authStore = new AuthStore(this);
         this.calendarStore = new CalendarStore(this);
+        this.realtimeHandler = new RealtimeHandler(this);
 
         makeAutoObservable(this);
 
@@ -50,62 +53,6 @@ export class ProjectStore {
                 }
             }
         );
-    }
-
-    handleRealtimeEvent(type: string, data: any) {
-        console.log("[ProjectStore] Handling Realtime Event:", type, data);
-        runInAction(() => {
-            switch (type) {
-                // Tasks
-                case 'task.created':
-                case 'task.updated':
-                case 'task.deleted':
-                    this.taskStore.handleRealtimeUpdate(type, data);
-                    break;
-
-                // Groups
-                case 'group.created':
-                case 'group.updated':
-                case 'group.deleted':
-                    this.groupStore.handleRealtimeUpdate(type, data);
-                    break;
-
-                // Workspaces
-                case 'workspace.created':
-                case 'workspace.updated':
-                case 'workspace.deleted':
-                case 'workspace.member_added':
-                case 'workspace.member_removed':
-                case 'workspace.owner_updated':
-                    this.workspaceStore.handleRealtimeUpdate(type, data);
-                    break;
-
-                // Labels
-                case 'label.created':
-                case 'label.updated':
-                case 'label.deleted':
-                    this.labelStore.handleRealtimeUpdate(type, data);
-                    break;
-
-                // Notifications
-                case 'notification.created':
-                case 'notification.updated':
-                    this.notificationStore.handleRealtimeUpdate(type, data);
-                    break;
-
-                // Settings
-                case 'settings.updated':
-                    // Settings are usually in UIStore or a separate SettingsStore (UIStore.settings)
-                    // UIStore structure handles settings inside it.
-                    if (this.uiStore.settings) {
-                        this.uiStore.settings.updateFromRealtime(data);
-                    }
-                    break;
-
-                default:
-                    console.warn("Unhandled realtime event:", type);
-            }
-        });
     }
 
     // --- Delegation to Sub-Stores ---

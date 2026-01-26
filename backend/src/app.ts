@@ -32,6 +32,14 @@ export class App {
             }
         }));
         this.app.use(express.urlencoded({ limit: '25mb', extended: true }));
+
+        // Debug Logger
+        this.app.use((req, res, next) => {
+            if (req.url.startsWith('/api/stream')) {
+                console.log(`[App] Incoming SSE Request: ${req.method} ${req.url}`);
+            }
+            next();
+        });
     }
 
     private initializeRoutes(routes: Routes[]) {
