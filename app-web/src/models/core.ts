@@ -86,7 +86,6 @@ export interface IGroup {
     defaultLabelId?: string;
     autoAddLabelEnabled: boolean;
     tasks: ITask[];
-    participants: IParticipant[];
     createdBy?: string;
 }
 

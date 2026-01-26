@@ -216,71 +216,68 @@ export const TeamSettings = observer(() => {
                 <div className="manage-divider" />
 
                 {isOwner && (
-                    <>
-                        {/* Invite Section (Restored Style) */}
-                        <div className="invite-section" style={{ marginTop: 30 }}>
-                            <label className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 14, fontWeight: 500 }}>Invite new member</label>
-                            <div className="invite-row" style={{ display: 'flex', gap: 10 }}>
-                                <input
-                                    className="form-input"
-                                    placeholder="colleague@example.com"
-                                    value={settings.emailToInvite}
-                                    onChange={(e) => settings.setEmailToInvite(e.target.value)}
-                                    style={{ flex: 1 }}
-                                />
-                                <button className="btn-primary" onClick={handleInvite}>Invite</button>
-                            </div>
+                    <div className="invite-section" style={{ marginTop: 30 }}>
+                        <label className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 14, fontWeight: 500 }}>Invite new member</label>
+                        <div className="invite-row" style={{ display: 'flex', gap: 10 }}>
+                            <input
+                                className="form-input"
+                                placeholder="colleague@example.com"
+                                value={settings.emailToInvite}
+                                onChange={(e) => settings.setEmailToInvite(e.target.value)}
+                                style={{ flex: 1 }}
+                            />
+                            <button className="btn-primary" onClick={handleInvite}>Invite</button>
                         </div>
-
-                        {/* Members Section (Restored Style) */}
-                        <div style={{ marginTop: 30 }}>
-                            <div className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 14, fontWeight: 500 }}>Active Members</div>
-                            {teamWorkspace.members.map((memberId: string) => {
-                                const memberDetail = store.workspaceStore.memberDetails.get(memberId);
-                                const isMemberOwner = teamWorkspace.ownerId === memberId;
-                                const isMe = memberId === user?.sub || memberId === user?.username;
-
-                                return (
-                                    <div
-                                        key={memberId}
-                                        style={{
-                                            display: 'flex', alignItems: 'center', gap: 10,
-                                            padding: '10px 0',
-                                            borderBottom: '1px solid var(--border-subtle)'
-                                        }}
-                                        onClick={(e) => !isMe && isOwner && handleMemberClick(e, memberId)}
-                                        className={!isMe && isOwner ? "member-clickable" : ""}
-                                    >
-                                        {memberDetail?.avatarUrl ? (
-                                            <img
-                                                src={memberDetail.avatarUrl}
-                                                alt={memberDetail.name}
-                                                style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }}
-                                            />
-                                        ) : (
-                                            <div className="settings-avatar-sm" style={{ width: 32, height: 32, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-input)', borderRadius: 6 }}>
-                                                {(memberDetail?.name?.charAt(0) || 'U').toUpperCase()}
-                                            </div>
-                                        )}
-
-                                        <div style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            {memberDetail?.name || (isMe ? (settings.account.displayName || user?.name) : 'Loading...')}
-                                            {isMemberOwner && <Crown size={14} className="text-warning" style={{ color: '#F59E0B' }} fill="currentColor" />}
-                                        </div>
-                                        <div
-                                            style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}
-                                            className="member-role-label"
-                                        >
-                                            {isMemberOwner ? 'Owner' : 'Member'}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="manage-divider" />
-                    </>
+                    </div>
                 )}
+
+                {/* Members Section (Restored Style) */}
+                <div style={{ marginTop: 30 }}>
+                    <div className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 14, fontWeight: 500 }}>Active Members</div>
+                    {teamWorkspace.members.map((memberId: string) => {
+                        const memberDetail = store.workspaceStore.memberDetails.get(memberId);
+                        const isMemberOwner = teamWorkspace.ownerId === memberId;
+                        const isMe = memberId === user?.sub || memberId === user?.username;
+
+                        return (
+                            <div
+                                key={memberId}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 10,
+                                    padding: '10px 0',
+                                    borderBottom: '1px solid var(--border-subtle)'
+                                }}
+                                onClick={(e) => !isMe && isOwner && handleMemberClick(e, memberId)}
+                                className={!isMe && isOwner ? "member-clickable" : ""}
+                            >
+                                {memberDetail?.avatarUrl ? (
+                                    <img
+                                        src={memberDetail.avatarUrl}
+                                        alt={memberDetail.name}
+                                        style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }}
+                                    />
+                                ) : (
+                                    <div className="settings-avatar-sm" style={{ width: 32, height: 32, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-input)', borderRadius: 6 }}>
+                                        {(memberDetail?.name?.charAt(0) || 'U').toUpperCase()}
+                                    </div>
+                                )}
+
+                                <div style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    {memberDetail?.name || (isMe ? (settings.account.displayName || user?.name) : 'Loading...')}
+                                    {isMemberOwner && <Crown size={14} className="text-warning" style={{ color: '#F59E0B' }} fill="currentColor" />}
+                                </div>
+                                <div
+                                    style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}
+                                    className="member-role-label"
+                                >
+                                    {isMemberOwner ? 'Owner' : 'Member'}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <div className="manage-divider" />
 
                 {/* Danger Zone */}
                 <div style={{ marginBottom: 40 }}>

@@ -44,6 +44,8 @@ export const ResizableTaskCardView = observer(({
     startTime,
     endTime,
 }: any) => {
+    const isSmallTask = (task.duration || 15) <= 15;
+
     return (
         <div
             ref={setNodeRef}
@@ -57,8 +59,8 @@ export const ResizableTaskCardView = observer(({
             {...attributes}
         >
 
-            <div className="tc-header" style={{ gap: '6px', alignItems: 'flex-start', height: '100%', overflow: 'hidden' }}>
-                <div className="tc-checkbox-wrapper" style={{ paddingTop: '2px', flexShrink: 0 }}>
+            <div className="tc-header" style={{ gap: '6px', alignItems: isSmallTask ? 'center' : 'flex-start', height: '100%', overflow: 'hidden', padding: isSmallTask ? '0' : undefined }}>
+                <div className="tc-checkbox-wrapper" style={{ flexShrink: 0, paddingTop: isSmallTask ? '0' : '2px' }}>
                     <div
                         className={`tc-checkbox ${task.status === 'done' ? 'checked' : ''}`}
                         onClick={(e) => {
@@ -76,7 +78,7 @@ export const ResizableTaskCardView = observer(({
                     </div>
                 </div>
 
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: isSmallTask ? 'center' : 'flex-start', paddingTop: isSmallTask ? '0' : '1px' }}>
                     <div
                         className="tc-title"
                         style={{
@@ -129,7 +131,7 @@ export const ResizableTaskCardView = observer(({
                 onRemoveFromTimebox={handleRemoveFromTimebox}
                 onDelete={handleDelete}
             />
-        </div>
+        </div >
     );
 });
 

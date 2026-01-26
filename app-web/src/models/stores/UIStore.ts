@@ -34,6 +34,9 @@ export class UIStore {
     // Daily Shutdown State
     isDailyShutdownOpen: boolean = false;
 
+    // Daily Planning State
+    isDailyPlanningOpen: boolean = false;
+
     // Settings Modal State
     isSettingsOpen: boolean = false;
     settings: SettingsModel = new SettingsModel();
@@ -245,6 +248,10 @@ export class UIStore {
 
     toggleDailyShutdown() {
         this.isDailyShutdownOpen = !this.isDailyShutdownOpen;
+    }
+
+    toggleDailyPlanning() {
+        this.isDailyPlanningOpen = !this.isDailyPlanningOpen;
     }
 
     openSettings(tab: string = 'account') {

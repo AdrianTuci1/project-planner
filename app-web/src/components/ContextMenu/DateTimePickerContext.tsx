@@ -169,34 +169,38 @@ export const DateTimePickerContext = observer(({
                                     handleSelect(newDate);
                                 }}
                             >
+                                <Clock size={14} className="dtp-time-icon" />
                                 Add to Timebox
                             </button>
                         ) : (
                             <>
-                                <div className="dtp-time-inputs">
-                                    <input
-                                        className="dtp-time-input"
-                                        value={hours.toString().padStart(2, '0')}
-                                        onChange={e => {
-                                            let val = parseInt(e.target.value);
-                                            if (e.target.value === '') return;
-                                            if (isNaN(val)) return;
-                                            val = Math.max(0, Math.min(23, val)); // 0-23
-                                            handleTimeChange('hours', val);
-                                        }}
-                                    />
-                                    <span className="dtp-time-separator">:</span>
-                                    <input
-                                        className="dtp-time-input"
-                                        value={minutes.toString().padStart(2, '0')}
-                                        onChange={e => {
-                                            let val = parseInt(e.target.value);
-                                            if (e.target.value === '') return;
-                                            if (isNaN(val)) return;
-                                            val = Math.max(0, Math.min(59, val));
-                                            handleTimeChange('minutes', val);
-                                        }}
-                                    />
+                                <div className="dtp-time-wrapper">
+                                    <Clock size={16} className="dtp-time-icon" />
+                                    <div className="dtp-time-inputs">
+                                        <input
+                                            className="dtp-time-input"
+                                            value={hours.toString().padStart(2, '0')}
+                                            onChange={e => {
+                                                let val = parseInt(e.target.value);
+                                                if (e.target.value === '') return;
+                                                if (isNaN(val)) return;
+                                                val = Math.max(0, Math.min(23, val)); // 0-23
+                                                handleTimeChange('hours', val);
+                                            }}
+                                        />
+                                        <span className="dtp-time-separator">:</span>
+                                        <input
+                                            className="dtp-time-input"
+                                            value={minutes.toString().padStart(2, '0')}
+                                            onChange={e => {
+                                                let val = parseInt(e.target.value);
+                                                if (e.target.value === '') return;
+                                                if (isNaN(val)) return;
+                                                val = Math.max(0, Math.min(59, val));
+                                                handleTimeChange('minutes', val);
+                                            }}
+                                        />
+                                    </div>
                                 </div>
                                 <button
                                     className="dtp-remove-btn"
@@ -212,7 +216,7 @@ export const DateTimePickerContext = observer(({
                             </>
                         )
                     )}
-                    {target === 'due' && (
+                    {target === 'due' && selectedDate && (
                         <button
                             className="dtp-remove-btn"
                             onClick={() => {

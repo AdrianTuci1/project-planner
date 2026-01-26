@@ -29,7 +29,7 @@ export class GroupsService {
             // AND (have no workspaceId OR have workspaceId === 'personal')
             groups = groups.filter((g: any) =>
                 (!g.workspaceId || g.workspaceId === 'personal') &&
-                (!userId || g.createdBy === userId) // Only show if created by this user
+                (g.createdBy === userId || !g.createdBy) // Show user's personal groups + system groups
             );
         }
 

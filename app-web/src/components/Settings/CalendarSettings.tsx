@@ -17,6 +17,18 @@ export const CalendarSettings = observer(() => {
         }
     }, []);
 
+    const activeWorkspace = store.workspaceStore.activeWorkspace;
+    if (activeWorkspace.type !== 'personal') {
+        return (
+            <div className="calendar-settings-container">
+                <h2 className="calendar-settings-title">Connected calendars</h2>
+                <div style={{ marginTop: 20, padding: 16, borderRadius: 12, border: '1px solid var(--border-subtle)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', textAlign: 'center' }}>
+                    Calendar is disabled in team workspace
+                </div>
+            </div>
+        );
+    }
+
     // Google Icon component
     const GoogleIcon = ({ size = 18 }: { size?: number }) => (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

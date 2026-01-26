@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { store } from '../../models/store';
 import { Task } from '../../models/core';
-import { format, addDays, isSameDay } from 'date-fns';
+import { format, subDays, isSameDay } from 'date-fns';
 import { X, ArrowRight } from 'lucide-react';
 import {
     DndContext,
@@ -22,16 +22,18 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import './DailyShutdown.css';
+import '../DailyShutdown/DailyShutdown.css'; // Reuse styles
+import { KanbanColumn } from '../Gantt/KanbanBoard';
 import { TaskCard, SortableTaskCard } from '../Gantt/TaskCard/index';
 import { GroupList } from '../Shared/GroupList';
 import { runInAction } from 'mobx';
+import { Timebox } from '../Gantt/Timebox';
 
 const DroppableList = ({ id, children, className, style }: any) => {
     const { setNodeRef } = useDroppable({
         id,
         data: {
-            type: 'shutdown-list',
+            type: 'planning-list',
             listId: id
         }
     });
@@ -43,12 +45,12 @@ const DroppableList = ({ id, children, className, style }: any) => {
     );
 };
 
-export const DailyShutdown = observer(() => {
+export const DailyPlanning = observer(() => {
     const [step, setStep] = useState(1);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [addingColumn, setAddingColumn] = useState<string | null>(null);
-    const [shutdownSourceGroupId, setShutdownSourceGroupId] = useState<string | null>('default');
+    const [planningSourceGroupId, setPlanningSourceGroupId] = useState<string | null>('default');
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -61,42 +63,31 @@ export const DailyShutdown = observer(() => {
         })
     );
 
-    if (!store.isDailyShutdownOpen || !store.activeWorkspace) return null;
+    if (!store.isDailyPlanningOpen || !store.activeWorkspace) return null;
 
     const today = new Date();
-    const tomorrow = addDays(today, 1);
+    const yesterday = subDays(today, 1);
 
-    const todaysTasks = store.allTasks.filter(t =>
+    const yesterdayTasks = store.allTasks.filter(t =>
+        t.scheduledDate && isSameDay(t.scheduledDate, yesterday)
+    );
+    const completedYesterday = yesterdayTasks.filter(t => t.status === 'done');
+    const missedYesterday = yesterdayTasks.filter(t => t.status !== 'done');
+
+    const todayTasks = store.allTasks.filter(t =>
         t.scheduledDate && isSameDay(t.scheduledDate, today)
     );
-    const completedTasks = todaysTasks.filter(t => t.status === 'done');
-    const missedTasks = todaysTasks.filter(t => t.status !== 'done');
 
-    // Calculate source tasks based on selected group
     const sourceTasks = (() => {
-        if (shutdownSourceGroupId === 'default') {
+        if (planningSourceGroupId === 'default') {
             return store.dumpAreaTasks.filter(t => !t.scheduledDate);
         }
-        const group = store.groups.find(g => g.id === shutdownSourceGroupId);
+        const group = store.groups.find(g => g.id === planningSourceGroupId);
         if (group) {
-            // Show unscheduled tasks from the group
             return group.tasks.filter(t => !t.scheduledDate);
         }
         return [];
     })();
-
-    const tomorrowTasks = store.allTasks.filter(t =>
-        t.scheduledDate && isSameDay(t.scheduledDate, tomorrow)
-    );
-
-    // Stats calculation
-    const totalDuration = completedTasks.reduce((acc, t) => acc + (t.actualDuration || 0), 0);
-
-    const formatTime = (minutes: number) => {
-        const h = Math.floor(minutes / 60);
-        const m = minutes % 60;
-        return `${h > 0 ? `${h}h ` : ''}${m}m`;
-    };
 
     // DnD Handlers
     const handleDragStart = (event: DragStartEvent) => {
@@ -106,7 +97,7 @@ export const DailyShutdown = observer(() => {
     };
 
     const handleDragOver = (event: DragOverEvent) => {
-        // Minimal DragOver. No mutations.
+        // Minimal DragOver: Only for highlighting, no mutations to avoid unmounting
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -119,30 +110,73 @@ export const DailyShutdown = observer(() => {
         const activeTask = active.data.current?.task as Task;
         const overContainer = over.data.current?.sortable?.containerId || over.id;
 
-        if (overContainer === 'shutdown-tomorrow-list') {
+        // Handle Timebox Drop
+        if (over.id === 'timebox-drop-area') {
             runInAction(() => {
-                // Ensure date is set
-                if (!activeTask.scheduledDate || !isSameDay(activeTask.scheduledDate, tomorrow)) {
-                    activeTask.scheduledDate = tomorrow;
-                    activeTask.scheduledTime = undefined;
-                }
+                activeTask.scheduledDate = today;
+                if (!activeTask.scheduledTime) activeTask.scheduledTime = "09:00";
 
-                // Ensure container validity
+                // Ensure task is in appropriate container
+                // If task was in Dump, keep it there (it will be filtered out of backlog view by date).
+                // If we are in a specific group view, we might want to move it to that group?
+                // User expectation: "Drag to Timebox" -> Just schedule it. Don't change group.
+
+                // If task is not in ANY container (rare/impossible?), put it in Dump.
                 const inDump = store.dumpAreaTasks.some(t => t.id === activeTask.id);
                 const inGroup = store.groups.some(g => g.tasks.some(t => t.id === activeTask.id));
 
                 if (!inDump && !inGroup) {
-                    // Recover orphan
-                    if (shutdownSourceGroupId && shutdownSourceGroupId !== 'default') {
-                        const group = store.groups.find(g => g.id === shutdownSourceGroupId);
+                    store.dumpAreaTasks.push(activeTask);
+                }
+            });
+            return;
+        }
+
+        if (overContainer === 'planning-today-list' || overContainer === 'planning-today-list-step3' || over.data.current?.type === 'kanban-column') {
+            runInAction(() => {
+                // 1. Set Date
+                if (!activeTask.scheduledDate || !isSameDay(activeTask.scheduledDate, today)) {
+                    activeTask.scheduledDate = today;
+                    activeTask.scheduledTime = undefined;
+                }
+
+                // 2. Container Logic
+                // If dragging from Source -> Today
+                // If Source was Dump, Keep in Dump.
+                // If Source was Group, Keep in Group.
+                // If Source was Group A but we dragged to Today... 
+                // We typically just schedule it. We don't steal it from Group A unless explicitly creating new task in different context.
+
+                // HINT: If the user IS selecting a group in the source list `planningSourceGroupId`
+                // and the task was in Dump, MAYBE they want to move it to that group?
+                // But dragging to "Today" usually just means "Do this today".
+
+                // Verification: If task is currently in Dump, and we touch it, do we assume ownership by selected group?
+                // Original logic did: `if (inDump) { remove; add to group }`.
+                // Let's preserve that "Move to Group" intent IF strict Move is desired, 
+                // BUT mostly we just want to schedule.
+
+                // SAFE FIX: Just schedule. Don't move containers unless necessary (e.g. orphan).
+                const inDump = store.dumpAreaTasks.some(t => t.id === activeTask.id);
+                const inGroup = store.groups.some(g => g.tasks.some(t => t.id === activeTask.id));
+
+                if (!inDump && !inGroup) {
+                    // Orphaned? Put in default location (Source Group or Dump)
+                    if (planningSourceGroupId && planningSourceGroupId !== 'default') {
+                        const group = store.groups.find(g => g.id === planningSourceGroupId);
                         if (group) group.addTask(activeTask);
                         else store.dumpAreaTasks.push(activeTask);
                     } else {
                         store.dumpAreaTasks.push(activeTask);
                     }
                 }
+
+                // If it WAS in Dump, and `planningSourceGroupId` is a Group, SHOULD we move it?
+                // If I am looking at "Work" tasks, and I drag a "Personal" (Dump) task to Today...
+                // It remains Personal (Dump) but Scheduled. That makes sense.
+                // So removing the `splice` is the correct fix.
             });
-        } else if (overContainer === 'shutdown-source-list') {
+        } else if (overContainer === 'planning-source-list') {
             runInAction(() => {
                 activeTask.scheduledDate = undefined;
                 activeTask.scheduledTime = undefined;
@@ -150,7 +184,7 @@ export const DailyShutdown = observer(() => {
                 const dumpIndex = store.dumpAreaTasks.findIndex(t => t.id === activeTask.id);
                 const currentGroup = store.groups.find(g => g.tasks.find(t => t.id === activeTask.id));
 
-                if (shutdownSourceGroupId === 'default') {
+                if (planningSourceGroupId === 'default') {
                     // Move to Brain Dump (Default)
                     if (currentGroup) {
                         currentGroup.removeTask(activeTask.id);
@@ -160,13 +194,13 @@ export const DailyShutdown = observer(() => {
                     }
                 } else {
                     // Move to Selected Group
-                    const targetGroup = store.groups.find(g => g.id === shutdownSourceGroupId);
+                    const targetGroup = store.groups.find(g => g.id === planningSourceGroupId);
                     if (targetGroup) {
                         // Remove from dump if present
                         if (dumpIndex > -1) store.dumpAreaTasks.splice(dumpIndex, 1);
 
                         // Remove from other group if present
-                        if (currentGroup && currentGroup.id !== shutdownSourceGroupId) {
+                        if (currentGroup && currentGroup.id !== planningSourceGroupId) {
                             currentGroup.removeTask(activeTask.id);
                         }
 
@@ -177,14 +211,16 @@ export const DailyShutdown = observer(() => {
                     }
                 }
             });
-        } else if (overContainer === 'completed' || overContainer === 'missed') {
+        } else if (overContainer === 'completed-yesterday' || overContainer === 'missed-yesterday') {
             // Handle Step 1 Dragging
             if (activeTask) {
                 runInAction(() => {
-                    if (overContainer === 'completed') {
+                    if (overContainer === 'completed-yesterday') {
                         activeTask.status = 'done';
-                    } else if (overContainer === 'missed') {
+                        activeTask.scheduledDate = yesterday;
+                    } else if (overContainer === 'missed-yesterday') {
                         activeTask.status = 'todo';
+                        activeTask.scheduledDate = yesterday;
                     }
                 });
             }
@@ -193,36 +229,34 @@ export const DailyShutdown = observer(() => {
 
     const handleCreateTask = (columnId: string, title: string) => {
         if (!title.trim()) return;
-
         const newTask = new Task(title);
 
         switch (columnId) {
-            case 'completed':
-                newTask.scheduledDate = today;
+            case 'completed-yesterday': // should manually create as done yesterday?
+                newTask.scheduledDate = yesterday;
                 newTask.status = 'done';
                 if (store.activeGroup) store.activeGroup.addTask(newTask);
                 else store.dumpAreaTasks.push(newTask);
                 break;
-            case 'missed':
-                newTask.scheduledDate = today;
+            case 'missed-yesterday':
+                newTask.scheduledDate = yesterday;
                 if (store.activeGroup) store.activeGroup.addTask(newTask);
                 else store.dumpAreaTasks.push(newTask);
                 break;
-            case 'shutdown-source-list':
-                if (shutdownSourceGroupId === 'default') {
+            case 'planning-source-list':
+                if (planningSourceGroupId === 'default') {
                     store.addTaskToDump(title);
                 } else {
-                    const group = store.groups.find(g => g.id === shutdownSourceGroupId);
+                    const group = store.groups.find(g => g.id === planningSourceGroupId);
                     if (group) group.addTask(newTask);
                     else store.dumpAreaTasks.push(newTask);
                 }
                 break;
-            case 'shutdown-tomorrow-list':
-                newTask.scheduledDate = tomorrow;
-                if (shutdownSourceGroupId) {
-                    const group = store.groups.find(g => g.id === shutdownSourceGroupId);
+            case 'planning-today-list':
+                newTask.scheduledDate = today;
+                if (planningSourceGroupId && planningSourceGroupId !== 'default') {
+                    const group = store.groups.find(g => g.id === planningSourceGroupId);
                     if (group) group.addTask(newTask);
-                    else if (store.groups.length > 0) store.groups[0].addTask(newTask);
                 } else if (store.activeGroup) {
                     store.activeGroup.addTask(newTask);
                 } else if (store.groups.length > 0) {
@@ -230,45 +264,15 @@ export const DailyShutdown = observer(() => {
                 } else {
                     store.addTaskToDump(title);
                     const task = store.dumpAreaTasks[store.dumpAreaTasks.length - 1];
-                    if (task) task.scheduledDate = tomorrow;
+                    if (task) task.scheduledDate = today;
                 }
                 break;
         }
     };
 
-    const renderProgressBar = () => {
-        if (totalDuration === 0) return (
-            <div className="progress-bar">
-                <div className="progress-fill" style={{ width: '0%' }}></div>
-            </div>
-        );
-
-        return (
-            <div className="progress-bar" style={{ display: 'flex' }}>
-                {completedTasks.map((task) => {
-                    const percentage = ((task.actualDuration || 0) / totalDuration) * 100;
-                    if (percentage === 0) return null;
-                    const color = task.labelId ? store.getLabelColor(task.labelId) : '#E3C099';
-
-                    return (
-                        <div
-                            key={task.id}
-                            style={{
-                                width: `${percentage}%`,
-                                backgroundColor: color,
-                                height: '100%'
-                            }}
-                            title={`${task.title}: ${formatTime(task.actualDuration || 0)}`}
-                        />
-                    );
-                })}
-            </div>
-        );
-    };
-
     return (
         <DndContext
-            id="daily-shutdown-dnd"
+            id="daily-planning-dnd"
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
@@ -276,7 +280,7 @@ export const DailyShutdown = observer(() => {
             onDragEnd={handleDragEnd}
         >
             <div className="daily-shutdown-overlay">
-                <button className="close-btn" onClick={() => store.toggleDailyShutdown()}>
+                <button className="close-btn" onClick={() => store.toggleDailyPlanning()}>
                     <X size={16} />
                 </button>
 
@@ -288,36 +292,25 @@ export const DailyShutdown = observer(() => {
 
                     {step === 1 ? (
                         <>
-                            <h1 className="daily-shutdown-title">Let's review today's work ✍️</h1>
+                            <h1 className="daily-shutdown-title">Let's review yesterday's work 🔙</h1>
                             <div className="stats-summary">
                                 <div className="stat-row">
-                                    <span>{completedTasks.length} tasks completed</span>
-                                    <span>{formatTime(totalDuration)}</span>
+                                    <span>{completedYesterday.length} tasks completed</span>
                                 </div>
-
-                                {renderProgressBar()}
-
-                                <div className="labels-legend" style={{ marginTop: '16px' }}>
-                                    {completedTasks.map(task => { // Iterate tasks, not labels
-                                        const color = task.labelId ? store.getLabelColor(task.labelId) : '#E3C099';
-                                        return (
-                                            <div key={task.id} className="stat-row" style={{ fontSize: '12px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ color: color }}>●</span>
-                                                    <span>{task.title}</span>
-                                                </div>
-                                                <span>{formatTime(task.actualDuration || 0)}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                            </div>
+                        </>
+                    ) : step === 2 ? (
+                        <>
+                            <h1 className="daily-shutdown-title">What do you want to get done today? ☀️</h1>
+                            <div className="daily-shutdown-subtitle">
+                                Drag tasks from your backlog to today's list.
                             </div>
                         </>
                     ) : (
                         <>
-                            <h1 className="daily-shutdown-title">What do you want to get done tomorrow?</h1>
+                            <h1 className="daily-shutdown-title">Let's finalize your day 🚀</h1>
                             <div className="daily-shutdown-subtitle">
-                                Let's add some tasks you need to get done tomorrow. Feel free to pull tasks from any of your lists as well.
+                                Timebox your tasks to ensure a productive day.
                             </div>
                         </>
                     )}
@@ -327,12 +320,21 @@ export const DailyShutdown = observer(() => {
                             <button className="next-step-btn" onClick={() => setStep(2)}>
                                 Next step <ArrowRight size={16} />
                             </button>
-                        ) : (
+                        ) : step === 2 ? (
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <button className="next-step-btn" style={{ background: '#333', width: '50px' }} onClick={() => setStep(1)}>
                                     <ArrowRight size={16} style={{ transform: 'rotate(180deg)' }} />
                                 </button>
-                                <button className="next-step-btn" onClick={() => store.toggleDailyShutdown()}>
+                                <button className="next-step-btn" onClick={() => setStep(3)}>
+                                    Next step <ArrowRight size={16} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button className="next-step-btn" style={{ background: '#333', width: '50px' }} onClick={() => setStep(2)}>
+                                    <ArrowRight size={16} style={{ transform: 'rotate(180deg)' }} />
+                                </button>
+                                <button className="next-step-btn" onClick={() => store.toggleDailyPlanning()}>
                                     Finish <ArrowRight size={16} />
                                 </button>
                             </div>
@@ -343,110 +345,107 @@ export const DailyShutdown = observer(() => {
                 {/* Content */}
                 {step === 1 ? (
                     <div className="daily-shutdown-content">
-                        {/* Column 1: Completed Today */}
+                        {/* Column 1: Completed Yesterday */}
                         <div className="shutdown-column">
                             <div className="column-header">
-                                <h2>Here's what you did today</h2>
-                                <p>Feel free to make any corrections</p>
+                                <h2>Completed Yesterday</h2>
                             </div>
-                            <DroppableList id="completed" className="shutdown-task-list kanban-sortable-area">
+                            <DroppableList id="completed-yesterday" className="shutdown-task-list kanban-sortable-area">
                                 <TaskCard
                                     isGhost
-                                    onAddClick={() => setAddingColumn('completed')}
-                                    actualTime={completedTasks.reduce((acc, t) => acc + (t.actualDuration || 0), 0)}
-                                    estimatedTime={completedTasks.reduce((acc, t) => acc + (t.duration || 0), 0)}
+                                    onAddClick={() => setAddingColumn('completed-yesterday')}
+                                    actualTime={completedYesterday.reduce((acc, t) => acc + (t.actualDuration || 0), 0)}
+                                    estimatedTime={completedYesterday.reduce((acc, t) => acc + (t.duration || 0), 0)}
                                 />
-                                {addingColumn === 'completed' && (
+                                {addingColumn === 'completed-yesterday' && (
                                     <TaskCard
                                         isCreating
-                                        onCreate={(title) => handleCreateTask('completed', title)}
+                                        onCreate={(title) => handleCreateTask('completed-yesterday', title)}
                                         onCancel={() => setAddingColumn(null)}
                                     />
                                 )}
                                 <SortableContext
-                                    id="completed"
-                                    items={completedTasks.map(t => t.id)}
+                                    id="completed-yesterday"
+                                    items={completedYesterday.map(t => t.id)}
                                     strategy={verticalListSortingStrategy}
                                 >
-                                    {completedTasks.map(task => (
+                                    {completedYesterday.map(task => (
                                         <SortableTaskCard
                                             key={task.id}
                                             task={task}
                                             onTaskClick={() => { }}
                                             onDelete={() => store.deleteTask(task.id)}
-                                            containerData={{ type: 'shutdown-list', id: 'completed' }}
+                                            containerData={{ type: 'planning-list', id: 'completed-yesterday' }}
                                         />
                                     ))}
                                 </SortableContext>
                             </DroppableList>
                         </div>
 
-                        {/* Column 2: Missed Today */}
+                        {/* Column 2: Missed Yesterday */}
                         <div className="shutdown-column">
                             <div className="column-header">
-                                <h2>What you missed</h2>
-                                <p>We'll roll these over to tomorrow</p>
+                                <h2>Missed Yesterday</h2>
+                                <p>Moved to today automatically?</p>
                             </div>
-                            <DroppableList id="missed" className="shutdown-task-list kanban-sortable-area">
+                            <DroppableList id="missed-yesterday" className="shutdown-task-list kanban-sortable-area">
                                 <TaskCard
                                     isGhost
-                                    onAddClick={() => setAddingColumn('missed')}
-                                    actualTime={missedTasks.reduce((acc, t) => acc + (t.actualDuration || 0), 0)}
-                                    estimatedTime={missedTasks.reduce((acc, t) => acc + (t.duration || 0), 0)}
+                                    onAddClick={() => setAddingColumn('missed-yesterday')}
+                                    actualTime={missedYesterday.reduce((acc, t) => acc + (t.actualDuration || 0), 0)}
+                                    estimatedTime={missedYesterday.reduce((acc, t) => acc + (t.duration || 0), 0)}
                                 />
-                                {addingColumn === 'missed' && (
+                                {addingColumn === 'missed-yesterday' && (
                                     <TaskCard
                                         isCreating
-                                        onCreate={(title) => handleCreateTask('missed', title)}
+                                        onCreate={(title) => handleCreateTask('missed-yesterday', title)}
                                         onCancel={() => setAddingColumn(null)}
                                     />
                                 )}
                                 <SortableContext
-                                    id="missed"
-                                    items={missedTasks.map(t => t.id)}
+                                    id="missed-yesterday"
+                                    items={missedYesterday.map(t => t.id)}
                                     strategy={verticalListSortingStrategy}
                                 >
-                                    {missedTasks.map(task => (
+                                    {missedYesterday.map(task => (
                                         <SortableTaskCard
                                             key={task.id}
                                             task={task}
                                             onTaskClick={() => { }}
                                             onDelete={() => store.deleteTask(task.id)}
-                                            containerData={{ type: 'shutdown-list', id: 'missed' }}
+                                            containerData={{ type: 'planning-list', id: 'missed-yesterday' }}
                                         />
                                     ))}
                                 </SortableContext>
                             </DroppableList>
                         </div>
                     </div>
-                ) : (
+                ) : step === 2 ? (
                     <div className="shutdown-step-2-content">
-                        {/* Left Panel: Source List (Brain Dump or Group) */}
+                        {/* Left Panel: Source List */}
                         <div className="left-panel">
                             <div className="brain-dump-header">
                                 <GroupList
                                     workspace={store.activeWorkspace!}
-                                    activeGroupId={shutdownSourceGroupId}
-                                    onSelectGroup={setShutdownSourceGroupId}
+                                    activeGroupId={planningSourceGroupId}
+                                    onSelectGroup={(id) => setPlanningSourceGroupId(id)}
                                     className="shutdown-group-selector"
                                 />
                             </div>
-                            <DroppableList id="shutdown-source-list" className="shutdown-task-list kanban-sortable-area" style={{ flex: 1, overflowY: 'auto' }}>
+                            <DroppableList id="planning-source-list" className="shutdown-task-list kanban-sortable-area" style={{ flex: 1, overflowY: 'auto' }}>
                                 <TaskCard
                                     isGhost
-                                    onAddClick={() => setAddingColumn('shutdown-source-list')}
-                                    actualTime={sourceTasks.reduce((acc, t) => acc + (t.actualDuration || 0), 0)}
-                                    estimatedTime={sourceTasks.reduce((acc, t) => acc + (t.duration || 0), 0)}
+                                    onAddClick={() => setAddingColumn('planning-source-list')}
                                 />
-                                {addingColumn === 'shutdown-source-list' && (
+                                {addingColumn === 'planning-source-list' && (
                                     <TaskCard
                                         isCreating
-                                        onCreate={(title) => handleCreateTask('shutdown-source-list', title)}
+                                        onCreate={(title) => handleCreateTask('planning-source-list', title)}
                                         onCancel={() => setAddingColumn(null)}
                                     />
                                 )}
                                 <SortableContext
-                                    id="shutdown-source-list"
+                                    id="planning-source-list"
                                     items={sourceTasks.map(t => t.id)}
                                     strategy={verticalListSortingStrategy}
                                 >
@@ -455,48 +454,71 @@ export const DailyShutdown = observer(() => {
                                             key={task.id}
                                             task={task}
                                             onDelete={() => store.deleteTask(task.id)}
-                                            containerData={{ type: 'shutdown-list', id: 'shutdown-source-list' }}
+                                            containerData={{ type: 'planning-list', id: 'planning-source-list' }}
                                         />
                                     ))}
                                 </SortableContext>
                             </DroppableList>
                         </div>
 
-                        {/* Right Panel: Tomorrow */}
+                        {/* Right Panel: Today */}
                         <div className="right-panel">
                             <div className="column-header">
-                                <h2>Tomorrow</h2>
-                                <p>Add some tasks</p>
+                                <h2>Today</h2>
                             </div>
 
-                            <DroppableList id="shutdown-tomorrow-list" className="shutdown-task-list kanban-sortable-area">
+                            <DroppableList id="planning-today-list" className="shutdown-task-list kanban-sortable-area">
                                 <TaskCard
                                     isGhost
-                                    onAddClick={() => setAddingColumn('shutdown-tomorrow-list')}
-                                    actualTime={tomorrowTasks.reduce((acc, t) => acc + (t.actualDuration || 0), 0)}
-                                    estimatedTime={tomorrowTasks.reduce((acc, t) => acc + (t.duration || 0), 0)}
+                                    onAddClick={() => setAddingColumn('planning-today-list')}
+                                    actualTime={todayTasks.reduce((acc, t) => acc + (t.actualDuration || 0), 0)}
+                                    estimatedTime={todayTasks.reduce((acc, t) => acc + (t.duration || 0), 0)}
                                 />
-                                {addingColumn === 'shutdown-tomorrow-list' && (
+                                {addingColumn === 'planning-today-list' && (
                                     <TaskCard
                                         isCreating
-                                        onCreate={(title) => handleCreateTask('shutdown-tomorrow-list', title)}
+                                        onCreate={(title) => handleCreateTask('planning-today-list', title)}
                                         onCancel={() => setAddingColumn(null)}
                                     />
                                 )}
                                 <SortableContext
-                                    id="shutdown-tomorrow-list"
-                                    items={tomorrowTasks.map(t => t.id)}
+                                    id="planning-today-list"
+                                    items={todayTasks.map(t => t.id)}
                                     strategy={verticalListSortingStrategy}
                                 >
-                                    {tomorrowTasks.map(task => (
+                                    {todayTasks.map(task => (
                                         <SortableTaskCard
                                             key={task.id}
                                             task={task}
                                             onDelete={() => store.deleteTask(task.id)}
-                                            containerData={{ type: 'shutdown-list', id: 'shutdown-tomorrow-list' }}
+                                            containerData={{ type: 'planning-list', id: 'planning-today-list' }}
                                         />
                                     ))}
                                 </SortableContext>
+                            </DroppableList>
+                        </div>
+                    </div>
+                ) : (
+                    // Step 3
+                    <div className="shutdown-step-2-content" style={{ display: 'flex', gap: '20px', height: '100%' }}>
+                        {/* Left: Today's list */}
+                        <KanbanColumn
+                            date={today}
+                            tasks={todayTasks}
+                            isToday={true}
+                            isAdding={addingColumn === 'planning-today-list-step3'}
+                            onAddClick={() => setAddingColumn('planning-today-list-step3')}
+                            onTaskClick={(t: Task) => {/* Open task modal? */ }}
+                            onDuplicate={(t: Task) => {/* duplicate logic */ }}
+                            onDelete={(t: Task) => store.deleteTask(t.id)}
+                            onCreate={(title: string) => handleCreateTask('planning-today-list', title)} // Reuse Step 2 logic? or specific Step 3?
+                            onCancel={() => setAddingColumn(null)}
+                        />
+
+                        {/* Right: Timebox */}
+                        <div className="right-panel" style={{ flex: 1, overflow: 'hidden' }}>
+                            <DroppableList id="timebox-drop-area" className="timebox-wrapper" style={{ height: '100%', width: '100%' }}>
+                                <Timebox hideHeader={true} />
                             </DroppableList>
                         </div>
                     </div>

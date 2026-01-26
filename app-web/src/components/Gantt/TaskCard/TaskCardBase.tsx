@@ -409,7 +409,7 @@ export const TaskCardBase = observer(({
                 task={task}
                 onMarkAsComplete={() => store.taskStore.toggleTaskCompletion(task)}
                 onDuplicate={() => onDuplicate?.(task)}
-                onRemoveFromTimebox={() => task.setScheduling(undefined, undefined)}
+                onRemoveFromTimebox={() => task.setScheduling(task.scheduledDate, undefined)}
                 onRemoveFromList={() => store.moveTaskToInbox(task.id)}
                 onDelete={() => onDelete?.(task)}
             />

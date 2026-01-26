@@ -249,6 +249,10 @@ export const TopBar = observer(() => {
                     setUserMenuOpen(false);
                     store.toggleAnalytics();
                 }}
+                onDailyPlanning={() => {
+                    setUserMenuOpen(false);
+                    store.toggleDailyPlanning();
+                }}
                 onDailyShutdown={() => {
                     setUserMenuOpen(false);
                     store.toggleDailyShutdown();

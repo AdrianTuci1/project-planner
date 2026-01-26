@@ -1,5 +1,5 @@
-import { makeAutoObservable, reaction, runInAction } from "mobx";
-import { Task, GroupType } from "./core";
+import { makeAutoObservable, reaction } from "mobx";
+import { Task } from "./core";
 import { TaskStore } from "./stores/TaskStore";
 import { UIStore } from "./stores/UIStore";
 import { RecurrenceStore } from "./stores/RecurrenceStore";
@@ -203,6 +203,8 @@ export class ProjectStore {
     openUpgradeModal() { this.uiStore.openUpgradeModal(); }
     closeUpgradeModal() { this.uiStore.closeUpgradeModal(); }
     toggleDailyShutdown() { this.uiStore.toggleDailyShutdown(); }
+    toggleDailyPlanning() { this.uiStore.toggleDailyPlanning(); }
+    get isDailyPlanningOpen() { return this.uiStore.isDailyPlanningOpen; }
     openSettings(tab?: string) { this.uiStore.openSettings(tab); }
     closeSettings() { this.uiStore.closeSettings(); }
     openTaskModal(task: Task, isCreationMode: boolean = false, isNewTask: boolean = false) { this.uiStore.openTaskModal(task, isCreationMode, isNewTask); }
