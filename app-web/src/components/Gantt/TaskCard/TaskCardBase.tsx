@@ -25,6 +25,7 @@ import { SubtaskList } from '../../Shared/SubtaskList';
 import { TaskContextMenu } from './TaskContextMenu';
 import { RecurrenceWarningContext } from '../../ContextMenu/RecurrenceWarningContext';
 import './TaskCard.css';
+import { LuRefreshCw } from "react-icons/lu";
 
 
 const ActiveTimerDisplay = ({ startTime, accumulated }: { startTime: number | null, accumulated: number }) => {
@@ -264,8 +265,11 @@ export const TaskCardBase = observer(({
                             </div>
 
                             {/* Recurrence */}
-                            <div className={`${(!task.recurrence || task.recurrence === 'none') ? 'footer-reveal-item' : ''}`}>
-                                <RotateCw
+                            <div
+                                className={`${(!task.recurrence || task.recurrence === 'none') ? 'footer-reveal-item' : ''}`}
+                                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                            >
+                                <LuRefreshCw
                                     size={14}
                                     className={`tc-action-icon ${task.recurrence && task.recurrence !== 'none' ? 'active' : ''}`}
                                     style={task.recurrence && task.recurrence !== 'none' ? { color: 'var(--accent-primary)' } : undefined}
@@ -286,6 +290,11 @@ export const TaskCardBase = observer(({
                                         }
                                     }}
                                 />
+                                {task.recurrence && task.recurrence !== 'none' && (
+                                    <span style={{ fontSize: '10px', color: 'var(--accent-primary)', textTransform: 'capitalize' }}>
+                                        {task.recurrence === 'biweekly' ? 'Bi-Weekly' : task.recurrence}
+                                    </span>
+                                )}
                             </div>
 
                             {/* Attachments */}

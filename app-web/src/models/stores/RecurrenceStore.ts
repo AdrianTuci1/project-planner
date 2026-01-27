@@ -58,7 +58,7 @@ export class RecurrenceStore {
                     if (!exists) {
                         const newTask = task.clone();
                         newTask.scheduledDate = new Date(nextDate);
-                        const group = this.rootStore.taskStore.groups.find(g => g.tasks.includes(task));
+                        const group = this.rootStore.groups.find(g => g.tasks.includes(task));
                         tasksToCreate.push({ task: newTask, groupId: group?.id });
                     }
                     iterations++;
@@ -75,15 +75,15 @@ export class RecurrenceStore {
                 );
                 if (!exists) {
                     if (groupId) {
-                        const group = this.rootStore.taskStore.groups.find(g => g.id === groupId);
+                        const group = this.rootStore.groups.find(g => g.id === groupId);
                         group?.addTask(task);
                     } else {
-                        this.rootStore.taskStore.addTaskToDump(task.title);
+                        // this.rootStore.taskStore.addTaskToDump(task.title);
                         // Wait, addTaskToDump creates a NEW task. We want to add THIS specific task instance.
                         // TaskStore.addTaskToDump takes string. We need to expose a way to add a Task object.
                         // We'll fix TaskStore to allow adding raw task or expose access to list.
                         // accessing dumpAreaTasks directly is fine as it's public.
-                        this.rootStore.taskStore.dumpAreaTasks.push(task);
+                        this.rootStore.dumpAreaTasks.push(task);
                     }
                 }
             });
@@ -112,7 +112,7 @@ export class RecurrenceStore {
                 t.title = sourceTask.title;
                 t.description = sourceTask.description;
                 t.duration = sourceTask.duration;
-                t.labels = [...sourceTask.labels];
+                t.labelId = sourceTask.labelId;
                 t.participants = [...sourceTask.participants];
                 t.recurrence = sourceTask.recurrence;
                 if (sourceTask.scheduledTime) {
