@@ -6,21 +6,24 @@ export default function AlternatingFeatures() {
     const featuresData = [
         {
             id: 1,
-            title: "No tabs. Hello AI cards.",
-            description: "Completely reimagining the traditional tab interfaces to dedicated AI Cards with detailed context. Each card combines multiple connected apps based on your task.",
-            reversed: false
+            title: "Build your day like a pro.",
+            description: "Stop reacting to notifications and start commanding your hours. Drag your tasks directly onto your calendar to create a bulletproof plan that protects your deep work and eliminates decision fatigue.",
+            reversed: false,
+            image: '/visuals/part1.png',
         },
         {
             id: 2,
-            title: "Categories for Memory & Context",
-            description: "Organize your canvas by categorizing your tasks. Right-click on the empty Canvas to create a new category. Each category has its own context and memory that makes it a hyper-personalized experience.",
-            reversed: true
+            title: "See the magic in numbers.",
+            description: "Get a crystal-clear view of where your time actually goes. Our playful insights transform boring data into a visual roadmap, helping you spot burnout before it happens and celebrate your most productive streaks.",
+            reversed: true,
+            image: '/visuals/part2.png',
         },
         {
             id: 3,
-            title: "Surf the web with Built-in Browsing",
-            description: "We understand browsing is still essential to any kind of work, and we have implemented state-of-the-art browsing capabilities directly in the canvas.",
-            reversed: false
+            title: `The "off" switch you deserve.`,
+            description: `End the day with a clean slate and a quiet mind. Our signature shutdown ritual helps you review your wins, offload leftover tasks, and mentally transition from "hustle mode" to "home mode" in seconds.`,
+            reversed: false,
+            image: '/visuals/part3.png',
         }
     ]
 
@@ -29,7 +32,7 @@ export default function AlternatingFeatures() {
 
             <div className="alternating-features__header-wrapper">
                 <h2 className="alternating-features__header">
-                    simplu does all your time consuming operations
+                    Simplu has everything you need to own your day.
                 </h2>
             </div>
             <div className="alternating-features__list">
@@ -39,6 +42,7 @@ export default function AlternatingFeatures() {
                         title={feature.title}
                         description={feature.description}
                         reversed={feature.reversed}
+                        image={feature.image}
                     />
                 ))}
             </div>

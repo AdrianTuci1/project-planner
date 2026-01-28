@@ -66,7 +66,8 @@ export default function Navbar() {
                     <a href="#contact" className={getLinkClass('contact')} onClick={(e) => scrollToSection(e, 'contact')}>Chat with us</a>
                 </div>
                 <div className="navbar__actions">
-                    <Button variant="primary">Sign In</Button>
+                    <button className="btn btn--hero">Sign In</button>
+                    <Button variant="primary">Start for free</Button>
                 </div>
             </div>
         </nav>

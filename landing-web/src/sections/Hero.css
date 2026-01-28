@@ -26,8 +26,14 @@
 .hero__actions {
     display: flex;
     justify-content: center;
+    flex-direction: column;
+    align-items: center;
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
+
+    .btn {
+        max-width: 220px;
+    }
 }
 
 .hero__caption {

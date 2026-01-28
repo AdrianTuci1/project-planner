@@ -7,6 +7,7 @@ import SecondHero from './sections/SecondHero'
 import AlternatingFeatures from './sections/AlternatingFeatures'
 import GridFeatures from './sections/GridFeatures'
 import Pricing from './sections/Pricing'
+import CallToAction from './sections/CallToAction'
 import Footer from './components/Footer'
 import './App.css'
 
@@ -35,6 +36,7 @@ function App() {
         <GridFeatures />
         <SecondHero />
         <Pricing />
+        <CallToAction />
       </main>
       <Footer />
     </div>

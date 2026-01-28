@@ -9,32 +9,37 @@ const plans = [
         description: "For those who want new experiences",
         buttonText: "Get Started",
         features: [
-            "200 credits per month",
-            "Free canvas"
+            "Unlimited tasks",
+            "Inbox",
+            "Join teams",
+            "Advanced analytics",
         ],
         popular: false
     },
     {
         name: "Pro",
-        price: { monthly: 50, yearly: 40 },
+        price: { monthly: 10, yearly: 8 },
         description: "For those who want to experience a new way of managing work",
         buttonText: "Join Waitlist",
         features: [
-            "One canvas",
-            "2000 credits per month",
-            "One additional seat"
+            "Everything in Free",
+            "Labels",
+            "Google/Apple Calendar sync",
+            "Subtasks",
+            "Recurring tasks",
+            "Timeboxing",
+            "Create a team (up to 10 members)",
         ],
         popular: true
     },
     {
         name: "Infinite",
-        price: { monthly: 250, yearly: 200 },
+        price: { monthly: 20, yearly: 16 },
         description: "For those who want an infinite experience, now and in the future",
         buttonText: "Join Waitlist",
         features: [
-            "Two canvases",
-            "Six seats",
-            "50,000 credits per month"
+            "Everything in Pro",
+            "Unlimited team members",
         ],
         popular: false
     }
@@ -47,8 +52,8 @@ export default function Pricing() {
         <section className="pricing" id="pricing">
             <div className="container">
                 <div className="pricing__header">
-                    <h2>Enter your Business canvas</h2>
-                    <h3>Try it free today</h3>
+                    <h2>Plan your best days yet.</h2>
+                    <h3>Try it free</h3>
 
                     <div className="pricing__toggle-wrapper">
                         <div className="pricing__toggle-inner">

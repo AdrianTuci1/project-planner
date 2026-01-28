@@ -1,0 +1,117 @@
+.cta {
+    padding: var(--spacing-xl) 0;
+    background:
+        linear-gradient(to top,
+            rgba(124, 97, 243, 0) 100%,
+            rgba(124, 97, 243, 0.8) 10%,
+            transparent 90%),
+        radial-gradient(ellipse 80% 100% at top,
+            #7c61f3 20%,
+            #7c61f3 60%,
+            rgba(124, 97, 243, 0.3) 90%,
+            var(--color-bg) 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: ctaPattern 20s linear infinite;
+    opacity: 0.3;
+}
+
+@keyframes ctaPattern {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(50px, 50px);
+    }
+}
+
+.cta__content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--spacing-lg) 0;
+}
+
+.cta__title {
+    font-size: 3rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: var(--spacing-md);
+    line-height: 1.2;
+}
+
+.cta__description {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.6;
+}
+
+.cta__buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta__buttons .btn {
+    min-width: 180px;
+    font-size: 1.1rem;
+    padding: 1rem 2rem;
+    transition: all 0.3s ease;
+}
+
+.cta__buttons .btn--primary {
+    background: white;
+    color: var(--color-primary);
+}
+
+.cta__buttons .btn--primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.cta__buttons .btn--secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.cta__buttons .btn--secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .cta__title {
+        font-size: 2rem;
+    }
+
+    .cta__description {
+        font-size: 1.1rem;
+    }
+
+    .cta__buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .cta__buttons .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+}

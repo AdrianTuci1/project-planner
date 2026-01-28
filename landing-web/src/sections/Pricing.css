@@ -176,6 +176,7 @@
     padding: 0;
     color: var(--color-secondary);
     font-size: 0.9rem;
+    height: 200px;
 }
 
 .pricing-card__features li {

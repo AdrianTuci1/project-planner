@@ -47,24 +47,19 @@ export default function Hero() {
                 {/* Badges/Pills can go here if needed */}
 
                 <h1 className="hero__title">
-                    Your business management home
+                    Make every day count.
                 </h1>
 
                 <p className="hero__subtitle">
-                    End your business chaos forever. We give you a collaborative canvas and powerful AI workflows without configuration overhead.
+                    The all-in-one productivity hub designed for modern professionals. From seamless team collaboration to precision time blocking, we help you conquer your goals and reclaim your free time.
                 </p>
 
                 <div className="hero__actions">
-                    <Button variant="primary">Get Access</Button>
-                    <Button variant="secondary" style={{ border: 'none' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            ▶ Watch the demo
-                        </span>
-                    </Button>
+                    <Button variant="primary">Try Simplu - It's free</Button>
                 </div>
 
                 <div className="hero__caption">
-                    Simplu is currently in BETA
+                    14 days free trial. No credit card required.
                 </div>
 
                 <div className="hero__visual">

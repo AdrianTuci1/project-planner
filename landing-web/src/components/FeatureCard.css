@@ -1,7 +1,7 @@
 .feature-card {
     display: flex;
     align-items: center;
-    gap: 80px;
+    gap: 10px;
     /* Increased gap for better spacing */
     margin-bottom: 120px;
     max-width: 1200px;
@@ -17,22 +17,33 @@
     flex-direction: row-reverse;
 }
 
+.feature-card-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    text-align: left;
+    width: 100%;
+    max-width: 380px;
+}
+
 .feature-card__content {
     flex: 1;
-    text-align: left;
-    max-width: 360px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 420px;
 }
 
 .feature-card__label {
     display: block;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     color: #666;
     margin-bottom: var(--spacing-sm);
     font-weight: 500;
 }
 
 .feature-card__title {
-    font-size: 3rem;
+    font-size: 1.8rem;
     line-height: 1.1;
     margin-bottom: var(--spacing-md);
     color: #111;
@@ -53,6 +64,24 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+}
+
+/* Overlay for visual section - behind the frame */
+.feature-card__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+            rgba(125, 158, 199, 0.15) 0%,
+            rgba(196, 169, 160, 0.15) 50%,
+            rgba(212, 196, 184, 0.15) 100%);
+    border-radius: var(--radius-lg);
+    pointer-events: none;
+    z-index: 0;
+    backdrop-filter: blur(4px);
 }
 
 /* .feature-card__visual img selector removed as it's now inside .feature-card__image-container */
@@ -71,6 +100,7 @@
 
     position: relative;
     overflow: hidden;
+    perspective: 1200px;
 }
 
 /* Blur effect behind window */
@@ -105,11 +135,45 @@
 }
 
 .feature-card__image-container img {
-    width: 100%;
-    height: 100%;
     object-fit: cover;
     display: block;
 }
+
+/* Styling for each of the 3 feature cards using nth-child */
+
+/* First feature card - small image, top-left position, tilted with depth */
+.feature-card:nth-child(1) .feature-card__image-container {
+    width: 70%;
+    height: 100%;
+    position: absolute;
+    top: 20%;
+    align-items: flex-start;
+    justify-content: flex-start;
+    transform: rotateY(-15deg) rotateX(18deg) translateZ(40px);
+    transform-style: preserve-3d;
+    box-shadow:
+        0 20px 40px rgba(44, 43, 43, 0.15),
+        0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Second feature card - medium image, centered */
+.feature-card:nth-child(2) .feature-card__image-container {
+    width: 90%;
+    height: 80%;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Third feature card - large image, bottom-right position */
+.feature-card:nth-child(3) .feature-card__image-container {
+    position: absolute;
+    width: 100%;
+    height: 70%;
+    margin-left: 20%;
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+
 
 .feature-card__video-placeholder {
     width: 100%;
@@ -157,4 +221,12 @@
         max-width: 100%;
         text-align: center;
     }
+}
+
+
+.feature-card_frame .feature-card__image-container img:nth-child(1) {
+    width: 80%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }

@@ -1,30 +1,28 @@
 import './GridFeatures.css'
-import aiCardsImg from '../assets/ai-cards.png'
-import memoryContextImg from '../assets/memory-context.png'
-import browsingImg from '../assets/browsing.png'
+
 
 export default function GridFeatures() {
     const features = [
         {
             id: 1,
-            subtitle: "No tabs",
-            title: "Hello AI cards",
-            description: "Completely reimagining the traditional tab interfaces to dedicated AI Cards with detailed context. Each card combines multiple connected apps based on your task and provides live status and insights.",
-            image: aiCardsImg
+            subtitle: "Deep work",
+            title: "Sprint your way to done.",
+            description: "High-intensity focus meets guilt-free breaks. Use our built-in timer to break big projects into bite-sized sprints, keeping your brain fresh and your momentum high until the finish line.",
+            image: "/visuals/part4.png"
         },
         {
             id: 2,
-            subtitle: "Categories for",
-            title: "Memory & Context",
-            description: "Organize your canvas by categorizing your tasks. Right-click on the empty Canvas to create a new category. Each category has its own context and memory that makes it a hyper-personalized experience.",
-            image: memoryContextImg
+            subtitle: "Connectivity",
+            title: "Your apps, finally in sync.",
+            description: "Connect to over 5,000+ tools and let the robots do the heavy lifting. Automate your workflow so that a message in Slack or a lead in CRM instantly becomes a task in your planner.",
+            image: "/visuals/integration.png"
         },
         {
             id: 3,
-            subtitle: "Surf the web with",
-            title: "Built-in Browsing",
-            description: "We understand browsing is still stands as essential to any kind of work, and we have implemented state-of-the-art browsing capabilities. Surf the web and get things done then and there itself.",
-            image: browsingImg
+            subtitle: "Habits",
+            title: "Set it, then forget it.",
+            description: "Build consistency without the mental clutter. Whether it’s a weekly report or your daily yoga, automate your routine tasks so they appear exactly when you need them—and stay out of the way when you don’t.",
+            image: "/visuals/part5.png"
         }
     ]
 
@@ -32,7 +30,7 @@ export default function GridFeatures() {
         <section className="grid-features" id="how-it-works">
             <div className="container">
                 <h2 className="grid-features__header">
-                    a beautiful canvas for<br />all your AI apps and agents
+                    Tools for the modern <br /> high-achiever.
                 </h2>
                 <div className="grid-features__grid">
                     {features.map(feature => (
@@ -42,8 +40,16 @@ export default function GridFeatures() {
                                 <h3 className="grid-feature-card__title">{feature.title}</h3>
                                 <p className="grid-feature-card__description">{feature.description}</p>
                             </div>
-                            <div className="grid-feature-card__image">
-                                <img src={feature.image} alt={feature.title} />
+                            <div className="visual-wrapper">
+                                <div className="grid-feature-card__visual">
+                                    <div className="grid-feature-card__overlay">
+                                    </div>
+                                    <div className="grid-feature-card__frame">
+                                        <div className="grid-feature-card__image-container">
+                                            <img src={feature.image} alt={feature.title} />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}
