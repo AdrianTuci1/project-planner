@@ -12,7 +12,8 @@
     margin-bottom: var(--spacing-lg);
 }
 
-.features__title span {
+.features__title span,
+.features__text-block h3 span {
     color: var(--color-primary);
 }
 
@@ -86,4 +87,39 @@
     font-size: 1.1rem;
     color: var(--color-secondary);
     line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .features {
+        text-align: left;
+    }
+
+    .features__text-block {
+        text-align: left;
+    }
+
+    .features__visual {
+        width: 130%;
+        margin: var(--spacing-lg) auto;
+        height: 360px;
+        overflow: hidden;
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .features__visual-placeholder {
+        min-width: 700px;
+        /* Force desktop-like width */
+        width: 700px;
+        flex-shrink: 0;
+        height: auto;
+    }
+
+    .features__visual-placeholder img {
+        width: 100%;
+        height: auto;
+        max-width: none;
+    }
 }

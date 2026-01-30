@@ -1,7 +1,7 @@
 import Card from './Card'
 import './FeatureCard.css'
 
-export default function FeatureCard({ label, title, description, image, reversed = false }) {
+export default function FeatureCard({ label, title, description, image, reversed = false, gradient }) {
     return (
         <div className={`feature-card ${reversed ? 'feature-card--reversed' : ''}`}>
             <div className="feature-card__content">
@@ -12,7 +12,9 @@ export default function FeatureCard({ label, title, description, image, reversed
                 </div>
             </div>
             <div className="feature-card__visual">
-                <div className="feature-card__overlay"></div>
+                <div className="feature-card__overlay">
+                    {gradient && <img src={gradient} alt="" />}
+                </div>
                 <div className="feature-card__frame">
                     <div className="feature-card__image-container">
                         <img src={image} alt={title} />

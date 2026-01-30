@@ -13,15 +13,24 @@
     font-size: 3.5rem;
     line-height: 1.15;
     text-align: center;
-    color: #999;
-    font-weight: 400;
+    color: var(--color-secondary);
+    font-weight: 500;
     letter-spacing: -0.02em;
     max-width: 800px;
 }
 
+.alternating-features__header span {
+    color: var(--color-primary);
+}
+
 @media (max-width: 1024px) {
+    .alternating-features {
+        padding: var(--spacing-xl) 20px;
+    }
+
     .alternating-features__header {
         font-size: 2.5rem;
+        text-align: left;
     }
 }
 

@@ -74,14 +74,20 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg,
-            rgba(125, 158, 199, 0.15) 0%,
-            rgba(196, 169, 160, 0.15) 50%,
-            rgba(212, 196, 184, 0.15) 100%);
+    left: 0;
+    right: 0;
+    bottom: 0;
     border-radius: var(--radius-lg);
     pointer-events: none;
     z-index: 0;
-    backdrop-filter: blur(4px);
+    overflow: hidden;
+}
+
+.feature-card__overlay img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.6;
 }
 
 /* .feature-card__visual img selector removed as it's now inside .feature-card__image-container */
@@ -90,7 +96,7 @@
 .feature-card__frame {
     width: 100%;
     aspect-ratio: 4/3;
-    background: linear-gradient(135deg, #7d9ec7 0%, #c4a9a0 50%, #d4c4b8 100%);
+    /* background: linear-gradient(135deg, #7d9ec7 0%, #c4a9a0 50%, #d4c4b8 100%); */
     border-radius: 20px;
     padding: 28px;
     /* Padding to create the "frame" effect */
@@ -111,10 +117,10 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg,
+    /* background: linear-gradient(135deg,
             rgba(125, 158, 199, 0.8) 0%,
             rgba(196, 169, 160, 0.8) 50%,
-            rgba(212, 196, 184, 0.8) 100%);
+            rgba(212, 196, 184, 0.8) 100%); */
     backdrop-filter: blur(40px);
     z-index: 0;
 }
@@ -137,6 +143,8 @@
 .feature-card__image-container img {
     object-fit: cover;
     display: block;
+    width: 100%;
+    height: 100%;
 }
 
 /* Styling for each of the 3 feature cards using nth-child */
@@ -156,6 +164,13 @@
         0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
+@media (max-width: 900px) {
+    .feature-card:nth-child(1) .feature-card__image-container {
+        width: 90%;
+        top: 10%;
+    }
+}
+
 /* Second feature card - medium image, centered */
 .feature-card:nth-child(2) .feature-card__image-container {
     width: 90%;
@@ -172,6 +187,13 @@
     margin-left: 20%;
     align-items: flex-end;
     justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+    .feature-card:nth-child(3) .feature-card__image-container {
+        margin-left: 5%;
+        width: 95%;
+    }
 }
 
 
@@ -215,18 +237,15 @@
         flex-direction: column;
         text-align: center;
         gap: var(--spacing-xl);
+        margin-bottom: 24px;
     }
 
     .feature-card__content {
         max-width: 100%;
         text-align: center;
     }
-}
 
-
-.feature-card_frame .feature-card__image-container img:nth-child(1) {
-    width: 80%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    .feature-card__visual {
+        width: 100%;
+    }
 }

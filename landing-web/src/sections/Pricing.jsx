@@ -4,42 +4,47 @@ import './Pricing.css'
 
 const plans = [
     {
+        icon: "👾",
         name: "Free",
         price: { monthly: 0, yearly: 0 },
-        description: "For those who want new experiences",
+        description: "Perfect for exploring new ways to organize your day.",
         buttonText: "Get Started",
         features: [
             "Unlimited tasks",
-            "Inbox",
-            "Join teams",
-            "Advanced analytics",
+            "Inbox mapping",
+            "Team collaboration",
+            "Core analytics",
         ],
         popular: false
     },
     {
+        icon: "🎨",
         name: "Pro",
         price: { monthly: 10, yearly: 8 },
-        description: "For those who want to experience a new way of managing work",
+        description: "For professionals who want a refined, focused workflow.",
         buttonText: "Join Waitlist",
         features: [
             "Everything in Free",
-            "Labels",
-            "Google/Apple Calendar sync",
-            "Subtasks",
-            "Recurring tasks",
+            "Advanced Labels",
+            "Full Calendar Sync",
+            "Unlimited Subtasks",
+            "Routine Automations",
             "Timeboxing",
-            "Create a team (up to 10 members)",
+            "Teams (up to 10)",
         ],
         popular: true
     },
     {
+        icon: "🚁",
         name: "Infinite",
         price: { monthly: 20, yearly: 16 },
-        description: "For those who want an infinite experience, now and in the future",
+        description: "The ultimate experience for visionaries and large teams.",
         buttonText: "Join Waitlist",
         features: [
             "Everything in Pro",
             "Unlimited team members",
+            "Priority Support",
+            "Early Access",
         ],
         popular: false
     }
@@ -52,7 +57,7 @@ export default function Pricing() {
         <section className="pricing" id="pricing">
             <div className="container">
                 <div className="pricing__header">
-                    <h2>Plan your best days yet.</h2>
+                    <h2>Start your journey <span>today</span>.</h2>
                     <h3>Try it free</h3>
 
                     <div className="pricing__toggle-wrapper">
@@ -79,14 +84,23 @@ export default function Pricing() {
                         <div key={index} className={`pricing-card ${plan.popular ? 'popular' : ''}`}>
                             {plan.popular && <div className="popular-badge">Most popular</div>}
                             <div className="pricing-card__header">
-                                <h4>{plan.name}</h4>
+                                <div className="pricing-card__title-row">
+                                    <div className="pricing-card__icon">{plan.icon}</div>
+                                    <h4>{plan.name}</h4>
+                                </div>
                                 <div className="price">
                                     ${isYearly ? plan.price.yearly * 12 : plan.price.monthly}
                                     <span>{isYearly ? '/year' : '/month'}</span>
                                 </div>
                                 <p style={{ height: '60px' }}>{plan.description}</p>
                             </div>
-                            <Button variant="primary" style={{ width: '100%' }}>{plan.buttonText}</Button>
+                            <Button
+                                variant="primary"
+                                style={{ width: '100%' }}
+                                onClick={() => window.location.href = `${import.meta.env.VITE_APP_URL}/signup`}
+                            >
+                                {plan.buttonText}
+                            </Button>
                             <ul className="pricing-card__features">
                                 {plan.features.map((feature, featureIndex) => (
                                     <li key={featureIndex}>{feature}</li>

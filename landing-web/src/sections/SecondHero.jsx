@@ -5,13 +5,13 @@ export default function SecondHero() {
         <section className="features">
             <div className="container features__container">
                 <h2 className="features__title">
-                    Simplu is your<br />
-                    <span>Business Orchestrator</span>
+                    Collaboration<br />
+                    <span>reimagined</span>
                 </h2>
 
                 <div className="features__description">
                     <div className="features__text-block">
-                        <h3>One infinite canvas for all your business apps and agents</h3>
+                        <h3>Forget the endless emails and scattered tools. <span>Build together</span> in real-time on one shared, beautiful canvas.</h3>
                     </div>
                 </div>
 
