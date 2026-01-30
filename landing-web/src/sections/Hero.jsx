@@ -63,8 +63,8 @@ export default function Hero() {
                     <span className="hero__badge-1">🎉</span>
                     <h1 className="hero__title">
                         Make every day count.
+                        <span className="hero__badge-2">🚀</span>
                     </h1>
-                    <span className="hero__badge-2">🚀</span>
                 </div>
 
                 <p className="hero__subtitle">

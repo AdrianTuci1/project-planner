@@ -105,7 +105,11 @@
     }
 
     .cta__buttons {
-        justify-content: flex-start;
+        justify-content: center;
+    }
+
+    .cta__download-title {
+        text-align: center;
     }
 
     .cta__buttons .btn {

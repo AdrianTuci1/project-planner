@@ -106,7 +106,6 @@
 
     position: relative;
     overflow: hidden;
-    perspective: 1200px;
 }
 
 /* Blur effect behind window */
@@ -117,10 +116,6 @@
     left: 0;
     right: 0;
     bottom: 0;
-    /* background: linear-gradient(135deg,
-            rgba(125, 158, 199, 0.8) 0%,
-            rgba(196, 169, 160, 0.8) 50%,
-            rgba(212, 196, 184, 0.8) 100%); */
     backdrop-filter: blur(40px);
     z-index: 0;
 }
@@ -152,22 +147,29 @@
 /* First feature card - small image, top-left position, tilted with depth */
 .feature-card:nth-child(1) .feature-card__image-container {
     width: 70%;
-    height: 100%;
+    height: 95%;
+    /* Reduced height to stay within parent bounds */
     position: absolute;
     top: 20%;
+    left: 15%;
     align-items: flex-start;
     justify-content: flex-start;
-    transform: rotateY(-15deg) rotateX(18deg) translateZ(40px);
-    transform-style: preserve-3d;
-    box-shadow:
-        0 20px 40px rgba(44, 43, 43, 0.15),
-        0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 900px) {
     .feature-card:nth-child(1) .feature-card__image-container {
-        width: 90%;
-        top: 10%;
+        width: 70%;
+        height: 95%;
+        top: 20%;
+        left: 15%;
+    }
+
+    .feature-card:nth-child(2) .feature-card__image-container {
+        position: absolute;
+        width: 88%;
+        height: 80%;
+        bottom: -10%;
+        left: 10%;
     }
 }
 
@@ -191,7 +193,7 @@
 
 @media (max-width: 900px) {
     .feature-card:nth-child(3) .feature-card__image-container {
-        margin-left: 5%;
+        margin-left: 25%;
         width: 95%;
     }
 }

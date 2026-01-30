@@ -22,8 +22,12 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 42px;
-    height: 42px;
+    /* Removed restrictive width/height to allow logo + text to fit */
+}
+
+.navbar__logo img {
+    height: 32px;
+    width: auto;
 }
 
 .navbar__menu {
@@ -51,5 +55,29 @@
 @media (max-width: 768px) {
     .navbar__menu {
         display: none;
+    }
+
+    .navbar__actions {
+        gap: var(--spacing-sm);
+    }
+
+    .navbar__actions .btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .navbar__actions a.btn--hero {
+        display: none;
+        /* Hide Sign In on very small screens if needed, or just shrink */
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar__logo {
+        font-size: 1.2rem;
+    }
+
+    .navbar__actions .btn {
+        padding: 6px 10px;
     }
 }

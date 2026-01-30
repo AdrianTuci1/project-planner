@@ -28,8 +28,12 @@
         padding: var(--spacing-xl) 20px;
     }
 
+    .alternating-features__header-wrapper {
+        justify-content: flex-start;
+    }
+
     .alternating-features__header {
-        font-size: 2.5rem;
+        font-size: 2.0rem;
         text-align: left;
     }
 }
