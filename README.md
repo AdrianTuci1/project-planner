@@ -27,8 +27,15 @@ A comprehensive project management solution featuring a React frontend and a mod
 3.  Configure environment variables:
     - Copy `.env.example` to `.env`.
     - Fill in `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID`, and AWS credentials/Region.
-    - Review DynamoDB table names.
-4.  Start the server:
+    - Set the `TABLE_SINGLE` variable to your single DynamoDB table name (default: `sm-single-table`).
+4.  Initialize the DynamoDB database:
+    - Make sure you have the AWS CLI configured with appropriate credentials.
+    - Run the setup script to create the single DynamoDB table and its Global Secondary Indexes (GSIs):
+      ```bash
+      chmod +x setup_aws.sh
+      ./setup_aws.sh
+      ```
+5.  Start the server:
     ```bash
     npm run dev
     ```

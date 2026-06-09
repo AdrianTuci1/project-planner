@@ -44,13 +44,13 @@ export class SettingsService {
 
     constructor() {
         this.docClient = DBClient.getInstance();
-        this.tableName = process.env.TABLE_SETTINGS || 'settings';
+        this.tableName = process.env.TABLE_SINGLE || 'sm-single-table';
     }
 
     public async getGeneralSettings(userId: string = 'default-user'): Promise<GeneralSettings> {
         const command = new GetCommand({
             TableName: this.tableName,
-            Key: { userId }
+            Key: { id: `settings_${userId}` }
         });
 
         const result = await this.docClient.send(command);
@@ -81,7 +81,11 @@ export class SettingsService {
 
         const command = new PutCommand({
             TableName: this.tableName,
-            Item: updated
+            Item: {
+                ...updated,
+                id: `settings_${userId}`,
+                entityType: 'settings'
+            }
         });
 
         await this.docClient.send(command);
@@ -91,7 +95,7 @@ export class SettingsService {
     public async deleteSettings(userId: string): Promise<void> {
         const command = new DeleteCommand({
             TableName: this.tableName,
-            Key: { userId }
+            Key: { id: `settings_${userId}` }
         });
         await this.docClient.send(command);
     }

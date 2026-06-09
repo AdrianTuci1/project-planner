@@ -12,6 +12,7 @@ export interface Invitation {
     status: 'pending' | 'accepted' | 'declined';
     createdAt: number;
     updatedAt: number;
+    entityType?: string;
 }
 
 export class InvitationsService {
@@ -22,7 +23,7 @@ export class InvitationsService {
 
     constructor() {
         this.docClient = DBClient.getInstance();
-        this.tableName = process.env.TABLE_INVITATIONS || 'invitations';
+        this.tableName = process.env.TABLE_SINGLE || 'sm-single-table';
         this.notificationsService = new NotificationsService();
         this.workspacesService = new WorkspacesService();
     }
@@ -39,6 +40,7 @@ export class InvitationsService {
         const now = Date.now();
         const invitation: Invitation = {
             id,
+            entityType: 'invitation',
             email,
             workspaceId,
             inviterId,
@@ -145,12 +147,14 @@ export class InvitationsService {
     }
 
     private async findUserIdByEmail(email: string): Promise<string | null> {
-        // Warning: Scan is expensive. Use GSI in production.
         const { ScanCommand } = await import("@aws-sdk/lib-dynamodb");
         const command = new ScanCommand({
-            TableName: process.env.TABLE_USERS || 'users',
-            FilterExpression: "email = :e",
-            ExpressionAttributeValues: { ":e": email },
+            TableName: this.tableName,
+            FilterExpression: "entityType = :entityType AND email = :e",
+            ExpressionAttributeValues: { 
+                ":entityType": "user",
+                ":e": email 
+            },
             ProjectionExpression: "id"
         });
 

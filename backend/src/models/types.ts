@@ -53,6 +53,7 @@ export interface GeneralSettings {
 
 export interface User {
     id: string;
+    entityType?: string;
     email: string;
     stripeCustomerId?: string;
     plan: 'free' | 'pro';
@@ -94,6 +95,7 @@ export interface CalendarAccount {
 
 export interface Workspace {
     id: string;
+    entityType?: string;
     name: string;
     type: 'personal' | 'team';
     ownerId: string;

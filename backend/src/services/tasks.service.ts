@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { WorkspacesService } from "./workspaces.service";
 import { SettingsService } from "./settings.service";
@@ -10,7 +10,7 @@ export class TasksService {
 
     constructor() {
         this.docClient = DBClient.getInstance();
-        this.tableName = process.env.TABLE_TASKS || 'tasks';
+        this.tableName = process.env.TABLE_SINGLE || 'sm-single-table';
     }
 
     public workspacesService = new WorkspacesService();
@@ -23,6 +23,10 @@ export class TasksService {
         // RE-IMPLEMENTING FULL METHOD to ensure no code loss.
         const command = new ScanCommand({
             TableName: this.tableName,
+            FilterExpression: "entityType = :entityType",
+            ExpressionAttributeValues: {
+                ":entityType": "task"
+            }
         });
 
         const result = await this.docClient.send(command);
@@ -77,7 +81,7 @@ export class TasksService {
     public async createTask(task: any) {
         const command = new PutCommand({
             TableName: this.tableName,
-            Item: task
+            Item: { ...task, entityType: 'task' }
         });
         await this.docClient.send(command);
 
@@ -105,7 +109,7 @@ export class TasksService {
     public async updateTask(id: string, task: any) {
         const existing = await this.getTaskById(id);
 
-        const updated = { ...existing, ...task, id };
+        const updated = { ...existing, ...task, id, entityType: 'task' };
         const command = new PutCommand({
             TableName: this.tableName,
             Item: updated
@@ -136,15 +140,16 @@ export class TasksService {
     }
 
     public async getTaskById(id: string) {
-        const command = new ScanCommand({
+        const command = new GetCommand({
             TableName: this.tableName,
-            FilterExpression: "id = :id",
-            ExpressionAttributeValues: {
-                ":id": id
-            }
+            Key: { id }
         });
         const result = await this.docClient.send(command);
-        return result.Items && result.Items.length > 0 ? result.Items[0] : null;
+        const item = result.Item;
+        if (item && item.entityType === 'task') {
+            return item;
+        }
+        return null;
     }
 
     public async deleteTask(id: string) {
@@ -185,8 +190,9 @@ export class TasksService {
         // Scan for tasks created by user AND (workspaceId is missing OR workspaceId = 'personal')
         const command = new ScanCommand({
             TableName: this.tableName,
-            FilterExpression: "(createdBy = :u) AND (attribute_not_exists(workspaceId) OR workspaceId = :p)",
+            FilterExpression: "entityType = :entityType AND (createdBy = :u) AND (attribute_not_exists(workspaceId) OR workspaceId = :p)",
             ExpressionAttributeValues: {
+                ":entityType": "task",
                 ":u": userId,
                 ":p": "personal"
             }

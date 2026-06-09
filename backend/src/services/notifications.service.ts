@@ -9,13 +9,14 @@ export class NotificationsService {
 
     constructor() {
         this.docClient = DBClient.getInstance();
-        this.tableName = process.env.TABLE_NOTIFICATIONS || 'notifications';
+        this.tableName = process.env.TABLE_SINGLE || 'sm-single-table';
     }
 
     public async createNotification(userId: string, type: string, title: string, message: string, data?: any) {
         const id = uuidv4();
         const notification = {
             id,
+            entityType: 'notification',
             userId,
             type, // 'invite' | 'info' | 'alert'
             title,
@@ -111,7 +112,11 @@ export class NotificationsService {
 
     public async sendGlobalNotification(title: string, message: string, type: string = 'info') {
         const command = new ScanCommand({
-            TableName: process.env.TABLE_USERS || 'users',
+            TableName: this.tableName,
+            FilterExpression: "entityType = :entityType",
+            ExpressionAttributeValues: {
+                ":entityType": "user"
+            },
             ProjectionExpression: 'id'
         });
 

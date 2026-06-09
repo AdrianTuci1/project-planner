@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { SSEService } from "./sse.service";
 import { WorkspacesService } from "./workspaces.service";
@@ -10,12 +10,16 @@ export class LabelsService {
 
     constructor() {
         this.docClient = DBClient.getInstance();
-        this.tableName = process.env.TABLE_LABELS || 'labels';
+        this.tableName = process.env.TABLE_SINGLE || 'sm-single-table';
     }
 
     public async getLabels(workspaceId?: string, userId?: string) {
         const command = new ScanCommand({
             TableName: this.tableName,
+            FilterExpression: "entityType = :entityType",
+            ExpressionAttributeValues: {
+                ":entityType": "label"
+            }
         });
 
         const result = await this.docClient.send(command);
@@ -51,7 +55,7 @@ export class LabelsService {
     public async createLabel(label: any) {
         const command = new PutCommand({
             TableName: this.tableName,
-            Item: label
+            Item: { ...label, entityType: 'label' }
         });
         await this.docClient.send(command);
 
@@ -76,7 +80,7 @@ export class LabelsService {
     public async updateLabel(id: string, label: any) {
         const command = new PutCommand({
             TableName: this.tableName,
-            Item: { ...label, id }
+            Item: { ...label, id, entityType: 'label' }
         });
         await this.docClient.send(command);
 
@@ -105,13 +109,12 @@ export class LabelsService {
         // Fetch context
         let label: any = null;
         try {
-            const getCmd = new ScanCommand({
+            const getCmd = new GetCommand({
                 TableName: this.tableName,
-                FilterExpression: "id = :id",
-                ExpressionAttributeValues: { ":id": id }
+                Key: { id }
             });
             const res = await this.docClient.send(getCmd);
-            if (res.Items && res.Items.length > 0) label = res.Items[0];
+            if (res.Item && res.Item.entityType === 'label') label = res.Item;
         } catch (e) { }
 
         const command = new DeleteCommand({
@@ -141,8 +144,9 @@ export class LabelsService {
     public async deleteUserPersonalLabels(userId: string) {
         const command = new ScanCommand({
             TableName: this.tableName,
-            FilterExpression: "(createdBy = :u) AND (attribute_not_exists(workspaceId) OR workspaceId = :p)",
+            FilterExpression: "entityType = :entityType AND (createdBy = :u) AND (attribute_not_exists(workspaceId) OR workspaceId = :p)",
             ExpressionAttributeValues: {
+                ":entityType": "label",
                 ":u": userId,
                 ":p": "personal"
             }

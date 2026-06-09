@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, PutCommand, DeleteCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { DBClient } from "../config/db.client";
 import { SSEService } from "./sse.service";
 import { WorkspacesService } from "./workspaces.service";
@@ -9,12 +9,16 @@ export class GroupsService {
 
     constructor() {
         this.docClient = DBClient.getInstance();
-        this.tableName = process.env.TABLE_GROUPS || 'sm-groups';
+        this.tableName = process.env.TABLE_SINGLE || 'sm-single-table';
     }
 
     public async getGroups(workspaceId?: string, userId?: string) {
         const command = new ScanCommand({
             TableName: this.tableName,
+            FilterExpression: "entityType = :entityType",
+            ExpressionAttributeValues: {
+                ":entityType": "group"
+            }
         });
 
         const result = await this.docClient.send(command);
@@ -41,7 +45,7 @@ export class GroupsService {
     public async createGroup(group: any) {
         const command = new PutCommand({
             TableName: this.tableName,
-            Item: group
+            Item: { ...group, entityType: 'group' }
         });
         await this.docClient.send(command);
 
@@ -68,7 +72,7 @@ export class GroupsService {
     public async updateGroup(id: string, group: any) {
         const command = new PutCommand({
             TableName: this.tableName,
-            Item: { ...group, id }
+            Item: { ...group, id, entityType: 'group' }
         });
         await this.docClient.send(command);
 
@@ -98,16 +102,12 @@ export class GroupsService {
         // Fetch first to get context
         let groupToDelete: any = null;
         try {
-            // We need to scan or if we had a getGroupById... relying on scan with id check for now since we don't have direct get available conveniently without params in some architectures, 
-            // but actually DynamoDB get requires Key. 
-            // Assuming ID is Key.
-            const getCmd = new ScanCommand({
+            const getCmd = new GetCommand({
                 TableName: this.tableName,
-                FilterExpression: "id = :id",
-                ExpressionAttributeValues: { ":id": id }
+                Key: { id }
             });
             const res = await this.docClient.send(getCmd);
-            if (res.Items && res.Items.length > 0) groupToDelete = res.Items[0];
+            if (res.Item && res.Item.entityType === 'group') groupToDelete = res.Item;
         } catch (e) { console.warn("Could not fetch group before delete", e); }
 
 
@@ -141,8 +141,9 @@ export class GroupsService {
     public async deleteUserPersonalGroups(userId: string) {
         const command = new ScanCommand({
             TableName: this.tableName,
-            FilterExpression: "(createdBy = :u) AND (attribute_not_exists(workspaceId) OR workspaceId = :p)",
+            FilterExpression: "entityType = :entityType AND (createdBy = :u) AND (attribute_not_exists(workspaceId) OR workspaceId = :p)",
             ExpressionAttributeValues: {
+                ":entityType": "group",
                 ":u": userId,
                 ":p": "personal"
             }

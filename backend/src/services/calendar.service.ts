@@ -13,7 +13,7 @@ export class CalendarService {
 
     constructor() {
         this.docClient = DBClient.getInstance();
-        this.tableName = process.env.TABLE_CALENDARS || 'calendars';
+        this.tableName = process.env.TABLE_SINGLE || 'sm-single-table';
     }
 
     public async getCalendars(userId: string = 'default-user'): Promise<CalendarData> {
@@ -21,7 +21,7 @@ export class CalendarService {
         try {
             const command = new GetCommand({
                 TableName: this.tableName,
-                Key: { userId }
+                Key: { id: `calendar_${userId}` }
             });
 
             const result = await this.docClient.send(command);
@@ -38,7 +38,12 @@ export class CalendarService {
 
     public async updateCalendars(data: CalendarData, userId: string = 'default-user'): Promise<void> {
         // Ensure atomic updates or simple overwrite for this use case
-        const item = { ...data, userId };
+        const item = { 
+            ...data, 
+            userId,
+            id: `calendar_${userId}`,
+            entityType: 'calendar'
+        };
 
         const command = new PutCommand({
             TableName: this.tableName,
@@ -305,7 +310,7 @@ export class CalendarService {
     public async deleteUserCalendars(userId: string): Promise<void> {
         const command = new DeleteCommand({
             TableName: this.tableName,
-            Key: { userId }
+            Key: { id: `calendar_${userId}` }
         });
         await this.docClient.send(command);
     }

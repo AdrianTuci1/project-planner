@@ -3,12 +3,16 @@ import { AuthLayout } from './AuthLayout';
 import { Link } from 'react-router-dom';
 import { store } from '../../models/store';
 import { observer } from 'mobx-react-lite';
+import { useSearchParams } from 'react-router-dom';
 
 interface LoginProps {
     onLogin: () => void;
 }
 
 export const Login: React.FC<LoginProps> = observer(({ onLogin }) => {
+    const [searchParams] = useSearchParams();
+    const isSessionExpired = searchParams.get('expired') === 'true';
+
     // Login State
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -126,6 +130,22 @@ export const Login: React.FC<LoginProps> = observer(({ onLogin }) => {
                 <span className="auth-brand-name">simplu</span>
             </div>
             <p className="auth-subtitle">Welcome back! Please enter your details.</p>
+
+            {isSessionExpired && (
+                <div style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid var(--danger)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: 'var(--space-3)',
+                    color: 'var(--danger)',
+                    marginBottom: 'var(--space-6)',
+                    textAlign: 'center',
+                    fontSize: 'var(--text-sm)',
+                    fontWeight: 500
+                }}>
+                    Your session expired. Please log in again.
+                </div>
+            )}
 
             <form className="auth-form" onSubmit={handleLogin}>
                 <div>

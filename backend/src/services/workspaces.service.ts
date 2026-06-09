@@ -13,13 +13,17 @@ export class WorkspacesService {
 
     constructor() {
         this.docClient = DBClient.getInstance();
-        this.tableName = process.env.TABLE_WORKSPACES || 'workspaces';
+        this.tableName = process.env.TABLE_SINGLE || 'sm-single-table';
         this.notificationsService = new NotificationsService();
     }
 
     public async getAllWorkspaces(userId: string, email?: string): Promise<Workspace[]> {
         const command = new ScanCommand({
             TableName: this.tableName,
+            FilterExpression: "entityType = :entityType",
+            ExpressionAttributeValues: {
+                ":entityType": "workspace"
+            }
         });
 
         const result = await this.docClient.send(command);
@@ -55,6 +59,7 @@ export class WorkspacesService {
 
         const newWorkspace: Workspace = {
             id: workspaceId,
+            entityType: 'workspace',
             name,
             type: type,
             ownerId,
@@ -81,7 +86,10 @@ export class WorkspacesService {
             Key: { id }
         });
         const result = await this.docClient.send(command);
-        return result.Item as Workspace | undefined;
+        if (result.Item && result.Item.entityType === 'workspace') {
+            return result.Item as Workspace;
+        }
+        return undefined;
     }
 
     public async updateWorkspace(id: string, updates: Partial<Workspace>, userId?: string): Promise<Workspace | undefined> {
@@ -233,9 +241,7 @@ export class WorkspacesService {
     }
 
     private async cascadeDeleteResources(workspaceId: string) {
-        await this.deleteByWorkspaceId(process.env.TABLE_TASKS || 'tasks', workspaceId);
-        await this.deleteByWorkspaceId(process.env.TABLE_GROUPS || 'groups', workspaceId);
-        await this.deleteByWorkspaceId(process.env.TABLE_LABELS || 'labels', workspaceId);
+        await this.deleteByWorkspaceId(this.tableName, workspaceId);
     }
 
     private async deleteByWorkspaceId(tableName: string, workspaceId: string) {
@@ -283,8 +289,11 @@ export class WorkspacesService {
 
         const command = new ScanCommand({
             TableName: this.tableName,
-            FilterExpression: "ownerId = :o",
-            ExpressionAttributeValues: { ":o": userId }
+            FilterExpression: "entityType = :entityType AND ownerId = :o",
+            ExpressionAttributeValues: { 
+                ":entityType": "workspace",
+                ":o": userId 
+            }
         });
 
         const result = await this.docClient.send(command);

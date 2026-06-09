@@ -24,7 +24,7 @@ export class UserService {
 
     constructor() {
         this.docClient = DBClient.getInstance();
-        this.tableName = process.env.TABLE_USERS || 'Users';
+        this.tableName = process.env.TABLE_SINGLE || 'sm-single-table';
         this.emailService = new EmailService();
 
         this.notificationsService = new NotificationsService();
@@ -66,6 +66,7 @@ export class UserService {
 
         const newUser = {
             id: userId,
+            entityType: 'user',
             email,
             name,
             onboarding: onboardingData,

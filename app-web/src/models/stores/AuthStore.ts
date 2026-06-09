@@ -196,8 +196,8 @@ export class AuthStore {
             runInAction(() => {
                 this.isLoading = false;
             });
-            // Optional: Redirect to Cognito logout endpoint if we want to clear SSO session too
-            window.location.href = `${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${encodeURIComponent(REDIRECT_URI)}`;
+            // Redirect to home/login page locally rather than Cognito logout endpoint
+            window.location.href = '/';
         }
     }
 
@@ -327,6 +327,7 @@ export class AuthStore {
         } catch (err) {
             console.error("Failed to refresh session", err);
             this.clearSession();
+            window.location.href = '/?expired=true';
             throw err;
         }
     }
